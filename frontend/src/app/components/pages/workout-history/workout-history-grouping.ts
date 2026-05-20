@@ -118,8 +118,13 @@ function detectGroupsInWeek(weekSessions: SavedSession[]): {
     }
     members.sort((a, b) => sessionStartEnd(a).start.getTime() - sessionStartEnd(b).start.getTime());
     const sports = distinctOrdered(members.map((s) => s.sportType));
+    // Race-classified sessions force the "race" kind regardless of count/sport variety —
+    // a 2-leg duathlon is still a race, even though the count heuristic would call it a brick.
+    const isRaceClassified = members.some((s) => s.raceRole === 'RACE');
     const kind: GroupKind =
-      members.length >= RACE_MIN_SESSIONS || sports.length >= 3 ? 'race' : 'brick';
+      isRaceClassified || members.length >= RACE_MIN_SESSIONS || sports.length >= 3
+        ? 'race'
+        : 'brick';
     const startTime = sessionStartEnd(members[0]).start;
     const endTime = sessionStartEnd(members[members.length - 1]).end;
     const movingSeconds = members.reduce((acc, s) => acc + (s.totalDuration ?? 0), 0);

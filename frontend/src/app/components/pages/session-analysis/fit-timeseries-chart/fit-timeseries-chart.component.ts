@@ -13,13 +13,16 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { formatPaceWithUnit, formatTimeHMS } from '../../../shared/format/format.utils';
 import { FitRecord } from '../../../../services/metrics.service';
 import { BlockSummary } from '../../../../services/workout-execution.service';
 import { ZoneBlock } from '../../../../services/zone';
 import {
+  computeSelectionStats,
   downsample,
   marginsForWidth,
   resolveThemeColors,
+  SelectionStats,
   ThemeColors,
 } from './fit-timeseries-chart.utils';
 import {
@@ -59,14 +62,14 @@ export class FitTimeseriesChartComponent
   @Input() showPrimary = true;
   @Input() showHR = true;
   @Input() showCadence = false;
-  @Input() showEfficiency = false;
   @Input() showBlocks = false;
+  /** Enable mouse drag-to-select range stats (desktop only). Off by default. */
+  @Input() enableBrush = false;
 
   @ViewChild('stack') stackRef!: ElementRef<HTMLDivElement>;
   @ViewChild('primaryCanvas') pRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('hrCanvas') hrRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('cadCanvas') cadRef?: ElementRef<HTMLCanvasElement>;
-  @ViewChild('effCanvas') effRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('elevCanvas') elRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('xCanvas') xRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('ttEl') ttElRef?: ElementRef<HTMLDivElement>;
@@ -81,13 +84,29 @@ export class FitTimeseriesChartComponent
   ttRows: Array<{ label: string; value: string; color: string }> = [];
   private ttShiftRaf: number | null = null;
 
+  // ── Brush selection (desktop only) ────────────────────────────────────
+  private isDesktop = false;
+  private dragging = false;
+  selectionStartIdx: number | null = null;
+  selectionEndIdx: number | null = null;
+  selectionStats: SelectionStats | null = null;
+  selectionLeftPx = 0;
+  selectionWidthPx = 0;
+  private prevSelectionStartIdx: number | null = null;
+  private prevSelectionEndIdx: number | null = null;
+  private readonly windowMouseUpListener = () => this.onWindowMouseUp();
+  private readonly keyDownListener = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && this.selectionStartIdx !== null) {
+      this.clearSelection();
+      this.cdr.detectChanges();
+    }
+  };
+
   _hasElevation = false;
   private _primaryMax = 0;
   private _primaryMin = 0;
   /** Downsampled records (30s buckets) used for raw-mode line drawing to avoid canvas perf issues. */
   private _ds: FitRecord[] = [];
-  /** Per-bucket efficiency values populated by the renderer; tooltip uses the nearest bucket. */
-  private _effSmoothed: number[] = [];
   private ready = false;
   private readonly zone = inject(NgZone);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -107,11 +126,21 @@ export class FitTimeseriesChartComponent
 
   ngAfterViewInit(): void {
     this.ready = true;
+    this.isDesktop =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     this.resizeObserver = new ResizeObserver(() => {
-      if (this.ready) this.drawAll();
+      if (this.ready) {
+        this.drawAll();
+        this.recomputeSelectionRect();
+      }
     });
     this.syncObservedCanvases();
     this.registerTouchMoveListeners();
+    if (this.enableBrush && this.isDesktop) {
+      window.addEventListener('mouseup', this.windowMouseUpListener);
+      window.addEventListener('keydown', this.keyDownListener);
+    }
     this.drawAll();
     // Re-draw after the first paint so canvases pick up their flex-resolved size.
     requestAnimationFrame(() => this.drawAll());
@@ -131,7 +160,6 @@ export class FitTimeseriesChartComponent
     syncObservedCanvases(this.resizeObserver, this.observedCanvases, [
       this.pRef?.nativeElement,
       this.hrRef?.nativeElement,
-      this.effRef?.nativeElement,
       this.cadRef?.nativeElement,
       this.elRef?.nativeElement,
       this.xRef?.nativeElement,
@@ -142,6 +170,10 @@ export class FitTimeseriesChartComponent
     this.resizeObserver?.disconnect();
     this.unregisterTouchMoveListeners();
     if (this.ttShiftRaf !== null) cancelAnimationFrame(this.ttShiftRaf);
+    if (this.enableBrush && this.isDesktop) {
+      window.removeEventListener('mouseup', this.windowMouseUpListener);
+      window.removeEventListener('keydown', this.keyDownListener);
+    }
   }
 
   ngOnChanges(): void {
@@ -154,19 +186,114 @@ export class FitTimeseriesChartComponent
       this.showBlocks = true;
       this.blocksDefaultApplied = true;
     }
+    // Drop any stale selection when the session changes.
+    if (this.selectionStartIdx !== null) this.clearSelection();
     if (this.ready) setTimeout(() => this.drawAll(), 0);
   }
 
-  toggle(prop: 'showPrimary' | 'showHR' | 'showCadence' | 'showEfficiency' | 'showBlocks'): void {
+  toggle(prop: 'showPrimary' | 'showHR' | 'showCadence' | 'showBlocks'): void {
     this[prop] = !this[prop];
     setTimeout(() => this.drawAll(), 0);
   }
 
   onHover(event: MouseEvent): void {
-    if (!this.showTooltip) return;
     const canvas = event.target as HTMLCanvasElement;
     this.isTouchHover = false;
+    if (this.dragging) {
+      // Drag-to-select: extend the range; suppress tooltip while drag is active.
+      this.computeHoverAt(canvas, event.clientX, event.clientY, /*silent*/ true);
+      if (this.hoverIdx !== null) {
+        this.selectionEndIdx = this.hoverIdx;
+        this.updateSelectionStats();
+        this.recomputeSelectionRect();
+      }
+      this.hoverIdx = null;
+      this.ttRows = [];
+      this.drawAll();
+      return;
+    }
+    if (!this.showTooltip) return;
     this.computeHoverAt(canvas, event.clientX, event.clientY);
+  }
+
+  onMouseDown(event: MouseEvent): void {
+    if (!this.enableBrush || !this.isDesktop) return;
+    if (event.button !== 0) return;
+    if (!this.records.length) return;
+    const canvas = event.currentTarget as HTMLCanvasElement;
+    this.computeHoverAt(canvas, event.clientX, event.clientY, /*silent*/ true);
+    if (this.hoverIdx === null) return;
+    this.dragging = true;
+    this.prevSelectionStartIdx = this.selectionStartIdx;
+    this.prevSelectionEndIdx = this.selectionEndIdx;
+    this.selectionStartIdx = this.hoverIdx;
+    this.selectionEndIdx = this.hoverIdx;
+    this.hoverIdx = null;
+    this.ttRows = [];
+    this.updateSelectionStats();
+    this.recomputeSelectionRect();
+    this.drawAll();
+    event.preventDefault();
+  }
+
+  private onWindowMouseUp(): void {
+    if (!this.dragging) return;
+    this.dragging = false;
+    const moved = Math.abs(
+      (this.selectionEndIdx ?? 0) - (this.selectionStartIdx ?? 0),
+    );
+    if (moved === 0) {
+      // Click without drag — restore any previously-pinned selection.
+      this.selectionStartIdx = this.prevSelectionStartIdx;
+      this.selectionEndIdx = this.prevSelectionEndIdx;
+    }
+    this.updateSelectionStats();
+    this.recomputeSelectionRect();
+    this.cdr.detectChanges();
+  }
+
+  clearSelection(): void {
+    this.selectionStartIdx = null;
+    this.selectionEndIdx = null;
+    this.selectionStats = null;
+    this.selectionLeftPx = 0;
+    this.selectionWidthPx = 0;
+  }
+
+  private updateSelectionStats(): void {
+    if (this.selectionStartIdx === null || this.selectionEndIdx === null) {
+      this.selectionStats = null;
+      return;
+    }
+    this.selectionStats = computeSelectionStats(
+      this.records,
+      this.selectionStartIdx,
+      this.selectionEndIdx,
+    );
+  }
+
+  private recomputeSelectionRect(): void {
+    if (
+      this.selectionStartIdx === null ||
+      this.selectionEndIdx === null ||
+      !this.records.length ||
+      !this.stackRef?.nativeElement
+    ) {
+      this.selectionLeftPx = 0;
+      this.selectionWidthPx = 0;
+      return;
+    }
+    const W = this.stackRef.nativeElement.offsetWidth;
+    const { mL, mR } = marginsForWidth(W);
+    const cW = W - mL - mR;
+    const t0 = this.records[0].timestamp;
+    const totalSec = this.records[this.records.length - 1].timestamp - t0 || this.records.length;
+    const a = Math.min(this.selectionStartIdx, this.selectionEndIdx);
+    const b = Math.max(this.selectionStartIdx, this.selectionEndIdx);
+    const xA = mL + ((this.records[a].timestamp - t0) / totalSec) * cW;
+    const xB = mL + ((this.records[b].timestamp - t0) / totalSec) * cW;
+    this.selectionLeftPx = xA;
+    this.selectionWidthPx = Math.max(1, xB - xA);
   }
 
   private isTouchHover = false;
@@ -214,7 +341,6 @@ export class FitTimeseriesChartComponent
     return [
       this.pRef?.nativeElement,
       this.hrRef?.nativeElement,
-      this.effRef?.nativeElement,
       this.cadRef?.nativeElement,
       this.elRef?.nativeElement,
     ];
@@ -230,7 +356,12 @@ export class FitTimeseriesChartComponent
     detachTouchMoveListeners(this.touchCanvases(), this.touchMoveListener);
   }
 
-  private computeHoverAt(canvas: HTMLCanvasElement | null, clientX: number, clientY: number): void {
+  private computeHoverAt(
+    canvas: HTMLCanvasElement | null,
+    clientX: number,
+    clientY: number,
+    silent = false,
+  ): void {
     if (!canvas || this.records.length < 2) return;
 
     const rect = canvas.getBoundingClientRect();
@@ -289,6 +420,7 @@ export class FitTimeseriesChartComponent
       this.ttY = anchorRect.top - stackRect.top - 8;
     }
 
+    if (silent) return;
     this.buildTooltip();
     this.drawAll();
     this.scheduleTooltipShiftUpdate();
@@ -347,7 +479,6 @@ export class FitTimeseriesChartComponent
         primary: this.pRef?.nativeElement,
         hr: this.hrRef?.nativeElement,
         cad: this.cadRef?.nativeElement,
-        eff: this.effRef?.nativeElement,
         elev: this.elRef?.nativeElement,
         xAxis: this.xRef?.nativeElement,
       },
@@ -363,7 +494,6 @@ export class FitTimeseriesChartComponent
         showPrimary: this.showPrimary,
         showHR: this.showHR,
         showCadence: this.showCadence,
-        showEfficiency: this.showEfficiency,
         hasElevation: this._hasElevation,
         hoverIdx: this.hoverIdx,
         theme: this.theme,
@@ -371,7 +501,6 @@ export class FitTimeseriesChartComponent
     );
     this._primaryMin = result.primaryMin;
     this._primaryMax = result.primaryMax;
-    this._effSmoothed = result.effSmoothed;
   }
 
   // ── Tooltip / hover delegates ─────────────────────────────────────────
@@ -381,7 +510,6 @@ export class FitTimeseriesChartComponent
     return {
       records: this.records,
       downsampled: this._ds,
-      effSmoothed: this._effSmoothed,
       sportType: this.sportType,
       zoneBlocks: this.zoneBlocks,
       blockSummaries: this.blockSummaries,
@@ -390,11 +518,39 @@ export class FitTimeseriesChartComponent
       showPrimary: this.showPrimary,
       showHR: this.showHR,
       showCadence: this.showCadence,
-      showEfficiency: this.showEfficiency,
       hasElevation: this._hasElevation,
       accentHex: this.theme.accentHex,
       hoverIdx: this.hoverIdx,
     };
+  }
+
+  // ── Brush selection formatters ────────────────────────────────────────
+
+  formatBrushTime(sec: number): string {
+    return formatTimeHMS(Math.max(0, Math.round(sec)));
+  }
+
+  formatBrushDuration(sec: number): string {
+    return formatTimeHMS(Math.max(0, Math.round(sec)));
+  }
+
+  formatBrushDistance(meters: number): string {
+    if (meters >= 1000) return `${(meters / 1000).toFixed(meters >= 10000 ? 1 : 2)} km`;
+    return `${Math.round(meters)} m`;
+  }
+
+  formatBrushPace(kmh: number): string {
+    if (kmh <= 0.5) return '—';
+    if (this.sportType === 'SWIMMING') {
+      const secPer100 = 360 / kmh;
+      return formatPaceWithUnit(secPer100, 'SWIMMING');
+    }
+    const secPerKm = 3600 / kmh;
+    return formatPaceWithUnit(secPerKm, this.sportType);
+  }
+
+  brushCadenceDisplay(c: number): number {
+    return this.sportType === 'RUNNING' ? c * 2 : c;
   }
 
   private buildTooltip(): void {

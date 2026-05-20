@@ -8,10 +8,12 @@ import com.koval.trainingplannerbackend.race.RaceService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Service
 public class RaceGoalService {
@@ -84,6 +86,34 @@ public class RaceGoalService {
         }
         goal.setRaceId(raceId);
         return repository.save(goal);
+    }
+
+    /**
+     * Races the athlete has set as goals whose scheduledDate matches {@code date}.
+     * Used by session classification to surface a "Mark as race?" prompt on race day.
+     */
+    public List<Race> findRacesForAthleteOnDate(String athleteId, LocalDate date) {
+        String iso = date.toString();
+        return repository.findByAthleteId(athleteId).stream()
+                .map(RaceGoal::getRaceId)
+                .filter(Objects::nonNull)
+                .map(this::loadRaceQuietly)
+                .filter(Objects::nonNull)
+                .filter(r -> iso.equals(r.getScheduledDate()))
+                .toList();
+    }
+
+    /** True iff the athlete has set this race as a goal (used to authorize classification). */
+    public boolean isRaceInGoals(String athleteId, String raceId) {
+        return repository.existsByAthleteIdAndRaceId(athleteId, raceId);
+    }
+
+    private Race loadRaceQuietly(String raceId) {
+        try {
+            return raceService.getRaceById(raceId);
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     private RaceGoalResponse toResponse(RaceGoal goal) {

@@ -175,6 +175,30 @@
     "allDeclaredFields": true
   },
   {
+    "name": "com.koval.trainingplannerbackend.training.history.SessionAssociationService$LinkCandidate",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.history.RaceRole",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.history.SessionController$ClassifyRaceRequest",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.training.history.SessionAssociationService$ScoreBreakdown",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
     "name": "com.koval.trainingplannerbackend.ai.tools.club.ClubSessionSummary",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,

@@ -18,6 +18,15 @@ import {ErrorToastService} from '../../../services/error-toast.service';
           [class.success]="toast.severity === 'success'"
         >
           <span class="error-toast-message">{{ toast.message }}</span>
+          @if (toast.action) {
+            <button
+              class="error-toast-action"
+              type="button"
+              (click)="runAction(toast.id)"
+            >
+              {{ toast.action.label }}
+            </button>
+          }
           <button class="error-toast-close" (click)="dismiss(toast.id)" aria-label="Close notification">&times;</button>
         </div>
       }
@@ -84,6 +93,26 @@ import {ErrorToastService} from '../../../services/error-toast.service';
         color: var(--text-color);
       }
 
+      .error-toast-action {
+        background: transparent;
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-sm);
+        color: var(--text-color);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 4px 10px;
+        flex-shrink: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .error-toast-action:hover {
+        background: var(--accent-subtle);
+        color: var(--accent-color);
+        border-color: var(--accent-color);
+      }
+
       @keyframes slideUp {
         from {
           transform: translateY(100%);
@@ -103,5 +132,9 @@ export class ErrorToastComponent {
 
   dismiss(id: number): void {
     this.errorToastService.dismiss(id);
+  }
+
+  runAction(id: number): void {
+    this.errorToastService.runAction(id);
   }
 }

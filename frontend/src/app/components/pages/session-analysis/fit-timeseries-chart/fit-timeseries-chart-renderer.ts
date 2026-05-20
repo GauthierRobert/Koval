@@ -14,7 +14,6 @@ import {
 import {
   HoverContext,
   hoverCadence,
-  hoverEfficiency,
   hoverHR,
   hoverPrimaryValue,
 } from './fit-timeseries-chart-tooltip';
@@ -23,7 +22,6 @@ export interface RenderCanvases {
   primary?: HTMLCanvasElement | null;
   hr?: HTMLCanvasElement | null;
   cad?: HTMLCanvasElement | null;
-  eff?: HTMLCanvasElement | null;
   elev?: HTMLCanvasElement | null;
   xAxis?: HTMLCanvasElement | null;
 }
@@ -40,7 +38,6 @@ export interface RenderInput {
   showPrimary: boolean;
   showHR: boolean;
   showCadence: boolean;
-  showEfficiency: boolean;
   hasElevation: boolean;
   hoverIdx: number | null;
   theme: ThemeColors;
@@ -49,7 +46,6 @@ export interface RenderInput {
 export interface RenderResult {
   primaryMin: number;
   primaryMax: number;
-  effSmoothed: number[];
 }
 
 interface CanvasFrame {
@@ -152,27 +148,52 @@ function drawBlockBounds(
   ctx.restore();
 }
 
+interface AreaFill {
+  rgb: [number, number, number];
+  top: number;
+  bottom: number;
+}
+
+function fillSteppedArea(
+  ctx: CanvasRenderingContext2D,
+  pts: Array<{ x1: number; x2: number; y: number }>,
+  fill: AreaFill,
+): void {
+  if (pts.length === 0) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x1, fill.bottom);
+  for (const p of pts) {
+    ctx.lineTo(p.x1, p.y);
+    ctx.lineTo(p.x2, p.y);
+  }
+  ctx.lineTo(pts[pts.length - 1].x2, fill.bottom);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, fill.top, 0, fill.bottom);
+  const [r, gC, b] = fill.rgb;
+  g.addColorStop(0, `rgba(${r},${gC},${b},0.35)`);
+  g.addColorStop(1, `rgba(${r},${gC},${b},0.03)`);
+  ctx.fillStyle = g;
+  ctx.fill();
+}
+
 function drawSteppedLine(
   ctx: CanvasRenderingContext2D,
   xOf: (i: number) => number,
   yOf: (v: number) => number,
   blocks: Array<{ s: number; e: number; v: number }>,
   color: string,
+  fill?: AreaFill,
 ): void {
+  const pts = blocks.map((b) => ({ x1: xOf(b.s), x2: xOf(b.e), y: yOf(b.v) }));
+  if (fill) fillSteppedArea(ctx, pts, fill);
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  let first = true;
-  for (const b of blocks) {
-    const x1 = xOf(b.s),
-      x2 = xOf(b.e),
-      y = yOf(b.v);
-    if (first) {
-      ctx.moveTo(x1, y);
-      first = false;
-    } else ctx.lineTo(x1, y);
-    ctx.lineTo(x2, y);
-  }
+  pts.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(p.x1, p.y);
+    else ctx.lineTo(p.x1, p.y);
+    ctx.lineTo(p.x2, p.y);
+  });
   ctx.stroke();
 }
 
@@ -182,24 +203,43 @@ function drawSteppedBlockLine(
   yOf: (v: number) => number,
   blocks: Array<{ dur: number; v: number }>,
   color: string,
+  fill?: AreaFill,
 ): void {
+  const pts: Array<{ x1: number; x2: number; y: number }> = [];
+  let t = 0;
+  for (const b of blocks) {
+    pts.push({ x1: xOfT(t), x2: xOfT(t + b.dur), y: yOf(b.v) });
+    t += b.dur;
+  }
+  if (fill) fillSteppedArea(ctx, pts, fill);
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  let first = true;
-  let t = 0;
-  for (const b of blocks) {
-    const x1 = xOfT(t),
-      x2 = xOfT(t + b.dur),
-      y = yOf(b.v);
-    if (first) {
-      ctx.moveTo(x1, y);
-      first = false;
-    } else ctx.lineTo(x1, y);
-    ctx.lineTo(x2, y);
-    t += b.dur;
-  }
+  pts.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(p.x1, p.y);
+    else ctx.lineTo(p.x1, p.y);
+    ctx.lineTo(p.x2, p.y);
+  });
   ctx.stroke();
+}
+
+function fillPolyline(
+  ctx: CanvasRenderingContext2D,
+  points: Array<{ x: number; y: number }>,
+  fill: AreaFill,
+): void {
+  if (points.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, fill.bottom);
+  for (const p of points) ctx.lineTo(p.x, p.y);
+  ctx.lineTo(points[points.length - 1].x, fill.bottom);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, fill.top, 0, fill.bottom);
+  const [r, gC, b] = fill.rgb;
+  g.addColorStop(0, `rgba(${r},${gC},${b},0.35)`);
+  g.addColorStop(1, `rgba(${r},${gC},${b},0.03)`);
+  ctx.fillStyle = g;
+  ctx.fill();
 }
 
 const isCycling = (sportType: string) => sportType === 'CYCLING';
@@ -210,16 +250,11 @@ const useZoneBlocks = (input: RenderInput): boolean =>
 const usePlannedBlocks = (input: RenderInput): boolean =>
   input.showBlocks && !useZoneBlocks(input) && input.blockSummaries.length > 0;
 
-function buildHoverContext(
-  input: RenderInput,
-  primaryMax: number,
-  effSmoothed: number[],
-): HoverContext | null {
+function buildHoverContext(input: RenderInput, primaryMax: number): HoverContext | null {
   if (input.hoverIdx === null) return null;
   return {
     records: input.records,
     downsampled: input.downsampled,
-    effSmoothed,
     sportType: input.sportType,
     zoneBlocks: input.zoneBlocks,
     blockSummaries: input.blockSummaries,
@@ -228,7 +263,6 @@ function buildHoverContext(
     showPrimary: input.showPrimary,
     showHR: input.showHR,
     showCadence: input.showCadence,
-    showEfficiency: input.showEfficiency,
     hasElevation: input.hasElevation,
     accentHex: input.theme.accentHex,
     hoverIdx: input.hoverIdx,
@@ -442,7 +476,7 @@ function drawPrimary(
   if (input.hoverIdx !== null) {
     const hx = xOf(input.hoverIdx);
     drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
-    const hCtx = buildHoverContext(input, primaryMax, []);
+    const hCtx = buildHoverContext(input, primaryMax);
     if (hCtx) {
       const val = hoverPrimaryValue(hCtx, input.hoverIdx, t0);
       drawDot(ctx, input.theme, hx, yOf(val), accent);
@@ -466,6 +500,8 @@ function drawHR(
   const top = mT,
     bottom = mT + chartH;
   const color = '#e74c3c';
+  const fillRgb: [number, number, number] = [231, 76, 60];
+  const fill: AreaFill = { rgb: fillRgb, top, bottom };
 
   const hrs = records.map((r) => r.heartRate).filter((v) => v > 0);
   const minHR = 100;
@@ -483,6 +519,7 @@ function drawHR(
         v: b.avgHR,
       })),
       color,
+      fill,
     );
   } else if (usePlannedBlocks(input)) {
     drawSteppedBlockLine(
@@ -494,19 +531,18 @@ function drawHR(
         v: b.actualHR,
       })),
       color,
+      fill,
     );
   } else {
     const ds = input.downsampled;
-    ctx.beginPath();
-    let first = true;
+    const pts: Array<{ x: number; y: number }> = [];
     ds.forEach((r) => {
       if (!r.heartRate) return;
-      const x = xOfT(r.timestamp - t0);
-      if (first) {
-        ctx.moveTo(x, yOf(r.heartRate));
-        first = false;
-      } else ctx.lineTo(x, yOf(r.heartRate));
+      pts.push({ x: xOfT(r.timestamp - t0), y: yOf(r.heartRate) });
     });
+    fillPolyline(ctx, pts, fill);
+    ctx.beginPath();
+    pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.5;
     ctx.stroke();
@@ -528,127 +564,6 @@ function drawHR(
   }
 }
 
-function drawEfficiency(
-  canvas: HTMLCanvasElement | null | undefined,
-  input: RenderInput,
-): number[] {
-  if (input.sportType === 'SWIMMING' || input.downsampled.length < 2) return [];
-
-  const ds = input.downsampled;
-  const records = input.records;
-  const t0 = records[0].timestamp;
-  const cycling = isCycling(input.sportType);
-  const effSmoothed = ds.map((r) => {
-    if (r.heartRate <= 0) return NaN;
-    const metric = cycling ? r.power : (r.speed || 0) * 3.6;
-    return metric > 0 ? metric / r.heartRate : NaN;
-  });
-
-  const valid = effSmoothed.filter((v) => !isNaN(v));
-  if (valid.length < 2) return effSmoothed;
-  const effMin = Math.min(...valid) * 0.95;
-  const effMax = Math.max(...valid) * 1.05;
-
-  const s = initCanvas(canvas, records);
-  if (!s) return effSmoothed;
-  const { ctx, H, xOf, xOfT, mT, mB, mL } = s;
-  const chartH = H - mT - mB;
-  const top = mT,
-    bottom = mT + chartH;
-  const range = effMax - effMin || 1;
-  const yOf = (v: number) => top + chartH * (1 - (v - effMin) / range);
-  const color = '#a855f7';
-
-  const effOfBlock = (power: number, speed: number, hr: number): number => {
-    if (hr <= 0) return NaN;
-    const metric = cycling ? power : speed * 3.6;
-    return metric > 0 ? metric / hr : NaN;
-  };
-
-  if (useZoneBlocks(input)) {
-    drawSteppedLine(
-      ctx,
-      xOf,
-      yOf,
-      input.zoneBlocks.map((b) => ({
-        s: b.startIndex,
-        e: b.endIndex,
-        v: effOfBlock(b.avgPower, b.avgSpeed, b.avgHR),
-      })),
-      color,
-    );
-  } else if (usePlannedBlocks(input)) {
-    drawSteppedBlockLine(
-      ctx,
-      xOfT,
-      yOf,
-      input.blockSummaries.map((b) => {
-        const speed =
-          b.distanceMeters && b.durationSeconds > 0 ? b.distanceMeters / b.durationSeconds : 0;
-        return { dur: b.durationSeconds, v: effOfBlock(b.actualPower, speed, b.actualHR) };
-      }),
-      color,
-    );
-  } else {
-    ctx.beginPath();
-    let started = false;
-    let lastX = mL;
-    effSmoothed.forEach((v, i) => {
-      if (isNaN(v)) return;
-      const x = xOfT(ds[i].timestamp - t0);
-      if (!started) {
-        ctx.moveTo(x, bottom);
-        ctx.lineTo(x, yOf(v));
-        started = true;
-      } else ctx.lineTo(x, yOf(v));
-      lastX = x;
-    });
-    if (started) {
-      ctx.lineTo(lastX, bottom);
-      ctx.closePath();
-      const g = ctx.createLinearGradient(0, top, 0, bottom);
-      g.addColorStop(0, 'rgba(168,85,247,0.35)');
-      g.addColorStop(1, 'rgba(168,85,247,0.03)');
-      ctx.fillStyle = g;
-      ctx.fill();
-    }
-
-    ctx.beginPath();
-    let first = true;
-    effSmoothed.forEach((v, i) => {
-      if (isNaN(v)) return;
-      const x = xOfT(ds[i].timestamp - t0);
-      if (first) {
-        ctx.moveTo(x, yOf(v));
-        first = false;
-      } else ctx.lineTo(x, yOf(v));
-    });
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
-
-  ctx.fillStyle = color;
-  ctx.font = '9px monospace';
-  ctx.textAlign = 'right';
-  const mid = (effMin + effMax) / 2;
-  [effMax, mid, effMin].forEach((v) => ctx.fillText(v.toFixed(2), mL - 4, yOf(v) + 4));
-
-  drawBlockBounds(ctx, input, xOfT, top, bottom);
-
-  if (input.hoverIdx !== null) {
-    const hx = xOfT(records[input.hoverIdx].timestamp - t0);
-    drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
-    const hCtx = buildHoverContext(input, 0, effSmoothed);
-    if (hCtx) {
-      const v = hoverEfficiency(hCtx, input.hoverIdx, t0);
-      if (!isNaN(v)) drawDot(ctx, input.theme, hx, yOf(v), color);
-    }
-  }
-
-  return effSmoothed;
-}
-
 function drawCadence(
   canvas: HTMLCanvasElement | null | undefined,
   input: RenderInput,
@@ -663,6 +578,8 @@ function drawCadence(
   const top = mT,
     bottom = mT + chartH;
   const color = '#3b82f6';
+  const fillRgb: [number, number, number] = [59, 130, 246];
+  const fill: AreaFill = { rgb: fillRgb, top, bottom };
 
   const cads = records.map((r) => getCadFromRecord(r, input.sportType)).filter((v) => v > 0);
   const minCad = input.sportType === 'RUNNING' ? 140 : 40;
@@ -681,6 +598,7 @@ function drawCadence(
         v: getCadBlockFromValue(b.avgCadence, input.sportType),
       })),
       color,
+      fill,
     );
   } else if (usePlannedBlocks(input)) {
     drawSteppedBlockLine(
@@ -692,20 +610,19 @@ function drawCadence(
         v: getCadBlockFromValue(b.actualCadence, input.sportType),
       })),
       color,
+      fill,
     );
   } else {
     const ds = input.downsampled;
-    ctx.beginPath();
-    let first = true;
+    const pts: Array<{ x: number; y: number }> = [];
     ds.forEach((r) => {
       if (!r.cadence) return;
       const c = getCadFromRecord(r, input.sportType);
-      const x = xOfT(r.timestamp - t0);
-      if (first) {
-        ctx.moveTo(x, yOf(c));
-        first = false;
-      } else ctx.lineTo(x, yOf(c));
+      pts.push({ x: xOfT(r.timestamp - t0), y: yOf(c) });
     });
+    fillPolyline(ctx, pts, fill);
+    ctx.beginPath();
+    pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.5;
     ctx.stroke();
@@ -837,8 +754,7 @@ function drawXAxis(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
 
 export function drawAll(canvases: RenderCanvases, input: RenderInput): RenderResult {
   const primary = drawPrimary(canvases.primary, input);
-  const effSmoothed = drawEfficiency(canvases.eff, input);
-  const hoverCtx = buildHoverContext(input, primary.max, effSmoothed);
+  const hoverCtx = buildHoverContext(input, primary.max);
   drawHR(canvases.hr, input, hoverCtx);
   drawCadence(canvases.cad, input, hoverCtx);
   drawElevation(canvases.elev, input);
@@ -846,6 +762,5 @@ export function drawAll(canvases: RenderCanvases, input: RenderInput): RenderRes
   return {
     primaryMin: primary.min,
     primaryMax: primary.max,
-    effSmoothed,
   };
 }

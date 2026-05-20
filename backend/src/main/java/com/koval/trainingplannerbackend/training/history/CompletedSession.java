@@ -38,6 +38,23 @@ public class CompletedSession {
     private List<BlockSummary> blockSummaries;
 
     private String scheduledWorkoutId; // Reference to ScheduledWorkout
+
+    /**
+     * Sub-threshold auto-association candidate: set when scoring landed below the auto-link
+     * threshold but above the dismissal floor. The user is prompted in history to confirm or reject.
+     * Cleared once the session is firmly linked, dismissed, or marked unplanned.
+     */
+    private String suggestedScheduledWorkoutId;
+    private Integer suggestionScore;
+
+    /** User explicitly declared this session was not part of any planned workout — suppresses prompts. */
+    private Boolean unplanned;
+
+    /** Race the athlete classified this session against; set together with {@link #raceRole}. */
+    private String raceId;
+    /** Role within the race day: RACE (counts toward the race chain) / WARMUP (race-day but separate) / NONE (dismissed). */
+    private RaceRole raceRole;
+
     @Indexed
     private String clubSessionId; // Reference to ClubTrainingSession
     private Double tss;

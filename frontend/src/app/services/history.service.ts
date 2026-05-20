@@ -7,7 +7,11 @@ import { SessionSummary } from './workout-execution.service';
 import { AuthService } from './auth.service';
 import { FitExportService } from './fit-export.service';
 import { MetricsService } from './metrics.service';
+import { ErrorToastService } from './error-toast.service';
+import { TranslateService } from '@ngx-translate/core';
 import { environment } from '../../environments/environment';
+
+export type RaceRole = 'RACE' | 'WARMUP' | 'NONE';
 
 export interface SavedSession extends SessionSummary {
   id: string;
@@ -19,6 +23,15 @@ export interface SavedSession extends SessionSummary {
   fitFileId?: string;
   rpe?: number;
   scheduledWorkoutId?: string;
+  /** Sub-threshold auto-association: a scheduled workout the user can confirm or reject. */
+  suggestedScheduledWorkoutId?: string;
+  suggestionScore?: number;
+  /** User explicitly declared this session was not part of any planned workout. */
+  unplanned?: boolean;
+  /** Race the athlete classified this session against (set together with raceRole). */
+  raceId?: string;
+  /** Role within the race day — RACE bundles into the race chain, WARMUP keeps it separate. */
+  raceRole?: RaceRole;
   clubSessionId?: string;
   stravaActivityId?: string;
   nolioActivityId?: string;
@@ -26,6 +39,30 @@ export interface SavedSession extends SessionSummary {
   groupId?: string | null;
   manuallyCreated?: boolean;
   totalDistance?: number | null;
+}
+
+/** Race-on-this-day candidate returned by `GET /api/sessions/{id}/race-candidates`. */
+export interface RaceCandidate {
+  id: string;
+  title: string;
+  sport: string | null;
+  location: string | null;
+  distance: string | null;
+  scheduledDate: string;
+}
+
+/** Ranked candidate returned by `GET /api/sessions/{id}/link-candidates`. */
+export interface LinkCandidate {
+  scheduledWorkoutId: string;
+  title: string;
+  sport: string | null;
+  scheduledDate: string;
+  plannedDurationSeconds: number | null;
+  totalScore: number;
+  sportScore: number;
+  dateScore: number;
+  durationScore: number;
+  titleScore: number;
 }
 
 export interface SessionFilters {
@@ -63,6 +100,11 @@ interface RawSavedSession {
   fitFileId?: string | null;
   rpe?: number | null;
   scheduledWorkoutId?: string | null;
+  suggestedScheduledWorkoutId?: string | null;
+  suggestionScore?: number | null;
+  unplanned?: boolean | null;
+  raceId?: string | null;
+  raceRole?: RaceRole | null;
   clubSessionId?: string | null;
   stravaActivityId?: string | null;
   nolioActivityId?: string | null;
@@ -99,6 +141,8 @@ export class HistoryService {
   private authService = inject(AuthService);
   private fitExport = inject(FitExportService);
   private metricsService = inject(MetricsService);
+  private errorToast = inject(ErrorToastService);
+  private translate = inject(TranslateService);
   private destroyRef = inject(DestroyRef);
 
   /**
@@ -260,6 +304,10 @@ export class HistoryService {
           tss: saved.tss ?? undefined,
           intensityFactor: saved.intensityFactor ?? undefined,
           fitFileId: saved.fitFileId ?? undefined,
+          scheduledWorkoutId: saved.scheduledWorkoutId ?? summary.scheduledWorkoutId,
+          suggestedScheduledWorkoutId: saved.suggestedScheduledWorkoutId ?? undefined,
+          suggestionScore: saved.suggestionScore ?? undefined,
+          unplanned: saved.unplanned ?? undefined,
         };
         this.sessionsSubject.next([session, ...this.sessionsSubject.value]);
         const state = this.historyStateSubject.value;
@@ -267,6 +315,7 @@ export class HistoryService {
           this.patchHistory({ sessions: [session, ...state.sessions] });
         }
         this.selectedSessionSubject.next(session);
+        this.notifyIfAutoLinked(summary.scheduledWorkoutId, saved);
 
         let bufferToUpload: ArrayBuffer | null = fitBuffer ?? null;
         if (!bufferToUpload && summary.history && summary.history.length > 0) {
@@ -358,6 +407,103 @@ export class HistoryService {
     }
   }
 
+  /** Ranked link candidates for the picker; ±3 days, same sport, PENDING, unlinked. */
+  getLinkCandidates(sessionId: string): Observable<LinkCandidate[]> {
+    return this.http.get<LinkCandidate[]>(`${this.apiUrl}/${sessionId}/link-candidates`);
+  }
+
+  /** Firmly link a session to a scheduled workout; mirrors the backend onto local state. */
+  linkToScheduledWorkout(sessionId: string, scheduledWorkoutId: string): Observable<SavedSession> {
+    return this.http
+      .post<RawSavedSession>(`${this.apiUrl}/${sessionId}/link/${scheduledWorkoutId}`, {})
+      .pipe(
+        map((raw) => this.parseSession(raw)),
+        tap((session) => this.replaceLocally(session)),
+      );
+  }
+
+  /** Clear the auto-suggestion without committing to a link. */
+  dismissSuggestion(sessionId: string): Observable<SavedSession> {
+    return this.http
+      .post<RawSavedSession>(`${this.apiUrl}/${sessionId}/dismiss-suggestion`, {})
+      .pipe(
+        map((raw) => this.parseSession(raw)),
+        tap((session) => this.replaceLocally(session)),
+      );
+  }
+
+  /** Mark the session as unplanned to suppress future prompts. */
+  markUnplanned(sessionId: string): Observable<SavedSession> {
+    return this.http
+      .post<RawSavedSession>(`${this.apiUrl}/${sessionId}/mark-unplanned`, {})
+      .pipe(
+        map((raw) => this.parseSession(raw)),
+        tap((session) => this.replaceLocally(session)),
+      );
+  }
+
+  /** Races the athlete has goals for whose scheduledDate matches this session's day. */
+  getRaceCandidates(sessionId: string): Observable<RaceCandidate[]> {
+    return this.http.get<RaceCandidate[]>(`${this.apiUrl}/${sessionId}/race-candidates`);
+  }
+
+  /** Set the race classification (or dismiss the prompt with role=NONE). */
+  classifyRace(sessionId: string, raceId: string | null, role: RaceRole): Observable<SavedSession> {
+    return this.http
+      .post<RawSavedSession>(`${this.apiUrl}/${sessionId}/classify-race`, { raceId, role })
+      .pipe(
+        map((raw) => this.parseSession(raw)),
+        tap((session) => this.replaceLocally(session)),
+      );
+  }
+
+  /** Undo a session→scheduled-workout link. */
+  unlinkFromSchedule(sessionId: string): Observable<SavedSession> {
+    return this.http
+      .post<RawSavedSession>(`${this.apiUrl}/${sessionId}/unlink-schedule`, {})
+      .pipe(
+        map((raw) => this.parseSession(raw)),
+        tap((session) => this.replaceLocally(session)),
+      );
+  }
+
+  /**
+   * Surfaces a "Linked to … — Undo" toast when the backend auto-associated this save
+   * (i.e. the caller did not supply a scheduledWorkoutId but the saved record came back with one).
+   */
+  private notifyIfAutoLinked(
+    suppliedScheduledWorkoutId: string | undefined,
+    saved: RawSavedSession,
+  ): void {
+    if (suppliedScheduledWorkoutId) return;
+    const linkedId = saved.scheduledWorkoutId;
+    if (!linkedId) return;
+
+    const message = this.translate.instant('WORKOUT_HISTORY.AUTO_LINKED_TOAST', {
+      title: saved.title ?? '',
+    });
+    const undoLabel = this.translate.instant('WORKOUT_HISTORY.AUTO_LINKED_UNDO');
+    this.errorToast.showWithAction(
+      message,
+      {
+        label: undoLabel,
+        onClick: () => this.unlinkFromSchedule(saved.id).subscribe(),
+      },
+      'success',
+    );
+  }
+
+  /** Replace a session in both dashboard and history views by id; no-op if absent. */
+  private replaceLocally(session: SavedSession): void {
+    const apply = (s: SavedSession) => (s.id === session.id ? session : s);
+    this.sessionsSubject.next(this.sessionsSubject.value.map(apply));
+    const state = this.historyStateSubject.value;
+    this.patchHistory({ sessions: state.sessions.map(apply) });
+    if (this.selectedSessionSubject.value?.id === session.id) {
+      this.selectedSessionSubject.next(session);
+    }
+  }
+
   updateSession(id: string, updates: Partial<SavedSession>): Observable<SavedSession> {
     return this.http.patch<SavedSession>(`${this.apiUrl}/${id}`, updates).pipe(
       tap((updated) => {
@@ -391,6 +537,11 @@ export class HistoryService {
     fitFileId: s.fitFileId ?? undefined,
     rpe: s.rpe ?? undefined,
     scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,
+    suggestedScheduledWorkoutId: s.suggestedScheduledWorkoutId ?? undefined,
+    suggestionScore: s.suggestionScore ?? undefined,
+    unplanned: s.unplanned ?? undefined,
+    raceId: s.raceId ?? undefined,
+    raceRole: s.raceRole ?? undefined,
     clubSessionId: s.clubSessionId ?? undefined,
     stravaActivityId: s.stravaActivityId ?? undefined,
     nolioActivityId: s.nolioActivityId ?? undefined,

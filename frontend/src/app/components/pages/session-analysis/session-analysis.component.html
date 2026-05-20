@@ -78,6 +78,7 @@
             [blockSummaries]="displayBlocks"
             [blockColors]="(blockColors$ | async) ?? []"
             [zoneBlocks]="(blockView === 'interpolated' ? (zoneBlocks$ | async) : null) ?? []"
+            [enableBrush]="true"
           />
         }
         @if (!fit.loading && !fit.error && fit.records.length === 0) {

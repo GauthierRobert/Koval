@@ -351,8 +351,68 @@
                           <span class="meta-tss">{{ tss }} TSS</span>
                         }
                       </div>
+                      @if (hasUnclassifiedRaceDay(row.session)) {
+                        <div class="race-day-chip">
+                          <span class="race-day-text">{{
+                            'WORKOUT_HISTORY.RACE_DAY_HINT' | translate
+                          }}</span>
+                          <button
+                            type="button"
+                            class="race-day-action"
+                            (click)="openClassifyRaceModal(row.session, $event)"
+                          >
+                            {{ 'WORKOUT_HISTORY.RACE_DAY_CLASSIFY' | translate }}
+                          </button>
+                        </div>
+                      } @else if (hasPendingSuggestion(row.session)) {
+                        <div class="suggestion-chip">
+                          <span class="suggestion-text">{{
+                            'WORKOUT_HISTORY.SUGGESTION_HINT' | translate
+                          }}</span>
+                          <button
+                            type="button"
+                            class="suggestion-action"
+                            (click)="openLinkScheduleModal(row.session, $event)"
+                          >
+                            {{ 'WORKOUT_HISTORY.SUGGESTION_REVIEW' | translate }}
+                          </button>
+                          <button
+                            type="button"
+                            class="suggestion-dismiss"
+                            (click)="dismissSuggestion(row.session, $event)"
+                            [title]="'WORKOUT_HISTORY.SUGGESTION_DISMISS' | translate"
+                            [attr.aria-label]="'WORKOUT_HISTORY.SUGGESTION_DISMISS' | translate"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      }
                     </div>
                     <div class="item-actions">
+                      <button
+                        type="button"
+                        class="row-action-btn"
+                        (click)="openLinkScheduleModal(row.session, $event)"
+                        [title]="'WORKOUT_HISTORY.BTN_LINK_TO_PLAN' | translate"
+                        [attr.aria-label]="'WORKOUT_HISTORY.BTN_LINK_TO_PLAN' | translate"
+                      >
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                          <path d="M9 16l2 2 4-4" />
+                        </svg>
+                      </button>
                       <button
                         type="button"
                         class="row-action-btn"
@@ -602,4 +662,19 @@
   [candidates]="linkCandidates"
   (closed)="closeLinkModal()"
   (apply)="onLinkApply($event)"
+/>
+
+<app-link-to-schedule-modal
+  [open]="linkScheduleModalOpen"
+  [session]="linkScheduleSession"
+  (closed)="closeLinkScheduleModal()"
+  (linked)="onScheduleLinked($event)"
+  (unplanned)="onMarkedUnplanned()"
+/>
+
+<app-classify-race-modal
+  [open]="classifyRaceModalOpen"
+  [session]="classifyRaceSession"
+  (closed)="closeClassifyRaceModal()"
+  (classified)="onRaceClassified()"
 />

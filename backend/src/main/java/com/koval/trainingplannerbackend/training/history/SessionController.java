@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.training.history;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
+import com.koval.trainingplannerbackend.race.Race;
 import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -119,6 +120,61 @@ public class SessionController {
         CompletedSession result = sessionService.linkSessionToSchedule(sessionId, scheduledWorkoutId, userId);
         return ResponseEntity.of(Optional.ofNullable(result));
     }
+
+    /** Ranked link candidates within ±3 days for the manual picker, with score breakdown. */
+    @GetMapping("/{sessionId}/link-candidates")
+    public ResponseEntity<List<SessionAssociationService.LinkCandidate>> listLinkCandidates(
+            @PathVariable String sessionId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(sessionService.listLinkCandidates(sessionId, userId));
+    }
+
+    /** Dismiss the pending auto-suggestion without committing to any link. */
+    @PostMapping("/{sessionId}/dismiss-suggestion")
+    public ResponseEntity<CompletedSession> dismissSuggestion(@PathVariable String sessionId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        CompletedSession result = sessionService.dismissSuggestion(sessionId, userId);
+        return ResponseEntity.of(Optional.ofNullable(result));
+    }
+
+    /** Mark the session as not part of any planned workout (suppresses future prompts). */
+    @PostMapping("/{sessionId}/mark-unplanned")
+    public ResponseEntity<CompletedSession> markUnplanned(@PathVariable String sessionId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        CompletedSession result = sessionService.markUnplanned(sessionId, userId);
+        return ResponseEntity.of(Optional.ofNullable(result));
+    }
+
+    /** Undo a session→scheduled-workout link; reverts the scheduled workout to PENDING. */
+    @PostMapping("/{sessionId}/unlink-schedule")
+    public ResponseEntity<CompletedSession> unlinkSchedule(@PathVariable String sessionId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        CompletedSession result = sessionService.unlinkFromSchedule(sessionId, userId);
+        return ResponseEntity.of(Optional.ofNullable(result));
+    }
+
+    /** Races (from the athlete's goals) whose scheduledDate matches this session's day. */
+    @GetMapping("/{sessionId}/race-candidates")
+    public ResponseEntity<List<Race>> listRaceCandidates(@PathVariable String sessionId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(sessionService.listRaceCandidates(sessionId, userId));
+    }
+
+    /**
+     * Classify a session against a race day:
+     * {@code role=RACE} bundles it into the race chain; {@code WARMUP} marks it race-day but separate;
+     * {@code NONE} just dismisses the prompt.
+     */
+    @PostMapping("/{sessionId}/classify-race")
+    public ResponseEntity<CompletedSession> classifyRace(
+            @PathVariable String sessionId,
+            @RequestBody ClassifyRaceRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        CompletedSession result = sessionService.classifyRace(sessionId, request.raceId(), request.role(), userId);
+        return ResponseEntity.of(Optional.ofNullable(result));
+    }
+
+    public record ClassifyRaceRequest(String raceId, RaceRole role) {}
 
     /** Links a completed session to a club training session. */
     @PostMapping("/{sessionId}/link-club-session/{clubSessionId}")

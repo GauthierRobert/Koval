@@ -1,0 +1,86 @@
+@if (open && session) {
+  <app-modal-shell
+    [title]="'WORKOUT_HISTORY.LINK_SCHEDULE_TITLE' | translate"
+    size="md"
+    (closed)="close()"
+  >
+    <div class="link-schedule-body">
+      <p class="link-schedule-desc">
+        {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_DESC' | translate }}
+      </p>
+
+      @if (loading$ | async) {
+        <div class="link-schedule-loading">
+          {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_LOADING' | translate }}
+        </div>
+      } @else if ((candidates$ | async); as candidates) {
+        @if (candidates.length === 0) {
+          <div class="link-schedule-empty">
+            {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_NO_CANDIDATES' | translate }}
+          </div>
+        } @else {
+          <ul class="candidate-list" role="radiogroup">
+            @for (c of candidates; track trackByCandidate($index, c)) {
+              <li>
+                <button
+                  type="button"
+                  role="radio"
+                  class="candidate-card"
+                  [class.selected]="c.scheduledWorkoutId === selectedId"
+                  [attr.aria-checked]="c.scheduledWorkoutId === selectedId"
+                  (click)="select(c.scheduledWorkoutId)"
+                >
+                  <div class="candidate-header">
+                    @if (c.sport) {
+                      <app-sport-icon [sport]="$any(c.sport)" [size]="14" />
+                    }
+                    <span class="candidate-title">{{ c.title }}</span>
+                    <span class="candidate-score">{{ c.totalScore }}</span>
+                  </div>
+                  <div class="candidate-meta">
+                    <span class="meta-date">{{ formatDate(c.scheduledDate) }}</span>
+                    <span class="meta-dot" aria-hidden="true">·</span>
+                    <span class="meta-duration">{{ formatDuration(c.plannedDurationSeconds) }}</span>
+                  </div>
+                  <div class="candidate-cues" aria-hidden="true">
+                    <span class="cue" [attr.data-state]="scoreCue(c.sportScore, 30)">
+                      {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_CUE_SPORT' | translate }}
+                    </span>
+                    <span class="cue" [attr.data-state]="scoreCue(c.dateScore, 20)">
+                      {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_CUE_DATE' | translate }}
+                    </span>
+                    <span class="cue" [attr.data-state]="scoreCue(c.durationScore, 25)">
+                      {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_CUE_DURATION' | translate }}
+                    </span>
+                    <span class="cue" [attr.data-state]="scoreCue(c.titleScore, 25)">
+                      {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_CUE_TITLE' | translate }}
+                    </span>
+                  </div>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </div>
+
+    <div modal-footer class="link-schedule-footer">
+      <button
+        type="button"
+        class="footer-btn footer-btn-secondary"
+        (click)="declareUnplanned()"
+        [disabled]="(submitting$ | async) === true"
+      >
+        {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_BTN_UNPLANNED' | translate }}
+      </button>
+      <button
+        type="button"
+        class="footer-btn footer-btn-primary"
+        (click)="confirm()"
+        [disabled]="!selectedId || (submitting$ | async) === true"
+      >
+        {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_BTN_CONFIRM' | translate }}
+      </button>
+    </div>
+  </app-modal-shell>
+}

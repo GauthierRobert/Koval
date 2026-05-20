@@ -56,6 +56,22 @@ public class ScheduledWorkoutService {
     }
 
     /**
+     * Revert a completed scheduled workout back to PENDING, clearing the linked session and metrics.
+     * Used when the user undoes an automatic link.
+     */
+    public ScheduledWorkout revertToPending(String scheduledWorkoutId) {
+        ScheduledWorkout workout = scheduledWorkoutRepository.findById(scheduledWorkoutId)
+                .orElseThrow(() -> new ResourceNotFoundException("Scheduled workout", scheduledWorkoutId));
+
+        workout.setStatus(ScheduleStatus.PENDING);
+        workout.setCompletedAt(null);
+        workout.setSessionId(null);
+        workout.setTss(null);
+        workout.setIntensityFactor(null);
+        return scheduledWorkoutRepository.save(workout);
+    }
+
+    /**
      * Mark a scheduled workout as skipped.
      */
     public ScheduledWorkout markSkipped(String scheduledWorkoutId) {

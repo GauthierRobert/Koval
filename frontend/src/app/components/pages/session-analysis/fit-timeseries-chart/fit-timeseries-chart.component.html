@@ -10,11 +10,6 @@
       <button class="toggle-btn" [class.active]="showCadence" (click)="toggle('showCadence')">
         <span class="dot cad"></span> Cadence
       </button>
-      @if (sportType !== 'SWIMMING') {
-        <button class="toggle-btn" [class.active]="showEfficiency" (click)="toggle('showEfficiency')">
-          <span class="dot eff"></span> Efficiency
-        </button>
-      }
       @if (zoneBlocks.length > 0 || blockSummaries.length > 0) {
         <span class="toggle-sep"></span>
         <button class="toggle-btn" [class.active]="showBlocks" (click)="toggle('showBlocks')">
@@ -27,6 +22,7 @@
     @if (showPrimary) {
       <canvas #primaryCanvas class="mc primary-h"
         (mousemove)="onHover($event)"
+        (mousedown)="onMouseDown($event)"
         (touchstart)="onTouchStart($event)"
         (touchend)="onTouchEnd()"
         (touchcancel)="onTouchEnd()"></canvas>
@@ -34,13 +30,7 @@
     @if (showHR) {
       <canvas #hrCanvas class="mc hr-h"
         (mousemove)="onHover($event)"
-        (touchstart)="onTouchStart($event)"
-        (touchend)="onTouchEnd()"
-        (touchcancel)="onTouchEnd()"></canvas>
-    }
-    @if (showEfficiency) {
-      <canvas #effCanvas class="mc eff-h"
-        (mousemove)="onHover($event)"
+        (mousedown)="onMouseDown($event)"
         (touchstart)="onTouchStart($event)"
         (touchend)="onTouchEnd()"
         (touchcancel)="onTouchEnd()"></canvas>
@@ -48,6 +38,7 @@
     @if (showCadence) {
       <canvas #cadCanvas class="mc cad-h"
         (mousemove)="onHover($event)"
+        (mousedown)="onMouseDown($event)"
         (touchstart)="onTouchStart($event)"
         (touchend)="onTouchEnd()"
         (touchcancel)="onTouchEnd()"></canvas>
@@ -55,9 +46,15 @@
     @if (_hasElevation) {
       <canvas #elevCanvas class="mc elev-h"
         (mousemove)="onHover($event)"
+        (mousedown)="onMouseDown($event)"
         (touchstart)="onTouchStart($event)"
         (touchend)="onTouchEnd()"
         (touchcancel)="onTouchEnd()"></canvas>
+    }
+    @if (enableBrush && selectionStartIdx !== null && selectionWidthPx > 0) {
+      <div class="brush-rect"
+        [style.left.px]="selectionLeftPx"
+        [style.width.px]="selectionWidthPx"></div>
     }
     @if (showXAxis) {
       <canvas #xCanvas class="mc xaxis-h"></canvas>
@@ -78,4 +75,36 @@
       </div>
     }
   </div>
+  @if (enableBrush && selectionStats) {
+    @let s = selectionStats;
+    <div class="brush-stats" role="status" aria-live="polite">
+      <span class="bs-range">{{ formatBrushTime(s.startSec) }} → {{ formatBrushTime(s.endSec) }}</span>
+      <span class="bs-sep"></span>
+      <span class="bs-item"><span class="bs-lbl">Dur</span><span class="bs-val">{{ formatBrushDuration(s.durationSec) }}</span></span>
+      @if (s.distanceMeters > 0) {
+        <span class="bs-item"><span class="bs-lbl">Dist</span><span class="bs-val">{{ formatBrushDistance(s.distanceMeters) }}</span></span>
+      }
+      @if (sportType === 'CYCLING' && s.avgPower > 0) {
+        <span class="bs-item bs-accent"><span class="bs-lbl">Avg Pwr</span><span class="bs-val">{{ s.avgPower | number:'1.0-0' }}W</span></span>
+        @if (s.normalizedPower > 0) {
+          <span class="bs-item"><span class="bs-lbl">NP</span><span class="bs-val">{{ s.normalizedPower | number:'1.0-0' }}W</span></span>
+        }
+        <span class="bs-item"><span class="bs-lbl">Max Pwr</span><span class="bs-val">{{ s.maxPower | number:'1.0-0' }}W</span></span>
+      }
+      @if (sportType !== 'CYCLING' && s.avgSpeedKmh > 0) {
+        <span class="bs-item bs-accent"><span class="bs-lbl">Avg</span><span class="bs-val">{{ formatBrushPace(s.avgSpeedKmh) }}</span></span>
+      }
+      @if (s.avgHR > 0) {
+        <span class="bs-item bs-hr"><span class="bs-lbl">Avg HR</span><span class="bs-val">{{ s.avgHR | number:'1.0-0' }}</span></span>
+        <span class="bs-item bs-hr"><span class="bs-lbl">Max HR</span><span class="bs-val">{{ s.maxHR | number:'1.0-0' }}</span></span>
+      }
+      @if (s.avgCadence > 0) {
+        <span class="bs-item bs-cad"><span class="bs-lbl">Avg Cad</span><span class="bs-val">{{ brushCadenceDisplay(s.avgCadence) | number:'1.0-0' }}</span></span>
+      }
+      @if (s.elevationGain > 0) {
+        <span class="bs-item bs-elev"><span class="bs-lbl">↑</span><span class="bs-val">{{ s.elevationGain | number:'1.0-0' }}m</span></span>
+      }
+      <button class="brush-clear" type="button" (click)="clearSelection()" aria-label="Clear selection">×</button>
+    </div>
+  }
 </div>

@@ -45,11 +45,23 @@ import {
   LinkChange,
   LinkSessionsModalComponent,
 } from './link-sessions-modal/link-sessions-modal.component';
+import { LinkToScheduleModalComponent } from './link-to-schedule-modal/link-to-schedule-modal.component';
+import { ClassifyRaceModalComponent } from './classify-race-modal/classify-race-modal.component';
+import { goalDate, RaceGoalService } from '../../../services/race-goal.service';
 import { forkJoin, of } from 'rxjs';
 
 export type { HistoryRow } from './workout-history-grouping';
 
 type SportFilter = string | null;
+
+/** Local YYYY-MM-DD key — matches the date format used by Race.scheduledDate. */
+function toIsoDate(d: Date | string): string {
+  const date = new Date(d);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 @Component({
   selector: 'app-workout-history',
@@ -65,6 +77,8 @@ type SportFilter = string | null;
     SkeletonComponent,
     ManualSessionModalComponent,
     LinkSessionsModalComponent,
+    LinkToScheduleModalComponent,
+    ClassifyRaceModalComponent,
   ],
   templateUrl: './workout-history.component.html',
   styleUrl: './workout-history.component.css',
@@ -84,9 +98,23 @@ export class WorkoutHistoryComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private responsive = inject(ResponsiveService);
   stravaSyncService = inject(StravaSyncService);
+  private readonly raceGoalService = inject(RaceGoalService);
 
   sessions$ = this.historyService.historySessions$;
   historyState$ = this.historyService.historyState$;
+
+  /** Set of YYYY-MM-DD dates on which the athlete has a race goal — drives the race-day chip. */
+  private raceDates$ = this.raceGoalService.goals$.pipe(
+    map((goals) => {
+      const set = new Set<string>();
+      for (const g of goals) {
+        const d = goalDate(g);
+        if (d) set.add(d);
+      }
+      return set;
+    }),
+  );
+  raceDatesValue = new Set<string>();
   sidebarCollapsed = false;
 
   /** Sessions sharing a groupId with the selected one (chronological). Empty
@@ -116,6 +144,12 @@ export class WorkoutHistoryComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Cache the race-date set synchronously so per-row chip predicates stay cheap.
+    this.raceDates$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((set) => {
+      this.raceDatesValue = set;
+      this.toggleSubject.next();
+    });
+
     // Sync the service-level selectedSession with the route param so any
     // downstream consumer that reads `historyService.selectedSession$`
     // sees the current focus.
@@ -423,6 +457,74 @@ export class WorkoutHistoryComponent implements OnInit {
     this.linkModalOpen = false;
     this.linkAnchor = null;
     this.linkCandidates = [];
+  }
+
+  // ── Link to scheduled workout (adherence) ──────────────────────
+  linkScheduleModalOpen = false;
+  linkScheduleSession: SavedSession | null = null;
+
+  openLinkScheduleModal(session: SavedSession, event: Event): void {
+    event.stopPropagation();
+    this.linkScheduleSession = session;
+    this.linkScheduleModalOpen = true;
+  }
+
+  closeLinkScheduleModal(): void {
+    this.linkScheduleModalOpen = false;
+    this.linkScheduleSession = null;
+  }
+
+  onScheduleLinked(_scheduledWorkoutId: string): void {
+    // history.service already mirrored the change locally; just close the modal.
+    this.closeLinkScheduleModal();
+  }
+
+  onMarkedUnplanned(): void {
+    this.closeLinkScheduleModal();
+  }
+
+  /** Inline dismiss of a sub-threshold suggestion without opening the picker. */
+  dismissSuggestion(session: SavedSession, event: Event): void {
+    event.stopPropagation();
+    this.historyService.dismissSuggestion(session.id).subscribe();
+  }
+
+  /** A session that needs the user's attention: orphan + has a pending candidate stored. */
+  hasPendingSuggestion(session: SavedSession): boolean {
+    return (
+      !session.scheduledWorkoutId &&
+      !session.unplanned &&
+      !!session.suggestedScheduledWorkoutId &&
+      !this.hasUnclassifiedRaceDay(session)
+    );
+  }
+
+  /** A session on a date the athlete has a race goal for, and not yet classified. */
+  hasUnclassifiedRaceDay(session: SavedSession): boolean {
+    if (session.raceRole) return false;
+    const iso = toIsoDate(session.date);
+    return this.raceDatesValue.has(iso);
+  }
+
+  // ── Classify race ─────────────────────────────────────────────
+  classifyRaceModalOpen = false;
+  classifyRaceSession: SavedSession | null = null;
+
+  openClassifyRaceModal(session: SavedSession, event: Event): void {
+    event.stopPropagation();
+    this.classifyRaceSession = session;
+    this.classifyRaceModalOpen = true;
+  }
+
+  closeClassifyRaceModal(): void {
+    this.classifyRaceModalOpen = false;
+    this.classifyRaceSession = null;
+  }
+
+  onRaceClassified(): void {
+    this.closeClassifyRaceModal();
+    // The race-derived groupId just changed — re-fold the grouping pass.
+    this.toggleSubject.next();
   }
 
   onLinkApply(change: LinkChange): void {

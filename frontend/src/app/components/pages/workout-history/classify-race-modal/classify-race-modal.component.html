@@ -1,0 +1,111 @@
+@if (open && session) {
+  <app-modal-shell
+    [title]="'WORKOUT_HISTORY.CLASSIFY_RACE_TITLE' | translate"
+    size="md"
+    (closed)="close()"
+  >
+    <div class="classify-race-body">
+      <p class="classify-race-desc">
+        {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_DESC' | translate }}
+      </p>
+
+      @if (loading$ | async) {
+        <div class="classify-race-loading">
+          {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_LOADING' | translate }}
+        </div>
+      } @else if ((candidates$ | async); as candidates) {
+        @if (candidates.length === 0) {
+          <div class="classify-race-empty">
+            {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_NO_CANDIDATES' | translate }}
+          </div>
+        } @else if (candidates.length === 1) {
+          <div class="single-race-card">
+            @if (candidates[0].sport) {
+              <app-sport-icon [sport]="$any(candidates[0].sport)" [size]="16" />
+            }
+            <div class="single-race-info">
+              <span class="single-race-title">{{ candidates[0].title }}</span>
+              @if (candidates[0].distance || candidates[0].location) {
+                <span class="single-race-meta">
+                  @if (candidates[0].distance) {
+                    {{ candidates[0].distance }}
+                  }
+                  @if (candidates[0].distance && candidates[0].location) {
+                    <span aria-hidden="true">·</span>
+                  }
+                  @if (candidates[0].location) {
+                    {{ candidates[0].location }}
+                  }
+                </span>
+              }
+            </div>
+          </div>
+        } @else {
+          <ul class="race-list" role="radiogroup">
+            @for (race of candidates; track trackByCandidate($index, race)) {
+              <li>
+                <button
+                  type="button"
+                  role="radio"
+                  class="race-card"
+                  [class.selected]="race.id === selectedRaceId"
+                  [attr.aria-checked]="race.id === selectedRaceId"
+                  (click)="selectRace(race.id)"
+                >
+                  @if (race.sport) {
+                    <app-sport-icon [sport]="$any(race.sport)" [size]="14" />
+                  }
+                  <div class="race-info">
+                    <span class="race-title">{{ race.title }}</span>
+                    @if (race.distance || race.location) {
+                      <span class="race-meta">
+                        @if (race.distance) {
+                          {{ race.distance }}
+                        }
+                        @if (race.distance && race.location) {
+                          <span aria-hidden="true">·</span>
+                        }
+                        @if (race.location) {
+                          {{ race.location }}
+                        }
+                      </span>
+                    }
+                  </div>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </div>
+
+    <div modal-footer class="classify-race-footer">
+      <button
+        type="button"
+        class="footer-btn footer-btn-secondary"
+        (click)="submitRole('NONE')"
+        [disabled]="(submitting$ | async) === true"
+      >
+        {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_NONE' | translate }}
+      </button>
+      <div class="footer-actions">
+        <button
+          type="button"
+          class="footer-btn footer-btn-warmup"
+          (click)="submitRole('WARMUP')"
+          [disabled]="!selectedRaceId || (submitting$ | async) === true"
+        >
+          {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_WARMUP' | translate }}
+        </button>
+        <button
+          type="button"
+          class="footer-btn footer-btn-primary"
+          (click)="submitRole('RACE')"
+          [disabled]="!selectedRaceId || (submitting$ | async) === true"
+        >
+          {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_RACE' | translate }}
+        </button>
+      </div>
+    </div>
+  </app-modal-shell>
+}

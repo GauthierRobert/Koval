@@ -302,11 +302,16 @@
 /* â”€â”€â”€ Session list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .session-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-xs);
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.session-list > * {
+  flex-shrink: 0;
 }
 
 .load-more-btn {
@@ -660,6 +665,94 @@
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   font-variant-numeric: tabular-nums;
+}
+
+/* ─── "Race day" classification chip ─────────────────────────── */
+.race-day-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  font-size: var(--text-xs);
+  color: #f59e0b;
+  font-weight: 700;
+  max-width: 100%;
+}
+
+.race-day-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+}
+
+.race-day-action {
+  background: transparent;
+  border: none;
+  color: #f59e0b;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+}
+
+.race-day-action:hover {
+  filter: brightness(1.15);
+}
+
+/* ─── "Link to plan?" suggestion chip ─────────────────────────── */
+.suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.32);
+  font-size: var(--text-xs);
+  color: var(--warning-color, #ffc107);
+  max-width: 100%;
+}
+
+.suggestion-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-action {
+  background: transparent;
+  border: none;
+  color: var(--warning-color, #ffc107);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+}
+
+.suggestion-action:hover {
+  filter: brightness(1.15);
+}
+
+.suggestion-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.suggestion-dismiss:hover {
+  color: var(--text-color);
 }
 
 .metric-chip.tss {

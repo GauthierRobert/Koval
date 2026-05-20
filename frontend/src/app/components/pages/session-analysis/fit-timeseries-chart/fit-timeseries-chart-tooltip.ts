@@ -5,15 +5,14 @@ import { formatPaceWithUnit } from '../../../shared/format/format.utils';
 import {
   findPlannedBlock,
   getCadBlockFromValue,
-  getCadFromRecord,
   kmhToPace,
+  lerpDsValue,
   speedToPlotValue,
 } from './fit-timeseries-chart.utils';
 
 export interface HoverContext {
   records: FitRecord[];
   downsampled: FitRecord[];
-  effSmoothed: number[];
   sportType: string;
   zoneBlocks: ZoneBlock[];
   blockSummaries: BlockSummary[];
@@ -22,7 +21,6 @@ export interface HoverContext {
   showPrimary: boolean;
   showHR: boolean;
   showCadence: boolean;
-  showEfficiency: boolean;
   hasElevation: boolean;
   accentHex: string;
   hoverIdx: number;
@@ -65,9 +63,14 @@ export function hoverPrimaryValue(ctx: HoverContext, idx: number, t0: number): n
       return speedToPlotValue(speedKmh, isSwimming(ctx.sportType), ctx.primaryMax);
     }
   }
-  const rec = ctx.records[idx];
-  if (isCycling(ctx.sportType)) return rec.power;
-  return speedToPlotValue((rec.speed || 0) * 3.6, isSwimming(ctx.sportType), ctx.primaryMax);
+  // No-block path: the visible line is drawn from the 30s downsampled series.
+  // Snap to the lerped bucket value so the dot rides the rendered line, not the raw spike.
+  const t = ctx.records[idx].timestamp;
+  if (isCycling(ctx.sportType)) {
+    return lerpDsValue(ctx.downsampled, t, (r) => r.power);
+  }
+  const kmh = lerpDsValue(ctx.downsampled, t, (r) => (r.speed || 0) * 3.6);
+  return speedToPlotValue(kmh, isSwimming(ctx.sportType), ctx.primaryMax);
 }
 
 export function hoverHR(ctx: HoverContext, idx: number, t0: number): number {
@@ -78,7 +81,8 @@ export function hoverHR(ctx: HoverContext, idx: number, t0: number): number {
     const pb = findPlannedBlock(ctx.records, ctx.blockSummaries, idx, t0);
     if (pb) return pb.actualHR;
   }
-  return ctx.records[idx].heartRate;
+  const t = ctx.records[idx].timestamp;
+  return lerpDsValue(ctx.downsampled, t, (r) => r.heartRate);
 }
 
 export function hoverCadence(ctx: HoverContext, idx: number, t0: number): number {
@@ -89,33 +93,9 @@ export function hoverCadence(ctx: HoverContext, idx: number, t0: number): number
     const pb = findPlannedBlock(ctx.records, ctx.blockSummaries, idx, t0);
     if (pb) return getCadBlockFromValue(pb.actualCadence, ctx.sportType);
   }
-  return getCadFromRecord(ctx.records[idx], ctx.sportType);
-}
-
-export function hoverEfficiency(ctx: HoverContext, idx: number, t0: number): number {
-  const effOf = (power: number, speed: number, hr: number): number => {
-    if (hr <= 0) return NaN;
-    const metric = isCycling(ctx.sportType) ? power : speed * 3.6;
-    return metric > 0 ? metric / hr : NaN;
-  };
-  if (useZoneBlocks(ctx)) {
-    const zb = ctx.zoneBlocks.find((b) => idx >= b.startIndex && idx <= b.endIndex);
-    if (zb) return effOf(zb.avgPower, zb.avgSpeed, zb.avgHR);
-  } else if (usePlannedBlocks(ctx)) {
-    const pb = findPlannedBlock(ctx.records, ctx.blockSummaries, idx, t0);
-    if (pb) {
-      const speed =
-        pb.distanceMeters && pb.durationSeconds > 0 ? pb.distanceMeters / pb.durationSeconds : 0;
-      return effOf(pb.actualPower, speed, pb.actualHR);
-    }
-  }
-  const hoverT = ctx.records[idx].timestamp;
-  const ds = ctx.downsampled;
-  let nearest = 0;
-  for (let i = 1; i < ds.length; i++) {
-    if (Math.abs(ds[i].timestamp - hoverT) < Math.abs(ds[nearest].timestamp - hoverT)) nearest = i;
-  }
-  return ctx.effSmoothed[nearest];
+  const t = ctx.records[idx].timestamp;
+  const cadAvg = lerpDsValue(ctx.downsampled, t, (r) => r.cadence);
+  return getCadBlockFromValue(cadAvg, ctx.sportType);
 }
 
 export function buildTooltipContent(ctx: HoverContext): TooltipContent {
@@ -223,17 +203,21 @@ export function buildTooltipContent(ctx: HoverContext): TooltipContent {
         }
       }
     } else {
+      // Raw-line mode: show the smoothed (30s bucket) value so it matches what the chart shows.
+      const tRec = rec.timestamp;
       if (cycling) {
-        rows.push({ label: 'Power', value: `${Math.round(rec.power)}W`, color: accent });
+        const p = lerpDsValue(ctx.downsampled, tRec, (r) => r.power);
+        rows.push({ label: 'Power', value: `${Math.round(p)}W`, color: accent });
       } else if (swimming) {
-        const pace = kmhToPace((rec.speed || 0) * 3.6);
+        const kmh = lerpDsValue(ctx.downsampled, tRec, (r) => (r.speed || 0) * 3.6);
+        const pace = kmhToPace(kmh);
         rows.push({
           label: 'Pace',
           value: isNaN(pace) ? '—' : formatPaceWithUnit(pace, 'SWIMMING'),
           color: accent,
         });
       } else {
-        const kmh = (rec.speed || 0) * 3.6;
+        const kmh = lerpDsValue(ctx.downsampled, tRec, (r) => (r.speed || 0) * 3.6);
         const pace = kmh > 0.5 ? 3600 / kmh : NaN;
         rows.push({
           label: 'Pace',
@@ -244,7 +228,7 @@ export function buildTooltipContent(ctx: HoverContext): TooltipContent {
     }
   }
   if (ctx.showHR) {
-    const hr = inBlock ? bhr : rec.heartRate;
+    const hr = inBlock ? bhr : lerpDsValue(ctx.downsampled, rec.timestamp, (r) => r.heartRate);
     if (hr)
       rows.push({
         label: inBlock ? 'Avg HR' : 'HR',
@@ -253,19 +237,18 @@ export function buildTooltipContent(ctx: HoverContext): TooltipContent {
       });
   }
   if (ctx.showCadence) {
-    const cad = inBlock ? bcad : getCadFromRecord(rec, ctx.sportType);
+    const cad = inBlock
+      ? bcad
+      : getCadBlockFromValue(
+          lerpDsValue(ctx.downsampled, rec.timestamp, (r) => r.cadence),
+          ctx.sportType,
+        );
     if (cad)
       rows.push({
         label: inBlock ? 'Avg Cad' : 'Cadence',
         value: `${Math.round(cad)} ${cadUnit}`,
         color: '#3b82f6',
       });
-  }
-  if (ctx.showEfficiency && ctx.effSmoothed.length > 0) {
-    const eff = hoverEfficiency(ctx, ctx.hoverIdx, t0);
-    if (!isNaN(eff)) {
-      rows.push({ label: inBlock ? 'Avg Eff.' : 'Eff.', value: eff.toFixed(2), color: '#a855f7' });
-    }
   }
   if (ctx.hasElevation && rec.elevation != null) {
     rows.push({ label: 'Elevation', value: `${Math.round(rec.elevation)}m`, color: '#4caf50' });

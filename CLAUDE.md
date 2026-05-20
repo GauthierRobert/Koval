@@ -2,9 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Disabled features (do NOT treat as important context)
+
+The following areas are **disabled until further discussion**. Do not propose changes, refactors, or task scoping that depends on them, and do not include them when summarizing what the app does:
+
+- **Bluetooth / live training** — Web Bluetooth integration (`bluetooth.service.ts`, `bluetooth-parsers.util.ts`, `workout-execution.service.ts`, active-session flow). Treat the "Bluetooth (Web Bluetooth API)" section below as historical.
+- **Internal chat assistant** — the in-app AI chat (`/api/ai/chat`, `/api/ai/chat/stream`, the `ai/` backend package's chat surface, `chat-sse.service.ts`, AI streaming UI). The **MCP server (`mcp/`) is NOT disabled** — external Claude clients via `/mcp/sse` remain in scope. The router/specialist agents and `@Tool` adapters under `ai/tools/` are also out of scope while the internal chat is paused.
+
+If a task touches these areas, pause and confirm with the user before proceeding.
+
 ## Project Overview
 
-**Koval Training Planner AI** is a full-stack application for cycling/triathlon athletes and coaches. It combines AI-powered workout planning (Spring AI + Anthropic Claude), Bluetooth-driven live training, multi-sport workout/plan/race/zone/club management, and an MCP server that exposes the same capabilities to external Claude clients.
+**Koval Training Planner AI** is a full-stack application for cycling/triathlon athletes and coaches. It combines multi-sport workout/plan/race/zone/club management and an MCP server that exposes these capabilities to external Claude clients. (AI-powered in-app chat and Bluetooth-driven live training exist in the codebase but are currently **disabled** — see "Disabled features" above.)
 
 Monorepo layout:
 - `backend/` — Spring Boot 4.0.4, Java 25, MongoDB, Spring AI 2.0.0-M2 (Anthropic). Package root: `com.koval.trainingplannerbackend`.
@@ -64,7 +73,7 @@ npm run e2e:ui                          # Playwright UI mode
 
 Top-level packages map to product domains, not technical layers:
 
-`ai/` — Spring AI integration with multi-agent routing.
+`ai/` — Spring AI integration with multi-agent routing. **[DISABLED — internal chat assistant is paused; see top of file.]**
   - `AIService`, `AIController` (`/api/ai/chat`, `/api/ai/chat/stream` SSE), `ChatHistory`, `CompactingChatMemory`, `ConversationSummarizer`, `AiRateLimiter`, `UserContextResolver`, `ToolEventEmitter`.
   - `agents/` — **Router/specialist pattern**: `RouterService` classifies user intent (training-creation, scheduling, analysis, coach-management, club-management, race-completion, planner, action) and delegates to a `SpecialistAgentService` instance per `AgentType`. System prompts live in `src/main/resources/prompts/*.md` (per agent + `common-rules.md`).
   - `tools/` — `@Tool` adapters organized by domain: `training/`, `coach/`, `history/`, `plan/`, `race/`, `club/`, `zone/`, `goal/`, `action/`, `scheduling/`. These are what the chat-side AI sees.
@@ -119,7 +128,9 @@ API failures: there are no mock data fallbacks. When the backend is unreachable,
 
 PWA: Angular service worker (`ngsw-config.json`) + custom `custom-sw.js` for push notifications via Firebase. `pwa-install.service.ts` handles install prompts.
 
-### Bluetooth (Web Bluetooth API)
+### Bluetooth (Web Bluetooth API) — **DISABLED**
+
+> Disabled until further discussion. Kept here as reference only — do not extend or rely on this feature.
 
 `bluetooth.service.ts` + `bluetooth-parsers.util.ts` handle GATT services per Bluetooth SIG specs:
 - `fitness_machine` — indoor trainer (Indoor Bike Data characteristic)
