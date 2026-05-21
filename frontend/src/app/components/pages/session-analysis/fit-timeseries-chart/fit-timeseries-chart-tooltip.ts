@@ -3,6 +3,7 @@ import { BlockSummary } from '../../../../services/workout-execution.service';
 import { ZoneBlock } from '../../../../services/zone';
 import { formatPaceWithUnit } from '../../../shared/format/format.utils';
 import {
+  DriftCurves,
   findPlannedBlock,
   getCadBlockFromValue,
   kmhToPace,
@@ -22,6 +23,8 @@ export interface HoverContext {
   showHR: boolean;
   showCadence: boolean;
   hasElevation: boolean;
+  showDrift: boolean;
+  driftCurves: DriftCurves | null;
   accentHex: string;
   hoverIdx: number;
 }
@@ -252,6 +255,26 @@ export function buildTooltipContent(ctx: HoverContext): TooltipContent {
   }
   if (ctx.hasElevation && rec.elevation != null) {
     rows.push({ label: 'Elevation', value: `${Math.round(rec.elevation)}m`, color: '#4caf50' });
+  }
+  if (ctx.showDrift && ctx.driftCurves) {
+    const hrN = ctx.driftCurves.hrNormPct[ctx.hoverIdx];
+    const outN = ctx.driftCurves.outNormPct[ctx.hoverIdx];
+    if (Number.isFinite(hrN)) {
+      rows.push({ label: 'HR vs base', value: `${hrN.toFixed(1)}%`, color: '#e74c3c' });
+    }
+    if (Number.isFinite(outN)) {
+      const outLabel = ctx.driftCurves.usePower ? 'Pwr vs base' : 'Spd vs base';
+      rows.push({ label: outLabel, value: `${outN.toFixed(1)}%`, color: accent });
+    }
+    if (Number.isFinite(hrN) && Number.isFinite(outN)) {
+      const drift = hrN - outN;
+      const sign = drift >= 0 ? '+' : '';
+      rows.push({
+        label: 'Drift',
+        value: `${sign}${drift.toFixed(1)}pp`,
+        color: drift > 5 ? '#e74c3c' : drift > 2 ? 'oklch(0.75 0.16 75)' : 'var(--success-color)',
+      });
+    }
   }
   return { header, rows };
 }

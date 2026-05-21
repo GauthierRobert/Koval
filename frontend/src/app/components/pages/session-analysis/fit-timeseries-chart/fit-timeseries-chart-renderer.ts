@@ -4,6 +4,7 @@ import { ZoneBlock } from '../../../../services/zone';
 import {
   accentAlphaFromRgb,
   cssToRgb,
+  DriftCurves,
   getCadBlockFromValue,
   getCadFromRecord,
   marginsForWidth,
@@ -23,6 +24,7 @@ export interface RenderCanvases {
   speed?: HTMLCanvasElement | null;
   hr?: HTMLCanvasElement | null;
   cad?: HTMLCanvasElement | null;
+  drift?: HTMLCanvasElement | null;
   elev?: HTMLCanvasElement | null;
   xAxis?: HTMLCanvasElement | null;
 }
@@ -40,7 +42,9 @@ export interface RenderInput {
   showSpeed: boolean;
   showHR: boolean;
   showCadence: boolean;
+  showDrift: boolean;
   hasElevation: boolean;
+  driftCurves: DriftCurves | null;
   hoverIdx: number | null;
   theme: ThemeColors;
 }
@@ -285,6 +289,8 @@ function buildHoverContext(input: RenderInput, primaryMax: number): HoverContext
     showHR: input.showHR,
     showCadence: input.showCadence,
     hasElevation: input.hasElevation,
+    showDrift: input.showDrift,
+    driftCurves: input.driftCurves,
     accentHex: input.theme.accentHex,
     hoverIdx: input.hoverIdx,
   };
@@ -776,6 +782,170 @@ function drawCadence(
   }
 }
 
+function drawDrift(canvas: HTMLCanvasElement | null | undefined, input: RenderInput): void {
+  const s = initCanvas(canvas, input.records);
+  if (!s || !input.driftCurves) return;
+  const { ctx, W, H, xOf, xOfT, mT, mB, mL, mR } = s;
+  const records = input.records;
+  const t0 = records[0].timestamp;
+  const chartH = H - mT - mB;
+  const top = mT;
+  const bottom = mT + chartH;
+  const hrColor = '#e74c3c';
+  const outColor = input.theme.accentHex;
+
+  const { hrNormPct, outNormPct, usePower, baselineStartSec, baselineEndSec } =
+    input.driftCurves;
+
+  // Faint shaded band marking the baseline window so the user can see what
+  // "100%" is calibrated against. Drawn first so everything else paints over it.
+  const bandX1 = xOfT(baselineStartSec);
+  const bandX2 = xOfT(baselineEndSec);
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.fillRect(bandX1, top, bandX2 - bandX1, chartH);
+  ctx.fillStyle = input.theme.textAlpha30;
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('baseline', (bandX1 + bandX2) / 2, top + chartH - 3);
+
+  // Auto-fit y range across both curves, padded; always include 100% baseline
+  // so the reference line never sits at the chart edge.
+  let lo = 100, hi = 100;
+  for (let i = 0; i < hrNormPct.length; i++) {
+    const a = hrNormPct[i], b = outNormPct[i];
+    if (Number.isFinite(a)) {
+      if (a < lo) lo = a;
+      if (a > hi) hi = a;
+    }
+    if (Number.isFinite(b)) {
+      if (b < lo) lo = b;
+      if (b > hi) hi = b;
+    }
+  }
+  const pad = Math.max((hi - lo) * 0.08, 1.5);
+  lo = Math.min(100, lo - pad);
+  hi = Math.max(100, hi + pad);
+  const range = hi - lo || 1;
+  const yOf = (v: number) => top + chartH * (1 - (v - lo) / range);
+
+  // 100% baseline reference.
+  const yBase = yOf(100);
+  ctx.save();
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = input.theme.gridAlpha15;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(mL, yBase);
+  ctx.lineTo(W - mR, yBase);
+  ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = input.theme.textAlpha30;
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('100%', mL + 2, yBase - 3);
+
+  // Sample the curves through the downsampled timeline so we draw a smooth
+  // ~30s-bucket polyline rather than every record (matches HR/cad panels).
+  const ds = input.downsampled;
+  const hrPts: Array<{ x: number; y: number; v: number } | null> = [];
+  const outPts: Array<{ x: number; y: number; v: number } | null> = [];
+  let lastIdx = 0;
+  for (const r of ds) {
+    while (
+      lastIdx < records.length - 1 &&
+      records[lastIdx + 1].timestamp <= r.timestamp
+    ) {
+      lastIdx++;
+    }
+    const x = xOfT(r.timestamp - t0);
+    const a = hrNormPct[lastIdx];
+    const b = outNormPct[lastIdx];
+    hrPts.push(Number.isFinite(a) ? { x, y: yOf(a), v: a } : null);
+    outPts.push(Number.isFinite(b) ? { x, y: yOf(b), v: b } : null);
+  }
+
+  // Gap fill between the two curves — red tint when HR > output (drift), green
+  // tint when output > HR (rare; warmup or pacing improvement).
+  const driftRgb: [number, number, number] = [231, 76, 60];
+  const goodRgb: [number, number, number] = [76, 175, 80];
+  for (let i = 0; i < hrPts.length - 1; i++) {
+    const a1 = hrPts[i], a2 = hrPts[i + 1];
+    const b1 = outPts[i], b2 = outPts[i + 1];
+    if (!a1 || !a2 || !b1 || !b2) continue;
+    const drifting = (a1.v + a2.v) / 2 > (b1.v + b2.v) / 2;
+    const [r, g, b] = drifting ? driftRgb : goodRgb;
+    ctx.fillStyle = `rgba(${r},${g},${b},0.18)`;
+    ctx.beginPath();
+    ctx.moveTo(a1.x, a1.y);
+    ctx.lineTo(a2.x, a2.y);
+    ctx.lineTo(b2.x, b2.y);
+    ctx.lineTo(b1.x, b1.y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Output curve (under HR for layer order).
+  ctx.strokeStyle = outColor;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  let started = false;
+  for (const p of outPts) {
+    if (!p) {
+      started = false;
+      continue;
+    }
+    if (!started) {
+      ctx.moveTo(p.x, p.y);
+      started = true;
+    } else ctx.lineTo(p.x, p.y);
+  }
+  ctx.stroke();
+
+  // HR curve on top.
+  ctx.strokeStyle = hrColor;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  started = false;
+  for (const p of hrPts) {
+    if (!p) {
+      started = false;
+      continue;
+    }
+    if (!started) {
+      ctx.moveTo(p.x, p.y);
+      started = true;
+    } else ctx.lineTo(p.x, p.y);
+  }
+  ctx.stroke();
+
+  // Y-axis labels: low / 100 / high.
+  ctx.fillStyle = input.theme.textAlpha40;
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'right';
+  [hi, 100, lo].forEach(v => ctx.fillText(`${Math.round(v)}%`, mL - 4, yOf(v) + 4));
+
+  // Compact legend (top-right) so the panel is self-explanatory without a header.
+  const legendY = top + 8;
+  ctx.textAlign = 'right';
+  const outLabel = usePower ? 'Pwr%' : 'Spd%';
+  ctx.fillStyle = hrColor;
+  ctx.fillText('HR%', W - mR - 4, legendY);
+  ctx.fillStyle = outColor;
+  ctx.fillText(outLabel, W - mR - 4, legendY + 10);
+
+  drawAxisSpine(ctx, s);
+  drawBlockBounds(ctx, input, xOfT, top, bottom);
+
+  if (input.hoverIdx !== null) {
+    const hx = xOf(input.hoverIdx);
+    drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
+    const a = hrNormPct[input.hoverIdx];
+    const b = outNormPct[input.hoverIdx];
+    if (Number.isFinite(b)) drawDot(ctx, input.theme, hx, yOf(b), outColor);
+    if (Number.isFinite(a)) drawDot(ctx, input.theme, hx, yOf(a), hrColor);
+  }
+}
+
 function drawElevation(canvas: HTMLCanvasElement | null | undefined, input: RenderInput): void {
   const s = initCanvas(canvas, input.records);
   if (!s) return;
@@ -892,6 +1062,7 @@ export function drawAll(canvases: RenderCanvases, input: RenderInput): RenderRes
   if (input.showSpeed) drawSpeed(canvases.speed, input);
   drawHR(canvases.hr, input, hoverCtx);
   drawCadence(canvases.cad, input, hoverCtx);
+  if (input.showDrift) drawDrift(canvases.drift, input);
   drawElevation(canvases.elev, input);
   drawXAxis(canvases.xAxis, input);
   return {

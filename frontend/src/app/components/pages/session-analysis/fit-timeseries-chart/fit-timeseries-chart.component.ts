@@ -18,8 +18,10 @@ import { FitRecord } from '../../../../services/metrics.service';
 import { BlockSummary } from '../../../../services/workout-execution.service';
 import { ZoneBlock } from '../../../../services/zone';
 import {
+  computeDriftCurves,
   computeSelectionStats,
   downsample,
+  DriftCurves,
   marginsForWidth,
   resolveThemeColors,
   SelectionStats,
@@ -64,6 +66,7 @@ export class FitTimeseriesChartComponent
   @Input() showCadence = false;
   @Input() showBlocks = false;
   @Input() showSpeed = true;
+  @Input() showDrift = true;
   /** Enable mouse drag-to-select range stats (desktop only). Off by default. */
   @Input() enableBrush = false;
 
@@ -72,6 +75,7 @@ export class FitTimeseriesChartComponent
   @ViewChild('speedCanvas') spRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('hrCanvas') hrRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('cadCanvas') cadRef?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('driftCanvas') driftRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('elevCanvas') elRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('xCanvas') xRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('ttEl') ttElRef?: ElementRef<HTMLDivElement>;
@@ -106,6 +110,8 @@ export class FitTimeseriesChartComponent
 
   _hasElevation = false;
   _hasPower = false;
+  _hasDrift = false;
+  private _driftCurves: DriftCurves | null = null;
   private _primaryMax = 0;
   private _primaryMin = 0;
   /** Downsampled records (30s buckets) used for raw-mode line drawing to avoid canvas perf issues. */
@@ -174,6 +180,7 @@ export class FitTimeseriesChartComponent
       this.spRef?.nativeElement,
       this.hrRef?.nativeElement,
       this.cadRef?.nativeElement,
+      this.driftRef?.nativeElement,
       this.elRef?.nativeElement,
       this.xRef?.nativeElement,
     ]);
@@ -194,6 +201,7 @@ export class FitTimeseriesChartComponent
     this.updateHasPower();
     this.updateHasSpeed();
     this.updateHasCadence();
+    this.updateDrift();
     this._ds = downsample(this.records, this.pickBucketSec(this.records));
     // Cycling without any power data: don't render the power chart or the
     // block overlays (zone or planned). Fall back to the speed sub-chart.
@@ -224,7 +232,9 @@ export class FitTimeseriesChartComponent
     return Math.min(30, Math.max(1, hours));
   }
 
-  toggle(prop: 'showPrimary' | 'showHR' | 'showCadence' | 'showBlocks' | 'showSpeed'): void {
+  toggle(
+    prop: 'showPrimary' | 'showHR' | 'showCadence' | 'showBlocks' | 'showSpeed' | 'showDrift',
+  ): void {
     this[prop] = !this[prop];
     setTimeout(() => this.drawAll(), 0);
   }
@@ -376,6 +386,7 @@ export class FitTimeseriesChartComponent
       this.spRef?.nativeElement,
       this.hrRef?.nativeElement,
       this.cadRef?.nativeElement,
+      this.driftRef?.nativeElement,
       this.elRef?.nativeElement,
     ];
   }
@@ -509,6 +520,12 @@ export class FitTimeseriesChartComponent
     this._hasCadence = this.records.some((r) => r.cadence > 0);
   }
 
+  private updateDrift(): void {
+    this._driftCurves = computeDriftCurves(this.records, this.sportType);
+    this._hasDrift = this._driftCurves !== null;
+    if (!this._hasDrift) this.showDrift = false;
+  }
+
   private updateHasElevation(): void {
     if (!this.records.length) {
       this._hasElevation = false;
@@ -526,6 +543,7 @@ export class FitTimeseriesChartComponent
         speed: this.spRef?.nativeElement,
         hr: this.hrRef?.nativeElement,
         cad: this.cadRef?.nativeElement,
+        drift: this.driftRef?.nativeElement,
         elev: this.elRef?.nativeElement,
         xAxis: this.xRef?.nativeElement,
       },
@@ -542,7 +560,9 @@ export class FitTimeseriesChartComponent
         showSpeed: this.showSpeedPanel,
         showHR: this.showHR,
         showCadence: this.showCadence,
+        showDrift: this._hasDrift && this.showDrift,
         hasElevation: this._hasElevation,
+        driftCurves: this._driftCurves,
         hoverIdx: this.hoverIdx,
         theme: this.theme,
       },
@@ -567,6 +587,8 @@ export class FitTimeseriesChartComponent
       showHR: this.showHR,
       showCadence: this.showCadence,
       hasElevation: this._hasElevation,
+      showDrift: this._hasDrift && this.showDrift,
+      driftCurves: this._driftCurves,
       accentHex: this.theme.accentHex,
       hoverIdx: this.hoverIdx,
     };
