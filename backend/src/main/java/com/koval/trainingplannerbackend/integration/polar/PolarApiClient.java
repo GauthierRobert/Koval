@@ -73,6 +73,20 @@ public class PolarApiClient {
         }
     }
 
+    /** Fetches the user profile (first/last name, etc.) for a registered AccessLink user. */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> fetchUser(String accessToken, String polarUserId) {
+        String url = BASE_URL + "/v3/users/" + polarUserId;
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    url, HttpMethod.GET, new HttpEntity<>(bearer(accessToken)), Map.class);
+            return response.getBody() != null ? response.getBody() : Map.of();
+        } catch (RestClientException e) {
+            log.warn("Polar fetchUser {} failed: {}", polarUserId, e.getMessage());
+            return Map.of();
+        }
+    }
+
     // ── Exercises (read) ────────────────────────────────────────────────
 
     /** Opens a new exercise transaction. Returns transaction id, or empty when there's nothing new (204). */
@@ -155,6 +169,18 @@ public class PolarApiClient {
                     "createTrainingTarget failed: " + e.getStatusCode() + " " + e.getResponseBodyAsString(), e);
         } catch (RestClientException e) {
             throw new ExternalServiceException("Polar", "createTrainingTarget failed: " + e.getMessage(), e);
+        }
+    }
+
+    /** DELETEs a previously-created training target. Best-effort — 404 is treated as success. */
+    public void deleteTrainingTarget(String accessToken, String polarUserId, String trainingTargetId) {
+        String url = BASE_URL + "/v3/users/" + polarUserId + "/training-targets/" + trainingTargetId;
+        try {
+            restTemplate.exchange(url, HttpMethod.DELETE, new HttpEntity<>(bearer(accessToken)), Void.class);
+        } catch (HttpClientErrorException.NotFound e) {
+            // Already gone — fine.
+        } catch (RestClientException e) {
+            log.warn("Polar deleteTrainingTarget {} failed: {}", trainingTargetId, e.getMessage());
         }
     }
 

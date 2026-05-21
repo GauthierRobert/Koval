@@ -1,5 +1,7 @@
 package com.koval.trainingplannerbackend.auth;
 
+import com.koval.trainingplannerbackend.integration.polar.PolarApiClient;
+import com.koval.trainingplannerbackend.integration.polar.PolarOAuthService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.validation.Valid;
@@ -35,6 +37,8 @@ public class AuthController {
 
     private final StravaOAuthService stravaOAuthService;
     private final GoogleOAuthService googleOAuthService;
+    private final PolarOAuthService polarOAuthService;
+    private final PolarApiClient polarApiClient;
     private final UserService userService;
     private final AccountLinkingService accountLinkingService;
     private final UserResponseMapper userResponseMapper;
@@ -50,11 +54,14 @@ public class AuthController {
     private volatile SecretKey signingKey;
 
     public AuthController(StravaOAuthService stravaOAuthService, GoogleOAuthService googleOAuthService,
+            PolarOAuthService polarOAuthService, PolarApiClient polarApiClient,
             UserService userService, AccountLinkingService accountLinkingService,
             UserResponseMapper userResponseMapper, UserRepository userRepository,
             Environment environment) {
         this.stravaOAuthService = stravaOAuthService;
         this.googleOAuthService = googleOAuthService;
+        this.polarOAuthService = polarOAuthService;
+        this.polarApiClient = polarApiClient;
         this.userService = userService;
         this.accountLinkingService = accountLinkingService;
         this.userResponseMapper = userResponseMapper;
@@ -170,6 +177,52 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header("Location", errorLink)
                     .build();
+        }
+    }
+
+    // --- Polar OAuth (primary login) ---
+
+    @GetMapping("/polar")
+    public ResponseEntity<Map<String, String>> getPolarAuthUrl() {
+        if (!polarOAuthService.isConfigured()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "Polar integration is not configured"));
+        }
+        Map<String, String> response = new HashMap<>();
+        response.put("authUrl", polarOAuthService.getAuthorizationUrl("login"));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/polar/callback")
+    public ResponseEntity<Map<String, Object>> handlePolarCallback(@RequestParam String code) {
+        try {
+            PolarOAuthService.PolarTokenResponse tokens = polarOAuthService.exchangeCodeForToken(code);
+            if (tokens.polarUserId() == null) {
+                throw new IllegalStateException("Polar did not return a user id");
+            }
+
+            // Polar requires a one-time user registration before the profile endpoint is reachable.
+            polarApiClient.registerUser(tokens.accessToken(), tokens.polarUserId());
+
+            Map<String, Object> profile = polarApiClient.fetchUser(tokens.accessToken(), tokens.polarUserId());
+            String first = (String) profile.get("first-name");
+            String last = (String) profile.get("last-name");
+            String displayName = ((first != null ? first : "") + " " + (last != null ? last : "")).trim();
+
+            User user = accountLinkingService.findOrCreateFromPolar(
+                    tokens.polarUserId(), displayName,
+                    tokens.accessToken(), tokens.refreshToken(), tokens.expiresAt());
+
+            String jwt = generateJwtToken(user);
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", jwt);
+            response.put("user", userResponseMapper.userToMap(user));
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.warn("Polar authentication failed ({}): {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Authentication failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
     }
 

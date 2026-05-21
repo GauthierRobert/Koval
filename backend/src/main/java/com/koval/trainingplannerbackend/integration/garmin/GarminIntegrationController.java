@@ -3,10 +3,14 @@ package com.koval.trainingplannerbackend.integration.garmin;
 import com.koval.trainingplannerbackend.auth.AccountLinkingService;
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
+import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserResponseMapper;
+import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +26,7 @@ public class GarminIntegrationController {
     private final GarminActivitySyncService syncService;
     private final AccountLinkingService accountLinkingService;
     private final UserResponseMapper userResponseMapper;
+    private final UserRepository userRepository;
 
     // Temporary store for request token secrets during OAuth flow
     private final Map<String, String> pendingTokenSecrets = new ConcurrentHashMap<>();
@@ -29,11 +34,13 @@ public class GarminIntegrationController {
     public GarminIntegrationController(GarminOAuthService oauthService,
                                         GarminActivitySyncService syncService,
                                         AccountLinkingService accountLinkingService,
-                                        UserResponseMapper userResponseMapper) {
+                                        UserResponseMapper userResponseMapper,
+                                        UserRepository userRepository) {
         this.oauthService = oauthService;
         this.syncService = syncService;
         this.accountLinkingService = accountLinkingService;
         this.userResponseMapper = userResponseMapper;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -80,5 +87,22 @@ public class GarminIntegrationController {
     @PostMapping("/import-history")
     public GarminActivitySyncService.SyncResult importHistory() {
         return syncService.importHistory(SecurityUtils.getCurrentUserId());
+    }
+
+    /** Toggle auto-push of scheduled workouts to Garmin Connect. */
+    @PutMapping("/auto-push")
+    public ResponseEntity<Map<String, Object>> setAutoPush(@RequestBody Map<String, Boolean> body) {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        boolean enabled = Boolean.TRUE.equals(body.get("enabled"));
+        if (enabled && user.getGarminAccessToken() == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Garmin is not connected for this user"));
+        }
+        user.setGarminAutoPushWorkouts(enabled);
+        userRepository.save(user);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 }

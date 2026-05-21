@@ -3,10 +3,15 @@ package com.koval.trainingplannerbackend.club.session;
 import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
 import com.koval.trainingplannerbackend.club.membership.ClubAuthorizationService;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionMaterializer;
+import com.koval.trainingplannerbackend.integration.sync.WorkoutSyncPayloadResolver;
+import com.koval.trainingplannerbackend.integration.sync.WorkoutSyncSourceType;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCancelledEvent;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCreatedEvent;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,17 +29,20 @@ public class SessionTrainingLinkService {
     private final ClubAuthorizationService authorizationService;
     private final TrainingService trainingService;
     private final RecurringSessionMaterializer materializer;
+    private final ApplicationEventPublisher eventPublisher;
 
     public SessionTrainingLinkService(ClubTrainingSessionRepository sessionRepository,
                                       ClubGroupRepository clubGroupRepository,
                                       ClubAuthorizationService authorizationService,
                                       TrainingService trainingService,
-                                      RecurringSessionMaterializer materializer) {
+                                      RecurringSessionMaterializer materializer,
+                                      ApplicationEventPublisher eventPublisher) {
         this.sessionRepository = sessionRepository;
         this.clubGroupRepository = clubGroupRepository;
         this.authorizationService = authorizationService;
         this.trainingService = trainingService;
         this.materializer = materializer;
+        this.eventPublisher = eventPublisher;
     }
 
     public ClubTrainingSession linkTrainingToSession(String userId, String clubId, String sessionId,
@@ -70,7 +78,9 @@ public class SessionTrainingLinkService {
         }
 
         trainingService.addClubIdToTraining(trainingId, clubId);
-        return sessionRepository.save(session);
+        ClubTrainingSession saved = sessionRepository.save(session);
+        publishLinkChange(saved, true);
+        return saved;
     }
 
     public ClubTrainingSession unlinkTrainingFromSession(String userId, String clubId, String sessionId,
@@ -96,7 +106,28 @@ public class SessionTrainingLinkService {
             session.setLinkedTrainingDescription(null);
         }
 
-        return sessionRepository.save(session);
+        ClubTrainingSession saved = sessionRepository.save(session);
+        publishLinkChange(saved, false);
+        return saved;
+    }
+
+    /**
+     * Fan out a sync event to every participant when a linked training changes on a session.
+     * Linking → {@code Created} (or {@code Updated} if a record already exists, both end up
+     * doing the same upsert in the dispatcher); unlinking → {@code Cancelled}.
+     */
+    private void publishLinkChange(ClubTrainingSession session, boolean linked) {
+        if (session.getParticipantIds() == null) return;
+        for (String participantId : session.getParticipantIds()) {
+            String sourceId = WorkoutSyncPayloadResolver.clubSessionSourceId(session.getId(), participantId);
+            if (linked) {
+                eventPublisher.publishEvent(new WorkoutSyncCreatedEvent(
+                        participantId, WorkoutSyncSourceType.CLUB_SESSION, sourceId));
+            } else {
+                eventPublisher.publishEvent(new WorkoutSyncCancelledEvent(
+                        participantId, WorkoutSyncSourceType.CLUB_SESSION, sourceId));
+            }
+        }
     }
 
     void enrichFromLinkedTraining(ClubTrainingSession session) {

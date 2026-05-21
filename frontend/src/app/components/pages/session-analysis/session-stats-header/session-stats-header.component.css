@@ -4,7 +4,7 @@
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .top-bar-row {
@@ -146,6 +146,20 @@
   flex: 1;
 }
 
+/* Second row under the title: RPE on the left, action buttons on the right. */
+.controls-row {
+  justify-content: space-between;
+}
+
+.controls-row .rpe-block {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.controls-row .top-bar-actions {
+  margin-left: auto;
+}
+
 .session-title {
   font-family: var(--font-display);
   font-size: var(--text-lg);
@@ -238,7 +252,7 @@
   align-items: stretch;
   gap: 4px;
   padding: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   border-radius: var(--radius-md);
   flex-wrap: wrap;
 }
@@ -339,16 +353,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 157, 0, 0.06);
   padding: var(--space-sm) 12px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 157, 0, 0.15);
+  border: none;
   flex-shrink: 0;
 }
 
 .rpe-label {
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--accent-color);
   white-space: nowrap;
@@ -491,6 +504,36 @@
   margin-left: 2px;
 }
 
+/* ─── Desktop: collapse title + RPE + actions into a single row ── */
+@media (min-width: 769px) {
+  .analysis-top-bar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .title-row {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .header-title-block {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .controls-row {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  .controls-row .rpe-block {
+    flex: 0 0 auto;
+  }
+}
+
 /* ─── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .breadcrumb-row {
@@ -498,7 +541,7 @@
     align-items: flex-start;
   }
 
-  .top-bar-actions {
+  .breadcrumb-row .top-bar-actions {
     width: 100%;
     justify-content: space-between;
   }
@@ -536,13 +579,26 @@
   }
 
   .rpe-block {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    width: 100%;
+    gap: 8px;
+    padding: var(--space-sm) 0;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .rpe-slider-wrap {
-    width: 100%;
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+  }
+
+  /* Keep the title and the source badge on the same line on mobile so the
+     badge sits in the top-right corner as in the design reference. */
+  .title-row {
+    flex-wrap: nowrap;
+  }
+
+  .source-badge {
+    font-size: 8px;
+    padding: 3px 7px;
   }
 }

@@ -102,6 +102,33 @@ public class AccountLinkingService {
         return userRepository.save(newUser);
     }
 
+    public User findOrCreateFromPolar(String polarUserId, String displayName,
+                                      String accessToken, String refreshToken, Long expiresAt) {
+        Optional<User> existing = userRepository.findByPolarUserId(polarUserId);
+
+        if (existing.isPresent()) {
+            User user = existing.get();
+            user.setPolarAccessToken(accessToken);
+            if (refreshToken != null) user.setPolarRefreshToken(refreshToken);
+            if (expiresAt != null) user.setPolarTokenExpiresAt(expiresAt);
+            user.setLastLogin(LocalDateTime.now());
+            return userRepository.save(user);
+        }
+
+        User newUser = new User();
+        newUser.setPolarUserId(polarUserId);
+        newUser.setAuthProvider(AuthProvider.POLAR);
+        newUser.setDisplayName(displayName != null && !displayName.isBlank() ? displayName : "Polar athlete");
+        newUser.setPolarAccessToken(accessToken);
+        newUser.setPolarRefreshToken(refreshToken);
+        newUser.setPolarTokenExpiresAt(expiresAt);
+        newUser.setRole(UserRole.ATHLETE);
+        newUser.setLastLogin(LocalDateTime.now());
+        newUser.setNeedsOnboarding(true);
+
+        return userRepository.save(newUser);
+    }
+
     // ── Linking ──────────────────────────────────────────────────────────
 
     public User linkStrava(String userId, String stravaId, String accessToken,

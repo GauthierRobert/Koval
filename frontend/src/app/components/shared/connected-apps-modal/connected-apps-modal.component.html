@@ -10,20 +10,32 @@
         <div class="linked-app-row">
           <div class="app-info">
             <svg class="app-icon strava" viewBox="0 0 24 24" width="20" height="20">
-              <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" fill="#FC4C02"/>
+              <path
+                d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"
+                fill="#FC4C02"
+              />
             </svg>
             <div class="app-details">
               <span class="app-name">Strava</span>
               <span class="app-status" [class.connected]="user.linkedAccounts?.strava">
-                {{ (user.linkedAccounts?.strava ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+                {{
+                  (user.linkedAccounts?.strava
+                    ? 'SETTINGS.APP_CONNECTED'
+                    : 'SETTINGS.APP_NOT_CONNECTED'
+                  ) | translate
+                }}
               </span>
             </div>
           </div>
           @if (user.linkedAccounts?.strava) {
-            <button class="unlink-btn"
+            <button
+              class="unlink-btn"
               [disabled]="unlinking || !canUnlink(user, 'strava')"
-              [title]="!canUnlink(user, 'strava') ? ('SETTINGS.UNLINK_DISABLED_HINT' | translate) : ''"
-              (click)="unlinkApp('strava')">
+              [title]="
+                !canUnlink(user, 'strava') ? ('SETTINGS.UNLINK_DISABLED_HINT' | translate) : ''
+              "
+              (click)="unlinkApp('strava')"
+            >
               {{ 'SETTINGS.BTN_UNLINK' | translate }}
             </button>
           } @else {
@@ -37,23 +49,44 @@
         <div class="linked-app-row">
           <div class="app-info">
             <svg class="app-icon google" viewBox="0 0 24 24" width="20" height="20">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
             </svg>
             <div class="app-details">
               <span class="app-name">Google</span>
               <span class="app-status" [class.connected]="user.linkedAccounts?.google">
-                {{ (user.linkedAccounts?.google ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+                {{
+                  (user.linkedAccounts?.google
+                    ? 'SETTINGS.APP_CONNECTED'
+                    : 'SETTINGS.APP_NOT_CONNECTED'
+                  ) | translate
+                }}
               </span>
             </div>
           </div>
           @if (user.linkedAccounts?.google) {
-            <button class="unlink-btn"
+            <button
+              class="unlink-btn"
               [disabled]="unlinking || !canUnlink(user, 'google')"
-              [title]="!canUnlink(user, 'google') ? ('SETTINGS.UNLINK_DISABLED_HINT' | translate) : ''"
-              (click)="unlinkApp('google')">
+              [title]="
+                !canUnlink(user, 'google') ? ('SETTINGS.UNLINK_DISABLED_HINT' | translate) : ''
+              "
+              (click)="unlinkApp('google')"
+            >
               {{ 'SETTINGS.BTN_UNLINK' | translate }}
             </button>
           } @else {
@@ -67,12 +100,20 @@
         <div class="linked-app-row">
           <div class="app-info">
             <svg class="app-icon garmin" viewBox="0 0 24 24" width="20" height="20">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="#007CC3"/>
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"
+                fill="#007CC3"
+              />
             </svg>
             <div class="app-details">
               <span class="app-name">Garmin</span>
               <span class="app-status" [class.connected]="user.linkedAccounts?.garmin">
-                {{ (user.linkedAccounts?.garmin ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+                {{
+                  (user.linkedAccounts?.garmin
+                    ? 'SETTINGS.APP_CONNECTED'
+                    : 'SETTINGS.APP_NOT_CONNECTED'
+                  ) | translate
+                }}
               </span>
             </div>
           </div>
@@ -81,29 +122,66 @@
               {{ 'SETTINGS.BTN_UNLINK' | translate }}
             </button>
           } @else {
-            <button class="connect-btn" [disabled]="isProd" [title]="isProd ? 'Coming soon' : ''" (click)="connectGarmin()">
+            <button
+              class="connect-btn"
+              [disabled]="isProd"
+              [title]="isProd ? 'Coming soon' : ''"
+              (click)="connectGarmin()"
+            >
               {{ 'SETTINGS.BTN_CONNECT' | translate }}
             </button>
           }
         </div>
 
+        <!-- Garmin auto-push toggle -->
+        @if (user.linkedAccounts?.garmin) {
+          <div class="auto-sync-row">
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                class="toggle-input"
+                [checked]="user.garminAutoPushWorkouts"
+                (change)="toggleGarminAutoPush($any($event.target).checked)"
+              />
+              <span class="toggle-switch"></span>
+              <span>{{ 'SETTINGS.GARMIN_AUTO_PUSH_WORKOUTS' | translate }}</span>
+            </label>
+          </div>
+        }
+
         <!-- Polar -->
         <div class="linked-app-row">
           <div class="app-info">
             <svg class="app-icon polar" viewBox="0 0 24 24" width="20" height="20">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" fill="#E1001E"/>
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"
+                fill="#E1001E"
+              />
             </svg>
             <div class="app-details">
               <span class="app-name">Polar</span>
               <span class="app-status" [class.connected]="user.linkedAccounts?.polar">
-                {{ (user.linkedAccounts?.polar ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+                {{
+                  (user.linkedAccounts?.polar
+                    ? 'SETTINGS.APP_CONNECTED'
+                    : 'SETTINGS.APP_NOT_CONNECTED'
+                  ) | translate
+                }}
               </span>
             </div>
           </div>
           @if (user.linkedAccounts?.polar) {
             <div class="app-actions">
-              <button class="connect-btn" [disabled]="(polarImporting$ | async) ?? false" (click)="importPolarHistory()">
-                {{ (polarImporting$ | async) ? ('SETTINGS.POLAR_IMPORTING' | translate) : ('SETTINGS.POLAR_IMPORT_HISTORY' | translate) }}
+              <button
+                class="connect-btn"
+                [disabled]="(polarImporting$ | async) ?? false"
+                (click)="importPolarHistory()"
+              >
+                {{
+                  (polarImporting$ | async)
+                    ? ('SETTINGS.POLAR_IMPORTING' | translate)
+                    : ('SETTINGS.POLAR_IMPORT_HISTORY' | translate)
+                }}
               </button>
               <button class="unlink-btn" [disabled]="unlinking" (click)="unlinkApp('polar')">
                 {{ 'SETTINGS.BTN_UNLINK' | translate }}
@@ -120,9 +198,12 @@
         @if (user.linkedAccounts?.polar) {
           <div class="auto-sync-row">
             <label class="toggle-label">
-              <input type="checkbox" class="toggle-input"
+              <input
+                type="checkbox"
+                class="toggle-input"
                 [checked]="user.polarAutoPushWorkouts"
-                (change)="togglePolarAutoPush($any($event.target).checked)"/>
+                (change)="togglePolarAutoPush($any($event.target).checked)"
+              />
               <span class="toggle-switch"></span>
               <span>{{ 'SETTINGS.POLAR_AUTO_PUSH_WORKOUTS' | translate }}</span>
             </label>
@@ -133,12 +214,17 @@
         <div class="linked-app-row">
           <div class="app-info">
             <svg class="app-icon zwift" viewBox="0 0 24 24" width="20" height="20">
-              <path d="M4 4h16l-8 8 8 8H4l8-8z" fill="#F26722"/>
+              <path d="M4 4h16l-8 8 8 8H4l8-8z" fill="#F26722" />
             </svg>
             <div class="app-details">
               <span class="app-name">Zwift</span>
               <span class="app-status" [class.connected]="user.linkedAccounts?.zwift">
-                {{ (user.linkedAccounts?.zwift ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+                {{
+                  (user.linkedAccounts?.zwift
+                    ? 'SETTINGS.APP_CONNECTED'
+                    : 'SETTINGS.APP_NOT_CONNECTED'
+                  ) | translate
+                }}
               </span>
             </div>
           </div>
@@ -157,9 +243,12 @@
         @if (user.linkedAccounts?.zwift) {
           <div class="auto-sync-row">
             <label class="toggle-label">
-              <input type="checkbox" class="toggle-input"
+              <input
+                type="checkbox"
+                class="toggle-input"
                 [checked]="user.zwiftAutoSyncWorkouts"
-                (change)="toggleZwiftAutoSync($any($event.target).checked)"/>
+                (change)="toggleZwiftAutoSync($any($event.target).checked)"
+              />
               <span class="toggle-switch"></span>
               <span>{{ 'SETTINGS.ZWIFT_AUTO_SYNC_WORKOUTS' | translate }}</span>
             </label>
@@ -169,11 +258,22 @@
         <!-- Nolio activities (read via Terra) -->
         <div class="linked-app-row">
           <div class="app-info">
-            <img class="app-icon nolio" src="assets/nolio-logo.svg" width="20" height="20" alt="Nolio"/>
+            <img
+              class="app-icon nolio"
+              src="assets/nolio-logo.svg"
+              width="20"
+              height="20"
+              alt="Nolio"
+            />
             <div class="app-details">
               <span class="app-name">Nolio activities</span>
               <span class="app-status" [class.connected]="user.linkedAccounts?.nolioRead">
-                {{ (user.linkedAccounts?.nolioRead ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+                {{
+                  (user.linkedAccounts?.nolioRead
+                    ? 'SETTINGS.APP_CONNECTED'
+                    : 'SETTINGS.APP_NOT_CONNECTED'
+                  ) | translate
+                }}
               </span>
             </div>
           </div>
@@ -182,7 +282,12 @@
               {{ 'SETTINGS.BTN_UNLINK' | translate }}
             </button>
           } @else {
-            <button class="connect-btn" [disabled]="isProd" [title]="isProd ? 'Coming soon' : ''" (click)="connectNolioRead()">
+            <button
+              class="connect-btn"
+              [disabled]="isProd"
+              [title]="isProd ? 'Coming soon' : ''"
+              (click)="connectNolioRead()"
+            >
               {{ 'SETTINGS.BTN_CONNECT' | translate }}
             </button>
           }
@@ -191,11 +296,22 @@
         <!-- Nolio workout push (direct OAuth) -->
         <div class="linked-app-row">
           <div class="app-info">
-            <img class="app-icon nolio" src="assets/nolio-logo.svg" width="20" height="20" alt="Nolio"/>
+            <img
+              class="app-icon nolio"
+              src="assets/nolio-logo.svg"
+              width="20"
+              height="20"
+              alt="Nolio"
+            />
             <div class="app-details">
               <span class="app-name">Nolio workout push</span>
               <span class="app-status" [class.connected]="user.linkedAccounts?.nolioWrite">
-                {{ (user.linkedAccounts?.nolioWrite ? 'SETTINGS.APP_CONNECTED' : 'SETTINGS.APP_NOT_CONNECTED') | translate }}
+                {{
+                  (user.linkedAccounts?.nolioWrite
+                    ? 'SETTINGS.APP_CONNECTED'
+                    : 'SETTINGS.APP_NOT_CONNECTED'
+                  ) | translate
+                }}
               </span>
             </div>
           </div>
@@ -204,7 +320,12 @@
               {{ 'SETTINGS.BTN_UNLINK' | translate }}
             </button>
           } @else {
-            <button class="connect-btn" [disabled]="isProd" [title]="isProd ? 'Coming soon' : ''" (click)="connectNolioWrite()">
+            <button
+              class="connect-btn"
+              [disabled]="isProd"
+              [title]="isProd ? 'Coming soon' : ''"
+              (click)="connectNolioWrite()"
+            >
               {{ 'SETTINGS.BTN_CONNECT' | translate }}
             </button>
           }
@@ -214,9 +335,12 @@
         @if (user.linkedAccounts?.nolioWrite) {
           <div class="auto-sync-row">
             <label class="toggle-label">
-              <input type="checkbox" class="toggle-input"
+              <input
+                type="checkbox"
+                class="toggle-input"
                 [checked]="user.nolioAutoSyncWorkouts"
-                (change)="toggleNolioAutoSync($any($event.target).checked)"/>
+                (change)="toggleNolioAutoSync($any($event.target).checked)"
+              />
               <span class="toggle-switch"></span>
               <span>{{ 'SETTINGS.NOLIO_AUTO_SYNC_WORKOUTS' | translate }}</span>
             </label>

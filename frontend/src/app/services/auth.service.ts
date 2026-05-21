@@ -102,6 +102,24 @@ export class AuthService {
       );
   }
 
+  // --- Polar OAuth ---
+
+  getPolarAuthUrl(): Observable<{ authUrl: string }> {
+    return this.http.get<{ authUrl: string }>(`${this.apiUrl}/polar`);
+  }
+
+  handlePolarCallback(code: string): Observable<{ token: string; user: User }> {
+    return this.http
+      .get<{ token: string; user: User }>(`${this.apiUrl}/polar/callback?code=${code}`)
+      .pipe(
+        tap((response) => {
+          localStorage.setItem('token', response.token);
+          this.userSubject.next(response.user);
+          this.setUiMode(response.user.role === 'COACH' ? 'coach' : 'athlete');
+        }),
+      );
+  }
+
   // --- DEV ONLY — login with arbitrary userId ---
 
   devLogin(

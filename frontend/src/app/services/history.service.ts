@@ -19,6 +19,8 @@ export interface SavedSession extends SessionSummary {
   syncedToStrava: boolean;
   syncedToGarmin: boolean;
   tss?: number;
+  /** True when {@link tss} was derived from RPE — UI may recompute optimistically on RPE change. */
+  tssFromRpe?: boolean;
   intensityFactor?: number;
   fitFileId?: string;
   rpe?: number;
@@ -434,12 +436,10 @@ export class HistoryService {
 
   /** Mark the session as unplanned to suppress future prompts. */
   markUnplanned(sessionId: string): Observable<SavedSession> {
-    return this.http
-      .post<RawSavedSession>(`${this.apiUrl}/${sessionId}/mark-unplanned`, {})
-      .pipe(
-        map((raw) => this.parseSession(raw)),
-        tap((session) => this.replaceLocally(session)),
-      );
+    return this.http.post<RawSavedSession>(`${this.apiUrl}/${sessionId}/mark-unplanned`, {}).pipe(
+      map((raw) => this.parseSession(raw)),
+      tap((session) => this.replaceLocally(session)),
+    );
   }
 
   /** Races the athlete has goals for whose scheduledDate matches this session's day. */
@@ -459,12 +459,10 @@ export class HistoryService {
 
   /** Undo a session→scheduled-workout link. */
   unlinkFromSchedule(sessionId: string): Observable<SavedSession> {
-    return this.http
-      .post<RawSavedSession>(`${this.apiUrl}/${sessionId}/unlink-schedule`, {})
-      .pipe(
-        map((raw) => this.parseSession(raw)),
-        tap((session) => this.replaceLocally(session)),
-      );
+    return this.http.post<RawSavedSession>(`${this.apiUrl}/${sessionId}/unlink-schedule`, {}).pipe(
+      map((raw) => this.parseSession(raw)),
+      tap((session) => this.replaceLocally(session)),
+    );
   }
 
   /**

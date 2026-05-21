@@ -130,14 +130,18 @@
 
       <!-- Zone Distribution -->
       @if (!fit.loading && !fit.error && fit.records.length > 0) {
-        @if (zoneDistribution$ | async; as zones) {
-          @if (zones.length > 0) {
-            <app-zone-distribution-panel
-              [zoneDistribution]="zones"
-              [userZoneSystems]="(userZoneSystems$ | async) ?? []"
-              [currentZoneSystemId]="selectedZoneSystemId$.value"
-              (zoneSystemChange)="onZoneSystemChange($event)"
-            />
+        @let cyclingNoPower = session.sportType === 'CYCLING' && !hasPower(fit.records);
+
+        @if (!cyclingNoPower) {
+          @if (zoneDistribution$ | async; as zones) {
+            @if (zones.length > 0) {
+              <app-zone-distribution-panel
+                [zoneDistribution]="zones"
+                [userZoneSystems]="(userZoneSystems$ | async) ?? []"
+                [currentZoneSystemId]="selectedZoneSystemId$.value"
+                (zoneSystemChange)="onZoneSystemChange($event)"
+              />
+            }
           }
         }
 
@@ -147,38 +151,42 @@
         <!-- Cadence distribution (cycling only, hidden when no cadence data) -->
         <app-cadence-distribution-panel [records]="fit.records" [sportType]="session.sportType" />
 
-        <!-- Quadrant analysis (cycling w/ FTP — force × velocity scatter) -->
-        @defer (on viewport) {
-          <app-quadrant-analysis-panel
-            [records]="fit.records"
-            [sportType]="session.sportType"
-            [ftp]="ftp"
-          />
-        } @placeholder {
-          <div class="skeleton skeleton-block" style="height: 460px"></div>
-        }
+        @if (!cyclingNoPower) {
+          <!-- Quadrant analysis (cycling w/ FTP — force × velocity scatter) -->
+          @defer (on viewport) {
+            <app-quadrant-analysis-panel
+              [records]="fit.records"
+              [sportType]="session.sportType"
+              [ftp]="ftp"
+            />
+          } @placeholder {
+            <div class="skeleton skeleton-block" style="height: 460px"></div>
+          }
 
-        <!-- W' balance trace (cycling w/ FTP and power data) -->
-        @defer (on viewport) {
-          <app-wprime-balance-chart
-            [records]="fit.records"
-            [sportType]="session.sportType"
-            [ftp]="ftp"
-            [criticalPower]="(criticalPower$ | async) ?? null"
-            [userWPrimeJ]="(wPrimeJ$ | async) ?? null"
-          />
-        } @placeholder {
-          <div class="skeleton skeleton-block" style="height: 240px"></div>
+          <!-- W' balance trace (cycling w/ FTP and power data) -->
+          @defer (on viewport) {
+            <app-wprime-balance-chart
+              [records]="fit.records"
+              [sportType]="session.sportType"
+              [ftp]="ftp"
+              [criticalPower]="(criticalPower$ | async) ?? null"
+              [userWPrimeJ]="(wPrimeJ$ | async) ?? null"
+            />
+          } @placeholder {
+            <div class="skeleton skeleton-block" style="height: 240px"></div>
+          }
         }
 
         <!-- Climbs (any sport with elevation data) -->
         <app-climbs-panel [records]="fit.records" [sportType]="session.sportType" />
 
-        <!-- Power curve (cycling only, hidden when no power data) -->
-        @defer (on viewport) {
-          <app-power-curve-chart [sessionId]="session.id" [sportType]="session.sportType" />
-        } @placeholder {
-          <div class="skeleton skeleton-block" style="height: 280px"></div>
+        @if (!cyclingNoPower) {
+          <!-- Power curve (cycling only, hidden when no power data) -->
+          @defer (on viewport) {
+            <app-power-curve-chart [sessionId]="session.id" [sportType]="session.sportType" />
+          } @placeholder {
+            <div class="skeleton skeleton-block" style="height: 280px"></div>
+          }
         }
       }
     }

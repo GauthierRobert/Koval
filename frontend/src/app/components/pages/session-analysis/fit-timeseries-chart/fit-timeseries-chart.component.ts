@@ -63,11 +63,13 @@ export class FitTimeseriesChartComponent
   @Input() showHR = true;
   @Input() showCadence = false;
   @Input() showBlocks = false;
+  @Input() showSpeed = true;
   /** Enable mouse drag-to-select range stats (desktop only). Off by default. */
   @Input() enableBrush = false;
 
   @ViewChild('stack') stackRef!: ElementRef<HTMLDivElement>;
   @ViewChild('primaryCanvas') pRef?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('speedCanvas') spRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('hrCanvas') hrRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('cadCanvas') cadRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('elevCanvas') elRef?: ElementRef<HTMLCanvasElement>;
@@ -103,6 +105,7 @@ export class FitTimeseriesChartComponent
   };
 
   _hasElevation = false;
+  _hasPower = false;
   private _primaryMax = 0;
   private _primaryMin = 0;
   /** Downsampled records (30s buckets) used for raw-mode line drawing to avoid canvas perf issues. */
@@ -118,11 +121,20 @@ export class FitTimeseriesChartComponent
   get isSwimming(): boolean {
     return this.sportType === 'SWIMMING';
   }
+  get isCycling(): boolean {
+    return this.sportType === 'CYCLING';
+  }
   get primaryLabel(): string {
     if (this.sportType === 'CYCLING') return 'Power';
     if (this.isSwimming) return 'Pace';
     return 'Speed';
   }
+  /** Show a dedicated speed sub-chart below the primary panel — cycling only. */
+  get showSpeedPanel(): boolean {
+    return this.isCycling && this.showSpeed && this._hasSpeed;
+  }
+  _hasSpeed = false;
+  _hasCadence = false;
 
   ngAfterViewInit(): void {
     this.ready = true;
@@ -159,6 +171,7 @@ export class FitTimeseriesChartComponent
     if (!this.resizeObserver) return;
     syncObservedCanvases(this.resizeObserver, this.observedCanvases, [
       this.pRef?.nativeElement,
+      this.spRef?.nativeElement,
       this.hrRef?.nativeElement,
       this.cadRef?.nativeElement,
       this.elRef?.nativeElement,
@@ -178,10 +191,23 @@ export class FitTimeseriesChartComponent
 
   ngOnChanges(): void {
     this.updateHasElevation();
-    this._ds = downsample(this.records, 30);
+    this.updateHasPower();
+    this.updateHasSpeed();
+    this.updateHasCadence();
+    this._ds = downsample(this.records, this.pickBucketSec(this.records));
+    // Cycling without any power data: don't render the power chart or the
+    // block overlays (zone or planned). Fall back to the speed sub-chart.
+    if (this.isCycling && !this._hasPower) {
+      this.showPrimary = false;
+      this.showBlocks = false;
+    }
+    if (!this._hasCadence) {
+      this.showCadence = false;
+    }
     if (
       !this.blocksDefaultApplied &&
-      (this.zoneBlocks.length > 0 || this.blockSummaries.length > 0)
+      (this.zoneBlocks.length > 0 || this.blockSummaries.length > 0) &&
+      !(this.isCycling && !this._hasPower)
     ) {
       this.showBlocks = true;
       this.blocksDefaultApplied = true;
@@ -191,7 +217,14 @@ export class FitTimeseriesChartComponent
     if (this.ready) setTimeout(() => this.drawAll(), 0);
   }
 
-  toggle(prop: 'showPrimary' | 'showHR' | 'showCadence' | 'showBlocks'): void {
+  private pickBucketSec(records: FitRecord[]): number {
+    if (records.length < 2) return 1;
+    const durationSec = records[records.length - 1].timestamp - records[0].timestamp;
+    const hours = Math.floor(durationSec / 3600);
+    return Math.min(30, Math.max(1, hours));
+  }
+
+  toggle(prop: 'showPrimary' | 'showHR' | 'showCadence' | 'showBlocks' | 'showSpeed'): void {
     this[prop] = !this[prop];
     setTimeout(() => this.drawAll(), 0);
   }
@@ -239,13 +272,13 @@ export class FitTimeseriesChartComponent
   private onWindowMouseUp(): void {
     if (!this.dragging) return;
     this.dragging = false;
-    const moved = Math.abs(
-      (this.selectionEndIdx ?? 0) - (this.selectionStartIdx ?? 0),
-    );
+    const moved = Math.abs((this.selectionEndIdx ?? 0) - (this.selectionStartIdx ?? 0));
     if (moved === 0) {
-      // Click without drag — restore any previously-pinned selection.
-      this.selectionStartIdx = this.prevSelectionStartIdx;
-      this.selectionEndIdx = this.prevSelectionEndIdx;
+      // Click without drag — clear any pinned selection.
+      this.clearSelection();
+      this.drawAll();
+      this.cdr.detectChanges();
+      return;
     }
     this.updateSelectionStats();
     this.recomputeSelectionRect();
@@ -340,6 +373,7 @@ export class FitTimeseriesChartComponent
   private touchCanvases(): (HTMLCanvasElement | undefined)[] {
     return [
       this.pRef?.nativeElement,
+      this.spRef?.nativeElement,
       this.hrRef?.nativeElement,
       this.cadRef?.nativeElement,
       this.elRef?.nativeElement,
@@ -463,6 +497,18 @@ export class FitTimeseriesChartComponent
     });
   }
 
+  private updateHasPower(): void {
+    this._hasPower = this.records.some((r) => r.power > 0);
+  }
+
+  private updateHasSpeed(): void {
+    this._hasSpeed = this.records.some((r) => r.speed > 0);
+  }
+
+  private updateHasCadence(): void {
+    this._hasCadence = this.records.some((r) => r.cadence > 0);
+  }
+
   private updateHasElevation(): void {
     if (!this.records.length) {
       this._hasElevation = false;
@@ -477,6 +523,7 @@ export class FitTimeseriesChartComponent
     const result = drawAll(
       {
         primary: this.pRef?.nativeElement,
+        speed: this.spRef?.nativeElement,
         hr: this.hrRef?.nativeElement,
         cad: this.cadRef?.nativeElement,
         elev: this.elRef?.nativeElement,
@@ -492,6 +539,7 @@ export class FitTimeseriesChartComponent
         blockColors: this.blockColors,
         showBlocks: this.showBlocks,
         showPrimary: this.showPrimary,
+        showSpeed: this.showSpeedPanel,
         showHR: this.showHR,
         showCadence: this.showCadence,
         hasElevation: this._hasElevation,

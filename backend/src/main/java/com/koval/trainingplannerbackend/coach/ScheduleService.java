@@ -5,7 +5,12 @@ import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
+import com.koval.trainingplannerbackend.integration.sync.WorkoutSyncSourceType;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCancelledEvent;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCreatedEvent;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncUpdatedEvent;
 import com.koval.trainingplannerbackend.notification.NotificationService;
+import org.springframework.context.ApplicationEventPublisher;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
@@ -37,6 +42,7 @@ public class ScheduleService {
     private final NotificationService notificationService;
     private final UserRepository userRepository;
     private final ScheduledWorkoutEnrichmentService enrichmentService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ScheduleService(ScheduledWorkoutRepository scheduledWorkoutRepository,
             TrainingRepository trainingRepository,
@@ -45,7 +51,8 @@ public class ScheduleService {
             AnalyticsService analyticsService,
             NotificationService notificationService,
             UserRepository userRepository,
-            ScheduledWorkoutEnrichmentService enrichmentService) {
+            ScheduledWorkoutEnrichmentService enrichmentService,
+            ApplicationEventPublisher eventPublisher) {
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.trainingRepository = trainingRepository;
         this.scheduledWorkoutService = scheduledWorkoutService;
@@ -54,6 +61,7 @@ public class ScheduleService {
         this.notificationService = notificationService;
         this.userRepository = userRepository;
         this.enrichmentService = enrichmentService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -148,6 +156,8 @@ public class ScheduleService {
         workout.setStatus(ScheduleStatus.PENDING);
 
         ScheduledWorkout saved = scheduledWorkoutRepository.save(workout);
+        eventPublisher.publishEvent(new WorkoutSyncCreatedEvent(
+                saved.getAthleteId(), WorkoutSyncSourceType.SCHEDULED_WORKOUT, saved.getId()));
         return enrichmentService.enrichSingle(saved);
     }
 
@@ -168,6 +178,8 @@ public class ScheduleService {
             throw new ForbiddenOperationException("Not authorized to delete this workout");
         }
         scheduledWorkoutRepository.deleteById(id);
+        eventPublisher.publishEvent(new WorkoutSyncCancelledEvent(
+                workout.getAthleteId(), WorkoutSyncSourceType.SCHEDULED_WORKOUT, id));
     }
 
     public ScheduledWorkoutResponse rescheduleWorkout(String userId, String id, LocalDate newDate) {
@@ -185,6 +197,8 @@ public class ScheduleService {
 
         workout.setScheduledDate(newDate);
         ScheduledWorkout saved = scheduledWorkoutRepository.save(workout);
+        eventPublisher.publishEvent(new WorkoutSyncUpdatedEvent(
+                saved.getAthleteId(), WorkoutSyncSourceType.SCHEDULED_WORKOUT, saved.getId()));
         return enrichmentService.enrichSingle(saved);
     }
 }

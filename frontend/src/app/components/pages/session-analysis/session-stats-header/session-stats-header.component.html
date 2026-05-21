@@ -40,10 +40,35 @@
         <span>SYNCED WITH NOLIO</span>
       </span>
     }
+  </div>
 
-    <!-- Action toolbar: always shown, regardless of whether the session is
-         linked. Replaces the per-row link/download buttons that used to
-         live in the history sidebar. -->
+  <!-- Controls row: RPE slider on the left, action buttons on the right.
+       Split from the title row so the title + source badge stay aligned
+       on their own line, especially on mobile (see design reference). -->
+  <div class="top-bar-row controls-row">
+    <div class="rpe-block">
+      <span class="rpe-label">{{ 'SESSION_ANALYSIS.LABEL_RPE' | translate }}</span>
+      <div class="rpe-slider-wrap">
+        <input
+          type="range"
+          min="1"
+          max="10"
+          step="1"
+          class="rpe-slider"
+          [value]="session.rpe ?? 5"
+          (change)="selectRpe(+$any($event.target).value)"
+        />
+        <div class="rpe-scale">
+          @for (n of rpeValues; track n) {
+            <span data-testid="rpe-tick" class="rpe-tick" [class.active]="session.rpe === n">{{
+              n
+            }}</span>
+          }
+        </div>
+      </div>
+      <span class="rpe-value" [class.set]="session.rpe">{{ session.rpe ?? '—' }}</span>
+    </div>
+
     <div class="top-bar-actions">
       <button
         type="button"
@@ -89,31 +114,6 @@
         </svg>
       </button>
     </div>
-
-    @if (!session.tss) {
-      <div class="rpe-block">
-        <span class="rpe-label">{{ 'SESSION_ANALYSIS.LABEL_RPE' | translate }}</span>
-        <div class="rpe-slider-wrap">
-          <input
-            type="range"
-            min="1"
-            max="10"
-            step="1"
-            class="rpe-slider"
-            [value]="session.rpe ?? 5"
-            (change)="selectRpe(+$any($event.target).value)"
-          />
-          <div class="rpe-scale">
-            @for (n of rpeValues; track n) {
-              <span data-testid="rpe-tick" class="rpe-tick" [class.active]="session.rpe === n">{{
-                n
-              }}</span>
-            }
-          </div>
-        </div>
-        <span class="rpe-value" [class.set]="session.rpe">{{ session.rpe ?? '—' }}</span>
-      </div>
-    }
   </div>
 </div>
 

@@ -4,5 +4,6 @@ public enum AuthProvider {
     STRAVA,
     GOOGLE,
     GARMIN,
-    ZWIFT
+    ZWIFT,
+    POLAR
 }

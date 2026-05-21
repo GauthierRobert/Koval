@@ -20,6 +20,7 @@ import {
 
 export interface RenderCanvases {
   primary?: HTMLCanvasElement | null;
+  speed?: HTMLCanvasElement | null;
   hr?: HTMLCanvasElement | null;
   cad?: HTMLCanvasElement | null;
   elev?: HTMLCanvasElement | null;
@@ -36,6 +37,7 @@ export interface RenderInput {
   blockColors: string[];
   showBlocks: boolean;
   showPrimary: boolean;
+  showSpeed: boolean;
   showHR: boolean;
   showCadence: boolean;
   hasElevation: boolean;
@@ -206,7 +208,7 @@ function drawSteppedLine(
   const pts = blocks.map((b) => ({ x1: xOf(b.s), x2: xOf(b.e), y: yOf(b.v) }));
   if (fill) fillSteppedArea(ctx, pts, fill);
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
   pts.forEach((p, i) => {
     if (i === 0) ctx.moveTo(p.x1, p.y);
@@ -232,7 +234,7 @@ function drawSteppedBlockLine(
   }
   if (fill) fillSteppedArea(ctx, pts, fill);
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
   pts.forEach((p, i) => {
     if (i === 0) ctx.moveTo(p.x1, p.y);
@@ -344,6 +346,23 @@ function drawPrimary(
 
   const plotValue = (speedKmh: number) => speedToPlotValue(speedKmh, swimming, primaryMax);
 
+  if (cycling && input.ftp) {
+    const fy = yOf(input.ftp);
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = input.theme.gridAlpha15;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(mL, fy);
+    ctx.lineTo(W - mR, fy);
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = input.theme.textAlpha30;
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('FTP', mL + 2, fy - 3);
+  }
+
   if (useZoneBlocks(input)) {
     for (const b of input.zoneBlocks) {
       const x1 = xOf(b.startIndex),
@@ -355,69 +374,80 @@ function drawPrimary(
       ctx.fillStyle = `rgba(${br},${bg},${bb},0.25)`;
       ctx.fillRect(x1, y, x2 - x1, bottom - y);
       ctx.strokeStyle = hb;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(x1, y);
       ctx.lineTo(x2, y);
       ctx.stroke();
     }
   } else if (usePlannedBlocks(input)) {
+    interface PlannedBlockGeom {
+      x1: number;
+      x2: number;
+      y: number;
+      targetY: number | null;
+      color: string;
+      rgb: [number, number, number];
+    }
+    const blocks: PlannedBlockGeom[] = [];
     let acc = 0;
     for (let bi = 0; bi < input.blockSummaries.length; bi++) {
       const b = input.blockSummaries[bi];
-      const x1 = xOfT(acc),
-        x2 = xOfT(acc + b.durationSeconds);
+      const x1 = xOfT(acc);
+      const x2 = xOfT(acc + b.durationSeconds);
       const speedKmh =
         b.distanceMeters && b.durationSeconds > 0
           ? (b.distanceMeters / b.durationSeconds) * 3.6
           : 0;
       const val = cycling ? b.actualPower : plotValue(speedKmh);
       const y = yOf(val);
-      if (b.targetPower > 0) {
-        const yt = yOf(b.targetPower);
-        ctx.save();
-        ctx.setLineDash([3, 3]);
-        ctx.strokeStyle = input.theme.gridAlpha15;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(x1, yt);
-        ctx.lineTo(x2, yt);
-        ctx.stroke();
-        ctx.restore();
-      }
-      const [cr, cg, cb] = cssToRgb(input.blockColors[bi] || accent);
-      const bColor = `rgb(${cr},${cg},${cb})`;
-      ctx.fillStyle = `rgba(${cr},${cg},${cb},0.25)`;
-      ctx.fillRect(x1, y, x2 - x1, bottom - y);
-      ctx.strokeStyle = bColor;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(x1, y);
-      ctx.lineTo(x2, y);
-      ctx.stroke();
+      const targetY = b.targetPower > 0 ? yOf(b.targetPower) : null;
+      const rgb = cssToRgb(input.blockColors[bi] || accent);
+      blocks.push({
+        x1,
+        x2,
+        y,
+        targetY,
+        color: `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`,
+        rgb,
+      });
       acc += b.durationSeconds;
+    }
+
+    for (const blk of blocks) {
+      if (blk.targetY === null) continue;
+      ctx.save();
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = input.theme.gridAlpha15;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(blk.x1, blk.targetY);
+      ctx.lineTo(blk.x2, blk.targetY);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    for (const blk of blocks) {
+      const [r, g, b] = blk.rgb;
+      ctx.fillStyle = `rgba(${r},${g},${b},0.25)`;
+      ctx.fillRect(blk.x1, blk.y, blk.x2 - blk.x1, bottom - blk.y);
+    }
+
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < blocks.length; i++) {
+      const blk = blocks[i];
+      ctx.strokeStyle = blk.color;
+      ctx.beginPath();
+      ctx.moveTo(blk.x1, blk.y);
+      ctx.lineTo(blk.x2, blk.y);
+      if (i < blocks.length - 1) ctx.lineTo(blk.x2, blocks[i + 1].y);
+      ctx.stroke();
     }
   } else {
     const ds = input.downsampled;
     const dsX = (i: number) => xOfT(ds[i].timestamp - t0);
     if (cycling) {
       const vals = ds.map((r) => r.power);
-      if (input.ftp) {
-        const fy = yOf(input.ftp);
-        ctx.save();
-        ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = input.theme.gridAlpha15;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(mL, fy);
-        ctx.lineTo(W - mR, fy);
-        ctx.stroke();
-        ctx.restore();
-        ctx.fillStyle = input.theme.textAlpha30;
-        ctx.font = '9px monospace';
-        ctx.textAlign = 'left';
-        ctx.fillText('FTP', mL + 2, fy - 3);
-      }
       if (vals.length > 1) {
         ctx.beginPath();
         ctx.moveTo(dsX(0), bottom);
@@ -433,7 +463,7 @@ function drawPrimary(
         ctx.moveTo(dsX(0), yOf(vals[0]));
         vals.forEach((p, i) => ctx.lineTo(dsX(i), yOf(p)));
         ctx.strokeStyle = accent;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
       }
     } else {
@@ -453,7 +483,7 @@ function drawPrimary(
         ctx.moveTo(dsX(0), yOf(vals[0]));
         vals.forEach((v, i) => ctx.lineTo(dsX(i), yOf(v)));
         ctx.strokeStyle = accent;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
       }
     }
@@ -504,6 +534,56 @@ function drawPrimary(
   }
 
   return { min: primaryMin, max: primaryMax };
+}
+
+function drawSpeed(canvas: HTMLCanvasElement | null | undefined, input: RenderInput): void {
+  const s = initCanvas(canvas, input.records);
+  if (!s) return;
+  const { ctx, H, xOf, xOfT, mT, mB, mL } = s;
+  const records = input.records;
+  const t0 = records[0].timestamp;
+  const chartH = H - mT - mB;
+  const top = mT,
+    bottom = mT + chartH;
+  const color = '#22d3ee';
+  const fillRgb: [number, number, number] = [34, 211, 238];
+  const fill: AreaFill = { rgb: fillRgb, top, bottom };
+
+  const sp = records.map((r) => (r.speed || 0) * 3.6);
+  const maxS = Math.max(...sp.filter((v) => v > 0), 1);
+  const yOf = (v: number) => top + chartH * (1 - v / maxS);
+
+  const ds = input.downsampled;
+  const pts: Array<{ x: number; y: number }> = [];
+  ds.forEach((r) => {
+    const v = (r.speed || 0) * 3.6;
+    pts.push({ x: xOfT(r.timestamp - t0), y: yOf(v) });
+  });
+  if (pts.length >= 2) {
+    fillPolyline(ctx, pts, fill);
+    ctx.beginPath();
+    pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = color;
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'right';
+  [maxS, maxS / 2, 0].forEach((v) =>
+    ctx.fillText(`${v.toFixed(v < 10 ? 1 : 0)}`, mL - 4, yOf(v) + 4),
+  );
+
+  drawAxisSpine(ctx, s);
+  drawBlockBounds(ctx, input, xOfT, top, bottom);
+
+  if (input.hoverIdx !== null) {
+    const hx = xOf(input.hoverIdx);
+    drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
+    const v = (records[input.hoverIdx].speed || 0) * 3.6;
+    drawDot(ctx, input.theme, hx, yOf(v), color);
+  }
 }
 
 function drawHR(
@@ -777,8 +857,9 @@ function drawXAxis(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
 }
 
 export function drawAll(canvases: RenderCanvases, input: RenderInput): RenderResult {
-  const primary = drawPrimary(canvases.primary, input);
+  const primary = input.showPrimary ? drawPrimary(canvases.primary, input) : { min: 0, max: 0 };
   const hoverCtx = buildHoverContext(input, primary.max);
+  if (input.showSpeed) drawSpeed(canvases.speed, input);
   drawHR(canvases.hr, input, hoverCtx);
   drawCadence(canvases.cad, input, hoverCtx);
   drawElevation(canvases.elev, input);

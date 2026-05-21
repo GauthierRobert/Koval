@@ -81,10 +81,10 @@ export class DecouplingGaugeComponent {
   private computeDecoupling(): DecouplingResult | null {
     if (this.sportType === 'SWIMMING') return null;
 
-    // Prefer power only if the session actually contains power data (cycling w/
-    // a power meter). Otherwise fall back to speed — this makes the gauge work
-    // for running and for power-less cycling sessions.
+    // Cycling decoupling is only meaningful with power data — speed is too noisy
+    // (terrain, drafting, stops) to reflect aerobic drift. Hide for power-less rides.
     const hasPower = this.sportType === 'CYCLING' && this.records.some((r) => r.power > 0);
+    if (this.sportType === 'CYCLING' && !hasPower) return null;
     const usePower = hasPower;
 
     const filtered = this.records.filter((r) => {

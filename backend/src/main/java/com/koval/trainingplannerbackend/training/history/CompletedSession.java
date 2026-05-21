@@ -58,6 +58,8 @@ public class CompletedSession {
     @Indexed
     private String clubSessionId; // Reference to ClubTrainingSession
     private Double tss;
+    /** True when {@link #tss} was derived from RPE (no power/pace signal). Lets us recompute TSS when the athlete changes RPE without clobbering power-based values. */
+    private Boolean tssFromRpe;
     private Double intensityFactor;
     private Double normalizedSpeed; // m/s — NGP for running, NSS for swimming, when computed from FIT
     private String fitFileId; // GridFS ObjectId; null when no FIT stored

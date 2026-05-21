@@ -59,7 +59,8 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .requestMatchers("/api/auth/strava", "/api/auth/strava/callback",
                                     "/api/auth/google", "/api/auth/google/callback",
-                                    "/api/auth/google/mobile-callback").permitAll();
+                                    "/api/auth/google/mobile-callback",
+                                    "/api/auth/polar", "/api/auth/polar/callback").permitAll();
                     if (!prod) {
                         auth.requestMatchers("/api/auth/dev/login").permitAll();
                     }

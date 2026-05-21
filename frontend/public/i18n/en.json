@@ -227,6 +227,7 @@
     "SUBTITLE": "Management platform for clubs and endurance athlete",
     "BTN_CONNECT_STRAVA": "Connect with Strava",
     "BTN_CONTINUE_GOOGLE": "Continue with Google",
+    "BTN_CONTINUE_POLAR": "Continue with Polar",
     "DEV_SECTION_LABEL": "DEV LOGIN",
     "DEV_USER_ID_PLACEHOLDER": "User ID",
     "DEV_ROLE_ATHLETE": "Athlete",

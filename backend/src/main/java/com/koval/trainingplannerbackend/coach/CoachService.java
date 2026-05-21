@@ -16,7 +16,11 @@ import com.koval.trainingplannerbackend.coach.dto.AthleteResponse;
 import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
+import com.koval.trainingplannerbackend.integration.sync.WorkoutSyncSourceType;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCancelledEvent;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCreatedEvent;
 import com.koval.trainingplannerbackend.notification.NotificationService;
+import org.springframework.context.ApplicationEventPublisher;
 import com.koval.trainingplannerbackend.training.group.Group;
 import com.koval.trainingplannerbackend.training.group.GroupService;
 import com.koval.trainingplannerbackend.training.received.ReceivedTrainingOrigin;
@@ -51,6 +55,7 @@ public class CoachService {
     private final ClubMembershipService clubMembershipService;
     private final ClubMembershipRepository clubMembershipRepository;
     private final ClubRepository clubRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public CoachService(UserRepository userRepository,
             ScheduledWorkoutRepository scheduledWorkoutRepository,
@@ -60,7 +65,8 @@ public class CoachService {
             ReceivedTrainingService receivedTrainingService,
             ClubMembershipService clubMembershipService,
             ClubMembershipRepository clubMembershipRepository,
-            ClubRepository clubRepository) {
+            ClubRepository clubRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.groupService = groupService;
@@ -70,6 +76,7 @@ public class CoachService {
         this.clubMembershipService = clubMembershipService;
         this.clubMembershipRepository = clubMembershipRepository;
         this.clubRepository = clubRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -176,6 +183,11 @@ public class CoachService {
                 .toList();
         List<ScheduledWorkout> assignments = scheduledWorkoutRepository.saveAll(toSave);
 
+        for (ScheduledWorkout sw : assignments) {
+            eventPublisher.publishEvent(new WorkoutSyncCreatedEvent(
+                    sw.getAthleteId(), WorkoutSyncSourceType.SCHEDULED_WORKOUT, sw.getId()));
+        }
+
         receivedTrainingService.createReceivedTrainings(
                 trainingId, athleteIds, coach.getId(), origin, originId, originName);
 
@@ -201,8 +213,11 @@ public class CoachService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
-        return scheduledWorkoutRepository.save(
+        ScheduledWorkout saved = scheduledWorkoutRepository.save(
                 newPendingWorkout(trainingId, userId, userId, scheduledDate, notes));
+        eventPublisher.publishEvent(new WorkoutSyncCreatedEvent(
+                saved.getAthleteId(), WorkoutSyncSourceType.SCHEDULED_WORKOUT, saved.getId()));
+        return saved;
     }
 
     private static ScheduledWorkout newPendingWorkout(String trainingId, String athleteId,
@@ -221,10 +236,11 @@ public class CoachService {
      * Unassign a scheduled workout.
      */
     public void unassignTraining(String scheduledWorkoutId) {
-        if (!scheduledWorkoutRepository.existsById(scheduledWorkoutId)) {
-            throw new ResourceNotFoundException("Scheduled workout", scheduledWorkoutId);
-        }
+        ScheduledWorkout workout = scheduledWorkoutRepository.findById(scheduledWorkoutId)
+                .orElseThrow(() -> new ResourceNotFoundException("Scheduled workout", scheduledWorkoutId));
         scheduledWorkoutRepository.deleteById(scheduledWorkoutId);
+        eventPublisher.publishEvent(new WorkoutSyncCancelledEvent(
+                workout.getAthleteId(), WorkoutSyncSourceType.SCHEDULED_WORKOUT, scheduledWorkoutId));
     }
 
     /**

@@ -6,7 +6,12 @@ import com.koval.trainingplannerbackend.club.activity.ClubActivityService;
 import com.koval.trainingplannerbackend.club.activity.ClubActivityType;
 import com.koval.trainingplannerbackend.club.group.ClubGroupRepository;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionMaterializer;
+import com.koval.trainingplannerbackend.integration.sync.WorkoutSyncPayloadResolver;
+import com.koval.trainingplannerbackend.integration.sync.WorkoutSyncSourceType;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCancelledEvent;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCreatedEvent;
 import com.koval.trainingplannerbackend.notification.NotificationService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,19 +27,22 @@ public class SessionParticipationService {
     private final NotificationService notificationService;
     private final ClubActivityService activityService;
     private final RecurringSessionMaterializer materializer;
+    private final ApplicationEventPublisher eventPublisher;
 
     public SessionParticipationService(ClubTrainingSessionRepository sessionRepository,
                                        ClubGroupRepository clubGroupRepository,
                                        ClubRepository clubRepository,
                                        NotificationService notificationService,
                                        ClubActivityService activityService,
-                                       RecurringSessionMaterializer materializer) {
+                                       RecurringSessionMaterializer materializer,
+                                       ApplicationEventPublisher eventPublisher) {
         this.sessionRepository = sessionRepository;
         this.clubGroupRepository = clubGroupRepository;
         this.clubRepository = clubRepository;
         this.notificationService = notificationService;
         this.activityService = activityService;
         this.materializer = materializer;
+        this.eventPublisher = eventPublisher;
     }
 
     public ClubTrainingSession joinSession(String userId, String sessionId) {
@@ -63,6 +71,7 @@ public class SessionParticipationService {
             session.getParticipantIds().add(userId);
             sessionRepository.save(session);
             activityService.emitActivity(session.getClubId(), ClubActivityType.SESSION_JOINED, userId, sessionId, session.getTitle());
+            publishJoinedIfLinked(session, userId);
         } else {
             session.getWaitingList().add(new WaitingListEntry(userId, LocalDateTime.now()));
             sessionRepository.save(session);
@@ -73,7 +82,11 @@ public class SessionParticipationService {
 
     public ClubTrainingSession cancelSessionParticipation(String userId, String sessionId) {
         ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
-        if (session.getParticipantIds().remove(userId)) {
+        boolean wasParticipant = session.getParticipantIds().remove(userId);
+        if (wasParticipant) {
+            eventPublisher.publishEvent(new WorkoutSyncCancelledEvent(
+                    userId, WorkoutSyncSourceType.CLUB_SESSION,
+                    WorkoutSyncPayloadResolver.clubSessionSourceId(session.getId(), userId)));
             if (session.getMaxParticipants() != null && !session.getWaitingList().isEmpty()) {
                 promoteNextFromWaitingList(session);
             }
@@ -83,10 +96,18 @@ public class SessionParticipationService {
         return sessionRepository.save(session);
     }
 
+    private void publishJoinedIfLinked(ClubTrainingSession session, String userId) {
+        if (session.getEffectiveLinkedTrainings().isEmpty()) return;
+        eventPublisher.publishEvent(new WorkoutSyncCreatedEvent(
+                userId, WorkoutSyncSourceType.CLUB_SESSION,
+                WorkoutSyncPayloadResolver.clubSessionSourceId(session.getId(), userId)));
+    }
+
     private void promoteNextFromWaitingList(ClubTrainingSession session) {
         if (session.getWaitingList().isEmpty()) return;
         WaitingListEntry promoted = session.getWaitingList().removeFirst();
         session.getParticipantIds().add(promoted.userId());
+        publishJoinedIfLinked(session, promoted.userId());
 
         notificationService.sendToUsers(
                 List.of(promoted.userId()),

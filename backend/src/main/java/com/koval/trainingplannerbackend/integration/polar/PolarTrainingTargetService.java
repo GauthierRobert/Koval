@@ -49,15 +49,29 @@ public class PolarTrainingTargetService {
         User athlete = userRepository.findById(scheduled.getAthleteId())
                 .orElseThrow(() -> new ResourceNotFoundException("Athlete not found"));
 
+        Training training = trainingService.getTrainingById(scheduled.getTrainingId());
+        return pushTraining(athlete, training, scheduled.getScheduledDate());
+    }
+
+    /**
+     * Lower-level push used by the auto-sync framework. Caller supplies the resolved athlete,
+     * training, and target date — no DB lookups happen here.
+     * @return the Polar-assigned training target id, or null when Polar didn't echo one.
+     */
+    public String pushTraining(User athlete, Training training, java.time.LocalDate scheduledDate) {
         if (athlete.getPolarUserId() == null || athlete.getPolarAccessToken() == null) {
             throw new IllegalStateException("Athlete has not connected Polar");
         }
-
-        Training training = trainingService.getTrainingById(scheduled.getTrainingId());
-        Map<String, Object> payload = mapper.map(training, scheduled.getScheduledDate());
-
+        Map<String, Object> payload = mapper.map(training, scheduledDate);
         String accessToken = oauthService.ensureValidToken(athlete);
         return apiClient.createTrainingTarget(accessToken, athlete.getPolarUserId(), payload)
                 .orElse(null);
+    }
+
+    /** Best-effort delete of a previously-pushed training target. */
+    public void deleteTrainingTarget(User athlete, String trainingTargetId) {
+        if (athlete.getPolarUserId() == null || athlete.getPolarAccessToken() == null) return;
+        String accessToken = oauthService.ensureValidToken(athlete);
+        apiClient.deleteTrainingTarget(accessToken, athlete.getPolarUserId(), trainingTargetId);
     }
 }

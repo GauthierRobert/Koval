@@ -416,6 +416,10 @@ export class SessionAnalysisComponent implements OnDestroy {
 
   // ── Helpers ──────────────────────────────────────────────────────────
 
+  hasPower(records: FitRecord[]): boolean {
+    return records.some((r) => r.power > 0);
+  }
+
   onZoneSystemChange(id: string | null): void {
     this.selectedZoneSystemId$.next(id || null);
   }
@@ -435,7 +439,13 @@ export class SessionAnalysisComponent implements OnDestroy {
   rpeValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   selectRpe(session: SavedSession, val: number) {
-    const updated = { ...session, rpe: val };
+    const wasRpeBased = session.tss == null || session.tssFromRpe === true;
+    const updated: SavedSession = { ...session, rpe: val };
+    if (wasRpeBased) {
+      const tss = Math.round(this.metricsService.computeTssFromRpe(session.totalDuration, val));
+      updated.tss = tss;
+      updated.tssFromRpe = true;
+    }
     this.sessionSubject.next(updated);
     this.rpeUpdate$.next({ id: session.id, rpe: val });
   }

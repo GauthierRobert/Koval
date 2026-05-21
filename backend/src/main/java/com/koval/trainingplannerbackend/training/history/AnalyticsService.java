@@ -56,6 +56,7 @@ public class AnalyticsService {
     public void computeAndAttachMetrics(CompletedSession session, User user) {
         if (user == null) return;
         if (session.getTotalDurationSeconds() <= 0) return;
+        if (session.getTss() != null) return;
 
         SportType sport = SportType.fromString(session.getSportType());
         OptionalDouble ifOpt = computeIntensityFactor(session, user, sport);
@@ -70,10 +71,11 @@ public class AnalyticsService {
 
     private void applyRpeFallback(CompletedSession session) {
         if (session.getRpe() != null && session.getRpe() > 0) {
-            double intensity = session.getRpe() / 10.0;
+            double intensity = TssCalculator.intensityFactorFromRpe(session.getRpe());
             double tss = TssCalculator.computeTss(loadDurationSeconds(session), intensity);
             session.setIntensityFactor(Math.round(intensity * 1000.0) / 1000.0);
             session.setTss(Math.round(tss * 10.0) / 10.0);
+            session.setTssFromRpe(true);
         }
     }
 
@@ -81,6 +83,7 @@ public class AnalyticsService {
         double tss = TssCalculator.computeTss(loadDurationSeconds(session), intensityFactor);
         session.setIntensityFactor(Math.round(intensityFactor * 1000.0) / 1000.0);
         session.setTss(Math.round(tss * 10.0) / 10.0);
+        session.setTssFromRpe(false);
     }
 
     /**

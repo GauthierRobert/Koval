@@ -321,10 +321,15 @@ public class SessionService {
         if (body.containsKey("rpe")) {
             int rpe = ((Number) body.get("rpe")).intValue();
             session.setRpe(rpe);
-            if (session.getTss() == null) {
-                double intensityFactor = rpe / 10.0;
-                session.setTss(TssCalculator.computeTss(AnalyticsService.loadDurationSeconds(session), intensityFactor));
-                session.setIntensityFactor(intensityFactor);
+            // Recompute TSS only when the existing value is missing or was itself derived from RPE.
+            // Power/pace-based TSS is left untouched — RPE just becomes an extra annotation.
+            boolean wasRpeBased = Boolean.TRUE.equals(session.getTssFromRpe());
+            if (session.getTss() == null || wasRpeBased) {
+                double intensityFactor = TssCalculator.intensityFactorFromRpe(rpe);
+                double tss = TssCalculator.computeTss(AnalyticsService.loadDurationSeconds(session), intensityFactor);
+                session.setTss(Math.round(tss * 10.0) / 10.0);
+                session.setIntensityFactor(Math.round(intensityFactor * 1000.0) / 1000.0);
+                session.setTssFromRpe(true);
             }
         }
     }

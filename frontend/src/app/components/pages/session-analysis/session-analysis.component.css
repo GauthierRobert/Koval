@@ -90,10 +90,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 157, 0, 0.06);
   padding: var(--space-sm) 12px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 157, 0, 0.15);
+  border: none;
   flex-shrink: 0;
 }
 

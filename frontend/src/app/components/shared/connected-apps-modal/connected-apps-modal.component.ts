@@ -79,7 +79,9 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
     return user.linkedAccounts[other] === true;
   }
 
-  unlinkApp(provider: 'strava' | 'google' | 'garmin' | 'polar' | 'zwift' | 'nolioRead' | 'nolioWrite') {
+  unlinkApp(
+    provider: 'strava' | 'google' | 'garmin' | 'polar' | 'zwift' | 'nolioRead' | 'nolioWrite',
+  ) {
     this.unlinking = true;
     let obs: Observable<unknown>;
     switch (provider) {
@@ -159,6 +161,16 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: (err) => this.reportConnectError(err, 'Polar auto-push'),
+      });
+  }
+
+  toggleGarminAutoPush(enabled: boolean): void {
+    this.http
+      .put<unknown>(`${environment.apiUrl}/api/integration/garmin/auto-push`, { enabled })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.authService.refreshUser(),
+        error: (err) => this.reportConnectError(err, 'Garmin auto-push'),
       });
   }
 

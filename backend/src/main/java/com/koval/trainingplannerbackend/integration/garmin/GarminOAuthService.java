@@ -124,6 +124,40 @@ public class GarminOAuthService {
     }
 
     /**
+     * Sign an API request with OAuth 1.0a and an additional {@code oauth_body_hash} parameter
+     * derived from a JSON request body, per the OAuth 1.0 Body Hash spec. Required by Garmin's
+     * Training API when posting non-form-encoded payloads.
+     */
+    public String signRequestWithBodyHash(String method, String url, String accessToken,
+                                          String accessTokenSecret, String jsonBody) {
+        String nonce = generateNonce();
+        String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
+
+        Map<String, String> oauthParams = new LinkedHashMap<>();
+        oauthParams.put("oauth_body_hash", encode(sha1Base64(jsonBody == null ? "" : jsonBody)));
+        oauthParams.put("oauth_consumer_key", consumerKey);
+        oauthParams.put("oauth_nonce", nonce);
+        oauthParams.put("oauth_signature_method", "HMAC-SHA1");
+        oauthParams.put("oauth_timestamp", timestamp);
+        oauthParams.put("oauth_token", accessToken);
+        oauthParams.put("oauth_version", "1.0");
+
+        String signature = generateSignature(method, url, oauthParams, accessTokenSecret);
+        oauthParams.put("oauth_signature", encode(signature));
+
+        return buildAuthorizationHeader(oauthParams);
+    }
+
+    private static String sha1Base64(String input) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-1");
+            return Base64.getEncoder().encodeToString(md.digest(input.getBytes(StandardCharsets.UTF_8)));
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new ExternalServiceException("Garmin", "SHA-1 unavailable", e);
+        }
+    }
+
+    /**
      * Sign an API request with OAuth 1.0a.
      */
     public String signRequest(String method, String url, String accessToken, String accessTokenSecret) {
