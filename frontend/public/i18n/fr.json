@@ -228,6 +228,7 @@
     "BTN_CONNECT_STRAVA": "Se connecter avec Strava",
     "BTN_CONTINUE_GOOGLE": "Continuer avec Google",
     "BTN_CONTINUE_POLAR": "Continuer avec Polar",
+    "BTN_CONNECT_WITH": "Se connecter avec",
     "DEV_SECTION_LABEL": "CONNEXION DEV",
     "DEV_USER_ID_PLACEHOLDER": "ID utilisateur",
     "DEV_ROLE_ATHLETE": "Athlète",

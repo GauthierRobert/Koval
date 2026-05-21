@@ -553,19 +553,49 @@ function drawSpeed(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
   const maxS = Math.max(...sp.filter((v) => v > 0), 1);
   const yOf = (v: number) => top + chartH * (1 - v / maxS);
 
-  const ds = input.downsampled;
-  const pts: Array<{ x: number; y: number }> = [];
-  ds.forEach((r) => {
-    const v = (r.speed || 0) * 3.6;
-    pts.push({ x: xOfT(r.timestamp - t0), y: yOf(v) });
-  });
-  if (pts.length >= 2) {
-    fillPolyline(ctx, pts, fill);
-    ctx.beginPath();
-    pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+  if (useZoneBlocks(input)) {
+    drawSteppedLine(
+      ctx,
+      xOf,
+      yOf,
+      input.zoneBlocks.map((b) => ({
+        s: b.startIndex,
+        e: b.endIndex,
+        v: b.avgSpeed,
+      })),
+      color,
+      fill,
+    );
+  } else if (usePlannedBlocks(input)) {
+    drawSteppedBlockLine(
+      ctx,
+      xOfT,
+      yOf,
+      input.blockSummaries.map((b) => ({
+        dur: b.durationSeconds,
+        v:
+          b.distanceMeters && b.durationSeconds > 0
+            ? (b.distanceMeters / b.durationSeconds) * 3.6
+            : 0,
+      })),
+      color,
+      fill,
+    );
+  } else {
+    const ds = input.downsampled;
+    const pts: Array<{ x: number; y: number }> = [];
+    ds.forEach((r) => {
+      const v = (r.speed || 0) * 3.6;
+      pts.push({ x: xOfT(r.timestamp - t0), y: yOf(v) });
+    });
+    if (pts.length >= 2) {
+      fillPolyline(ctx, pts, fill);
+      ctx.beginPath();
+      pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
   }
 
   ctx.fillStyle = color;
