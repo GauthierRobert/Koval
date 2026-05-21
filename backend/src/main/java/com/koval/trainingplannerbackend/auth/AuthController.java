@@ -2,6 +2,8 @@ package com.koval.trainingplannerbackend.auth;
 
 import com.koval.trainingplannerbackend.integration.polar.PolarApiClient;
 import com.koval.trainingplannerbackend.integration.polar.PolarOAuthService;
+import com.koval.trainingplannerbackend.integration.suunto.SuuntoApiClient;
+import com.koval.trainingplannerbackend.integration.suunto.SuuntoOAuthService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.validation.Valid;
@@ -39,6 +41,8 @@ public class AuthController {
     private final GoogleOAuthService googleOAuthService;
     private final PolarOAuthService polarOAuthService;
     private final PolarApiClient polarApiClient;
+    private final SuuntoOAuthService suuntoOAuthService;
+    private final SuuntoApiClient suuntoApiClient;
     private final UserService userService;
     private final AccountLinkingService accountLinkingService;
     private final UserResponseMapper userResponseMapper;
@@ -55,6 +59,7 @@ public class AuthController {
 
     public AuthController(StravaOAuthService stravaOAuthService, GoogleOAuthService googleOAuthService,
             PolarOAuthService polarOAuthService, PolarApiClient polarApiClient,
+            SuuntoOAuthService suuntoOAuthService, SuuntoApiClient suuntoApiClient,
             UserService userService, AccountLinkingService accountLinkingService,
             UserResponseMapper userResponseMapper, UserRepository userRepository,
             Environment environment) {
@@ -62,6 +67,8 @@ public class AuthController {
         this.googleOAuthService = googleOAuthService;
         this.polarOAuthService = polarOAuthService;
         this.polarApiClient = polarApiClient;
+        this.suuntoOAuthService = suuntoOAuthService;
+        this.suuntoApiClient = suuntoApiClient;
         this.userService = userService;
         this.accountLinkingService = accountLinkingService;
         this.userResponseMapper = userResponseMapper;
@@ -226,6 +233,49 @@ public class AuthController {
         }
     }
 
+    // --- Suunto OAuth (primary login) ---
+
+    @GetMapping("/suunto")
+    public ResponseEntity<Map<String, String>> getSuuntoAuthUrl() {
+        if (!suuntoOAuthService.isConfigured()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "Suunto integration is not configured"));
+        }
+        Map<String, String> response = new HashMap<>();
+        response.put("authUrl", suuntoOAuthService.getAuthorizationUrl("login"));
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/suunto/callback")
+    public ResponseEntity<Map<String, Object>> handleSuuntoCallback(@RequestParam String code) {
+        try {
+            SuuntoOAuthService.SuuntoTokenResponse tokens = suuntoOAuthService.exchangeCodeForToken(code);
+            if (tokens.suuntoUserId() == null) {
+                throw new IllegalStateException("Suunto did not return a user id");
+            }
+
+            Map<String, Object> profile = suuntoApiClient.fetchUser(tokens.accessToken());
+            String first = (String) profile.get("firstname");
+            String last = (String) profile.get("lastname");
+            String displayName = ((first != null ? first : "") + " " + (last != null ? last : "")).trim();
+
+            User user = accountLinkingService.findOrCreateFromSuunto(
+                    tokens.suuntoUserId(), displayName,
+                    tokens.accessToken(), tokens.refreshToken(), tokens.expiresAt());
+
+            String jwt = generateJwtToken(user);
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", jwt);
+            response.put("user", userResponseMapper.userToMap(user));
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            log.warn("Suunto authentication failed ({}): {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Authentication failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+    }
+
     // --- DEV ONLY — login with arbitrary userId, no password ---
 
     public record DevLoginRequest(String userId, String displayName, UserRole role) {
@@ -338,6 +388,13 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> unlinkPolar() {
         String userId = SecurityUtils.getCurrentUserId();
         User user = accountLinkingService.unlinkPolar(userId);
+        return ResponseEntity.ok(userResponseMapper.userToMap(user));
+    }
+
+    @DeleteMapping("/link/suunto")
+    public ResponseEntity<Map<String, Object>> unlinkSuunto() {
+        String userId = SecurityUtils.getCurrentUserId();
+        User user = accountLinkingService.unlinkSuunto(userId);
         return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 

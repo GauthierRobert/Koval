@@ -5,5 +5,6 @@ public enum AuthProvider {
     GOOGLE,
     GARMIN,
     ZWIFT,
-    POLAR
+    POLAR,
+    SUUNTO
 }

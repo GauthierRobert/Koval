@@ -268,5 +268,13 @@ export const routes: Routes = [
       import('./components/pages/auth/polar-callback.component').then((m) => m.PolarCallbackComponent),
     canActivate: [authGuard],
   },
+  {
+    path: 'auth/suunto/callback',
+    loadComponent: () =>
+      import('./components/pages/auth/suunto-callback.component').then(
+        (m) => m.SuuntoCallbackComponent,
+      ),
+    canActivate: [authGuard],
+  },
   { path: '**', redirectTo: '/dashboard' },
 ];

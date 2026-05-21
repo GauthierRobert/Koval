@@ -17,6 +17,7 @@ import { Observable } from 'rxjs';
 import { AuthService, User } from '../../../services/auth.service';
 import { NolioSyncService } from '../../../services/nolio-sync.service';
 import { PolarSyncService } from '../../../services/polar-sync.service';
+import { SuuntoSyncService } from '../../../services/suunto-sync.service';
 import { ErrorToastService } from '../../../services/error-toast.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
@@ -34,6 +35,7 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private nolioSync = inject(NolioSyncService);
   private polarSync = inject(PolarSyncService);
+  private suuntoSync = inject(SuuntoSyncService);
   private destroyRef = inject(DestroyRef);
   private toast = inject(ErrorToastService);
 
@@ -67,6 +69,7 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
       user.linkedAccounts.google,
       user.linkedAccounts.garmin,
       user.linkedAccounts.polar,
+      user.linkedAccounts.suunto,
       user.linkedAccounts.zwift,
       user.linkedAccounts.nolioRead,
       user.linkedAccounts.nolioWrite,
@@ -80,7 +83,15 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
   }
 
   unlinkApp(
-    provider: 'strava' | 'google' | 'garmin' | 'polar' | 'zwift' | 'nolioRead' | 'nolioWrite',
+    provider:
+      | 'strava'
+      | 'google'
+      | 'garmin'
+      | 'polar'
+      | 'suunto'
+      | 'zwift'
+      | 'nolioRead'
+      | 'nolioWrite',
   ) {
     this.unlinking = true;
     let obs: Observable<unknown>;
@@ -96,6 +107,9 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
         break;
       case 'polar':
         obs = this.polarSync.disconnect();
+        break;
+      case 'suunto':
+        obs = this.suuntoSync.disconnect();
         break;
       case 'zwift':
         obs = this.authService.unlinkZwift();
@@ -161,6 +175,25 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: (err) => this.reportConnectError(err, 'Polar auto-push'),
+      });
+  }
+
+  connectSuunto(): void {
+    this.suuntoSync
+      .getAuthUrl()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ authUrl }) => window.open(authUrl, '_blank', 'width=600,height=700'),
+        error: (err) => this.reportConnectError(err, 'Suunto'),
+      });
+  }
+
+  toggleSuuntoAutoPush(enabled: boolean): void {
+    this.suuntoSync
+      .setAutoPush(enabled)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: (err) => this.reportConnectError(err, 'Suunto auto-push'),
       });
   }
 

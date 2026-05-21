@@ -37,6 +37,7 @@ export interface User {
     google: boolean;
     garmin: boolean;
     polar: boolean;
+    suunto: boolean;
     zwift: boolean;
     nolioRead: boolean;
     nolioWrite: boolean;
@@ -44,6 +45,7 @@ export interface User {
   authProvider?: string;
   zwiftAutoSyncWorkouts?: boolean;
   polarAutoPushWorkouts?: boolean;
+  suuntoAutoPushWorkouts?: boolean;
   garminAutoPushWorkouts?: boolean;
   nolioAutoSyncWorkouts?: boolean;
 }

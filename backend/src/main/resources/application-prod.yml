@@ -35,6 +35,11 @@ polar:
   client-secret: ${POLAR_CLIENT_SECRET:}
   redirect-uri: ${POLAR_REDIRECT_URI:}
 
+suunto:
+  client-id: ${SUUNTO_CLIENT_ID:}
+  client-secret: ${SUUNTO_CLIENT_SECRET:}
+  redirect-uri: ${SUUNTO_REDIRECT_URI:}
+
 club-feed:
   broker:
     type: pubsub

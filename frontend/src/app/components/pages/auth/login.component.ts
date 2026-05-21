@@ -41,4 +41,10 @@ export class LoginComponent implements OnInit {
       window.location.href = res.authUrl;
     });
   }
+
+  loginWithSuunto() {
+    this.authService.getSuuntoAuthUrl().subscribe((res) => {
+      window.location.href = res.authUrl;
+    });
+  }
 }

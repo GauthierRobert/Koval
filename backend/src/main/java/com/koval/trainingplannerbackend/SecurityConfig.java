@@ -60,7 +60,8 @@ public class SecurityConfig {
                             .requestMatchers("/api/auth/strava", "/api/auth/strava/callback",
                                     "/api/auth/google", "/api/auth/google/callback",
                                     "/api/auth/google/mobile-callback",
-                                    "/api/auth/polar", "/api/auth/polar/callback").permitAll();
+                                    "/api/auth/polar", "/api/auth/polar/callback",
+                                    "/api/auth/suunto", "/api/auth/suunto/callback").permitAll();
                     if (!prod) {
                         auth.requestMatchers("/api/auth/dev/login").permitAll();
                     }

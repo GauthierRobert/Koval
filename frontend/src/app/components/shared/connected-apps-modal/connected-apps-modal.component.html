@@ -210,6 +210,58 @@
           </div>
         }
 
+        <!-- Suunto -->
+        <div class="linked-app-row">
+          <div class="app-info">
+            <svg class="app-icon suunto" viewBox="0 0 24 24" width="20" height="20">
+              <circle cx="12" cy="12" r="10" fill="#000" />
+              <circle cx="12" cy="12" r="6" fill="none" stroke="#fff" stroke-width="1.5" />
+              <path
+                d="M8 12h8M12 8v8"
+                stroke="#fff"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <div class="app-details">
+              <span class="app-name">Suunto</span>
+              <span class="app-status" [class.connected]="user.linkedAccounts?.suunto">
+                {{
+                  (user.linkedAccounts?.suunto
+                    ? 'SETTINGS.APP_CONNECTED'
+                    : 'SETTINGS.APP_NOT_CONNECTED'
+                  ) | translate
+                }}
+              </span>
+            </div>
+          </div>
+          @if (user.linkedAccounts?.suunto) {
+            <button class="unlink-btn" [disabled]="unlinking" (click)="unlinkApp('suunto')">
+              {{ 'SETTINGS.BTN_UNLINK' | translate }}
+            </button>
+          } @else {
+            <button class="connect-btn" (click)="connectSuunto()">
+              {{ 'SETTINGS.BTN_CONNECT' | translate }}
+            </button>
+          }
+        </div>
+
+        <!-- Suunto auto-push toggle -->
+        @if (user.linkedAccounts?.suunto) {
+          <div class="auto-sync-row">
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                class="toggle-input"
+                [checked]="user.suuntoAutoPushWorkouts"
+                (change)="toggleSuuntoAutoPush($any($event.target).checked)"
+              />
+              <span class="toggle-switch"></span>
+              <span>{{ 'SETTINGS.SUUNTO_AUTO_PUSH_WORKOUTS' | translate }}</span>
+            </label>
+          </div>
+        }
+
         <!-- Zwift -->
         <div class="linked-app-row">
           <div class="app-info">

@@ -207,6 +207,59 @@ public class AccountLinkingService {
         return userRepository.save(user);
     }
 
+    public User findOrCreateFromSuunto(String suuntoUserId, String displayName,
+                                       String accessToken, String refreshToken, Long expiresAt) {
+        Optional<User> existing = userRepository.findBySuuntoUserId(suuntoUserId);
+
+        if (existing.isPresent()) {
+            User user = existing.get();
+            user.setSuuntoAccessToken(accessToken);
+            if (refreshToken != null) user.setSuuntoRefreshToken(refreshToken);
+            if (expiresAt != null) user.setSuuntoTokenExpiresAt(expiresAt);
+            user.setLastLogin(LocalDateTime.now());
+            return userRepository.save(user);
+        }
+
+        User newUser = new User();
+        newUser.setSuuntoUserId(suuntoUserId);
+        newUser.setAuthProvider(AuthProvider.SUUNTO);
+        newUser.setDisplayName(displayName != null && !displayName.isBlank() ? displayName : "Suunto athlete");
+        newUser.setSuuntoAccessToken(accessToken);
+        newUser.setSuuntoRefreshToken(refreshToken);
+        newUser.setSuuntoTokenExpiresAt(expiresAt);
+        newUser.setRole(UserRole.ATHLETE);
+        newUser.setLastLogin(LocalDateTime.now());
+        newUser.setNeedsOnboarding(true);
+
+        return userRepository.save(newUser);
+    }
+
+    public User linkSuunto(String userId, String suuntoUserId, String accessToken,
+                           String refreshToken, Long expiresAt) {
+        userRepository.findBySuuntoUserId(suuntoUserId).ifPresent(other -> {
+            if (!other.getId().equals(userId)) {
+                throw new IllegalStateException("This Suunto account is already linked to another user");
+            }
+        });
+        User user = userService.getUserById(userId);
+        user.setSuuntoUserId(suuntoUserId);
+        user.setSuuntoAccessToken(accessToken);
+        user.setSuuntoRefreshToken(refreshToken);
+        user.setSuuntoTokenExpiresAt(expiresAt);
+        return userRepository.save(user);
+    }
+
+    public User unlinkSuunto(String userId) {
+        User user = userService.getUserById(userId);
+        user.setSuuntoUserId(null);
+        user.setSuuntoAccessToken(null);
+        user.setSuuntoRefreshToken(null);
+        user.setSuuntoTokenExpiresAt(null);
+        user.setSuuntoLastSyncAt(null);
+        user.setSuuntoAutoPushWorkouts(false);
+        return userRepository.save(user);
+    }
+
     public User linkZwift(String userId, String zwiftUserId, String accessToken, String refreshToken) {
         userRepository.findByZwiftUserId(zwiftUserId).ifPresent(other -> {
             if (!other.getId().equals(userId)) {

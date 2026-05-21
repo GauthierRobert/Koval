@@ -72,6 +72,15 @@ public class User {
     private LocalDateTime polarLastSyncAt;
     private Boolean polarAutoPushWorkouts = false;
 
+    // Suunto Cloud API (OAuth 2.0). suuntoUserId is the username returned by Suunto.
+    @Indexed(unique = true, sparse = true)
+    private String suuntoUserId;
+    private String suuntoAccessToken;
+    private String suuntoRefreshToken;
+    private Long suuntoTokenExpiresAt;
+    private LocalDateTime suuntoLastSyncAt;
+    private Boolean suuntoAutoPushWorkouts = false;
+
     // Zwift tokens (unofficial API)
     @Indexed(unique = true, sparse = true)
     private String zwiftUserId;

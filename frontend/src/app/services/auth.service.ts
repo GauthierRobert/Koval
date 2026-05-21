@@ -120,6 +120,24 @@ export class AuthService {
       );
   }
 
+  // --- Suunto OAuth ---
+
+  getSuuntoAuthUrl(): Observable<{ authUrl: string }> {
+    return this.http.get<{ authUrl: string }>(`${this.apiUrl}/suunto`);
+  }
+
+  handleSuuntoCallback(code: string): Observable<{ token: string; user: User }> {
+    return this.http
+      .get<{ token: string; user: User }>(`${this.apiUrl}/suunto/callback?code=${code}`)
+      .pipe(
+        tap((response) => {
+          localStorage.setItem('token', response.token);
+          this.userSubject.next(response.user);
+          this.setUiMode(response.user.role === 'COACH' ? 'coach' : 'athlete');
+        }),
+      );
+  }
+
   // --- DEV ONLY — login with arbitrary userId ---
 
   devLogin(

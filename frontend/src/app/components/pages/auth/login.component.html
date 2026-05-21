@@ -71,6 +71,18 @@
       >
         <img src="/assets/polar.svg" alt="Connect with Polar" class="polar-badge" />
       </button>
+      <button
+        class="auth-btn suunto"
+        (click)="loginWithSuunto()"
+        [attr.aria-label]="'LOGIN.BTN_CONTINUE_SUUNTO' | translate"
+      >
+        <svg class="suunto-logo" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" fill="#000" />
+          <circle cx="12" cy="12" r="6" fill="none" stroke="#fff" stroke-width="1.5" />
+          <path d="M8 12h8M12 8v8" stroke="#fff" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <span class="btn-text">{{ 'LOGIN.BTN_CONTINUE_SUUNTO' | translate }}</span>
+      </button>
       <button class="auth-btn google" (click)="loginWithGoogle()">
         <svg class="google-logo" viewBox="0 0 24 24" width="18" height="18">
           <path
@@ -92,6 +104,17 @@
         </svg>
         <span class="btn-text">{{ 'LOGIN.BTN_CONTINUE_GOOGLE' | translate }}</span>
       </button>
+      <div class="auth-btn-wrapper">
+        <button
+          class="auth-btn garmin"
+          type="button"
+          disabled
+          [attr.aria-label]="'LOGIN.BTN_CONNECT_GARMIN' | translate"
+        >
+          <span class="btn-text">{{ 'LOGIN.BTN_CONNECT_GARMIN' | translate }}</span>
+        </button>
+        <span class="auth-btn-subtitle">{{ 'LOGIN.COMING_SOON' | translate }}</span>
+      </div>
     </div>
   </div>
 </div>
