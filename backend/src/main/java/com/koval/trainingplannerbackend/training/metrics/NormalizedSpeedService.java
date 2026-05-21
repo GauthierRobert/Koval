@@ -1,16 +1,13 @@
 package com.koval.trainingplannerbackend.training.metrics;
 
+import com.koval.trainingplannerbackend.training.history.CompletedSession;
+import com.koval.trainingplannerbackend.training.history.fit.FitFileStore;
 import com.koval.trainingplannerbackend.training.model.SportType;
-import com.mongodb.client.gridfs.model.GridFSFile;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.gridfs.GridFsOperations;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.OptionalDouble;
 
 /**
@@ -23,23 +20,20 @@ public class NormalizedSpeedService {
 
     private static final Logger log = LoggerFactory.getLogger(NormalizedSpeedService.class);
 
-    private final GridFsOperations gridFsOperations;
+    private final FitFileStore fitFileStore;
 
-    public NormalizedSpeedService(GridFsOperations gridFsOperations) {
-        this.gridFsOperations = gridFsOperations;
+    public NormalizedSpeedService(FitFileStore fitFileStore) {
+        this.fitFileStore = fitFileStore;
     }
 
-    public OptionalDouble computeFromFit(String fitFileId, SportType sport) {
-        if (fitFileId == null || sport == null) return OptionalDouble.empty();
+    public OptionalDouble computeFromFit(CompletedSession session, SportType sport) {
+        if (session == null || sport == null) return OptionalDouble.empty();
         if (sport == SportType.CYCLING) return OptionalDouble.empty();
 
         try {
-            GridFSFile gridFile = gridFsOperations.findOne(
-                    Query.query(Criteria.where("_id").is(new ObjectId(fitFileId))));
-            if (gridFile == null) return OptionalDouble.empty();
-            GridFsResource resource = gridFsOperations.getResource(gridFile);
-            byte[] bytes = resource.getInputStream().readAllBytes();
-            FitRecordExtractor.Samples samples = FitRecordExtractor.extract(bytes);
+            Optional<byte[]> bytes = fitFileStore.read(session);
+            if (bytes.isEmpty()) return OptionalDouble.empty();
+            FitRecordExtractor.Samples samples = FitRecordExtractor.extract(bytes.get());
             if (samples.isEmpty()) return OptionalDouble.empty();
 
             double normalized = switch (sport) {
@@ -50,7 +44,7 @@ public class NormalizedSpeedService {
             };
             return normalized > 0 ? OptionalDouble.of(normalized) : OptionalDouble.empty();
         } catch (Exception e) {
-            log.warn("Failed to compute normalized speed for fitFileId={}: {}", fitFileId, e.getMessage());
+            log.warn("Failed to compute normalized speed for session {}: {}", session.getId(), e.getMessage());
             return OptionalDouble.empty();
         }
     }

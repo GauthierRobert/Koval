@@ -241,7 +241,7 @@ public class SessionService {
         return repository.findById(id)
                 .filter(s -> userId.equals(s.getUserId()))
                 .map(s -> {
-                    fitFileService.deleteFitFileQuietly(s.getFitFileId());
+                    fitFileService.deleteFitFileQuietly(s);
                     repository.delete(s);
                     return true;
                 })

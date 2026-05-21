@@ -7,13 +7,11 @@ import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import com.koval.trainingplannerbackend.training.history.SessionFitFileService;
 import com.koval.trainingplannerbackend.training.history.SessionService;
-import org.bson.types.ObjectId;
+import com.koval.trainingplannerbackend.training.history.fit.FitFileStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -33,20 +31,20 @@ public class StravaActivitySyncService {
     private final SessionService sessionService;
     private final SessionFitFileService fitFileService;
     private final UserRepository userRepository;
-    private final GridFsOperations gridFsOperations;
+    private final FitFileStore fitFileStore;
 
     public StravaActivitySyncService(StravaApiClient stravaApiClient,
                                      CompletedSessionRepository sessionRepository,
                                      SessionService sessionService,
                                      SessionFitFileService fitFileService,
                                      UserRepository userRepository,
-                                     GridFsOperations gridFsOperations) {
+                                     FitFileStore fitFileStore) {
         this.stravaApiClient = stravaApiClient;
         this.sessionRepository = sessionRepository;
         this.sessionService = sessionService;
         this.fitFileService = fitFileService;
         this.userRepository = userRepository;
-        this.gridFsOperations = gridFsOperations;
+        this.fitFileStore = fitFileStore;
     }
 
     /**
@@ -215,7 +213,7 @@ public class StravaActivitySyncService {
     }
 
     /**
-     * Fetch Strava streams, build a FIT binary, store in GridFS, and update the session.
+     * Fetch Strava streams, build a FIT binary, hand it to the storage layer, and update the session.
      */
     private CompletedSession buildAndStoreFit(CompletedSession session, User user, List<Map<String, Object>> laps) {
         Map<String, List<? extends Number>> streams =
@@ -233,12 +231,7 @@ public class StravaActivitySyncService {
                 session.getAvgCadence(), session.getAvgSpeed(),
                 laps);
 
-        ObjectId fileId = gridFsOperations.store(
-                new ByteArrayInputStream(fitBytes),
-                session.getId() + ".fit",
-                "application/octet-stream");
-
-        session.setFitFileId(fileId.toHexString());
+        fitFileStore.store(session, fitBytes);
         return fitFileService.recomputeMetricsAfterFitChange(session);
     }
 
