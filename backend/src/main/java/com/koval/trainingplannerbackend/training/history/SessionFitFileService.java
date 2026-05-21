@@ -2,26 +2,21 @@ package com.koval.trainingplannerbackend.training.history;
 
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.coach.CoachService;
+import com.koval.trainingplannerbackend.training.history.fit.FitFileStore;
 import com.koval.trainingplannerbackend.training.metrics.NormalizedSpeedService;
 import com.koval.trainingplannerbackend.training.model.SportType;
-import com.mongodb.client.gridfs.model.GridFSFile;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.gridfs.GridFsOperations;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.util.Optional;
 
 /**
- * Owns the lifecycle of FIT files attached to completed sessions: GridFS upload/download/delete
- * and the metric refresh that must follow any FIT change.
+ * Owns the lifecycle of FIT files attached to completed sessions: storage
+ * (delegated to {@link FitFileStore}), access checks, and the metric refresh
+ * that must follow any FIT change.
  */
 @Service
 public class SessionFitFileService {
@@ -29,20 +24,20 @@ public class SessionFitFileService {
     private static final Logger log = LoggerFactory.getLogger(SessionFitFileService.class);
 
     private final CompletedSessionRepository repository;
-    private final GridFsOperations gridFsOperations;
+    private final FitFileStore fitFileStore;
     private final AnalyticsService analyticsService;
     private final NormalizedSpeedService normalizedSpeedService;
     private final UserRepository userRepository;
     private final CoachService coachService;
 
     public SessionFitFileService(CompletedSessionRepository repository,
-                                 GridFsOperations gridFsOperations,
+                                 FitFileStore fitFileStore,
                                  AnalyticsService analyticsService,
                                  NormalizedSpeedService normalizedSpeedService,
                                  UserRepository userRepository,
                                  CoachService coachService) {
         this.repository = repository;
-        this.gridFsOperations = gridFsOperations;
+        this.fitFileStore = fitFileStore;
         this.analyticsService = analyticsService;
         this.normalizedSpeedService = normalizedSpeedService;
         this.userRepository = userRepository;
@@ -62,16 +57,15 @@ public class SessionFitFileService {
                 .orElse(null);
         if (session == null) return null;
 
-        deleteFitFileQuietly(session.getFitFileId());
-        ObjectId fileId = gridFsOperations.store(data, session.getId() + ".fit", "application/octet-stream");
-        session.setFitFileId(fileId.toHexString());
+        byte[] bytes = data.readAllBytes();
+        fitFileStore.store(session, bytes);
         return recomputeMetricsAfterFitChange(session);
     }
 
     /**
      * After a FIT file has been attached to a session, recompute its normalized speed
      * (NGP for running, NSS for swimming) and resulting TSS/IF, then refresh user load.
-     * Caller is responsible for setting {@code session.fitFileId} before invoking.
+     * Caller is responsible for setting the storage pointers on the session before invoking.
      */
     public CompletedSession recomputeMetricsAfterFitChange(CompletedSession session) {
         refreshNormalizedSpeedAndMetrics(session);
@@ -89,37 +83,25 @@ public class SessionFitFileService {
     public Optional<FitFileResult> downloadFitFile(String sessionId, String userId) {
         return repository.findById(sessionId)
                 .filter(s -> userId.equals(s.getUserId()) || isCoachOfOwner(userId, s.getUserId()))
-                .filter(s -> s.getFitFileId() != null)
-                .map(s -> {
-                    GridFSFile gridFile = gridFsOperations.findOne(
-                            Query.query(Criteria.where("_id").is(new ObjectId(s.getFitFileId()))));
-                    if (gridFile == null) return null;
-                    GridFsResource resource = gridFsOperations.getResource(gridFile);
-                    try {
-                        return new FitFileResult(resource.getInputStream().readAllBytes(), s.getId() + ".fit");
-                    } catch (IOException e) {
-                        throw new UncheckedIOException("Failed to read FIT file for session " + s.getId(), e);
-                    }
-                });
+                .flatMap(s -> fitFileStore.read(s)
+                        .map(bytes -> new FitFileResult(bytes, s.getId() + ".fit")));
     }
 
     /**
-     * Delete a FIT file from GridFS by its ID, logging a warning on failure.
-     * No-op if {@code fitFileId} is {@code null}.
+     * Delete the FIT file attached to a session from every backend that holds a copy.
+     * Logs and swallows failures so cleanup paths don't fail loudly. Mutates the session's
+     * pointer fields but does NOT save — the caller is expected to be in the middle of a
+     * larger update (delete session, replace FIT, etc).
      */
-    public void deleteFitFileQuietly(String fitFileId) {
-        if (fitFileId == null) return;
-        try {
-            gridFsOperations.delete(Query.query(Criteria.where("_id").is(new ObjectId(fitFileId))));
-        } catch (IllegalArgumentException | org.springframework.dao.DataAccessException e) {
-            log.warn("Failed to delete FIT file {}: {}", fitFileId, e.getMessage());
-        }
+    public void deleteFitFileQuietly(CompletedSession session) {
+        if (session == null) return;
+        fitFileStore.delete(session);
     }
 
     private void refreshNormalizedSpeedAndMetrics(CompletedSession session) {
         SportType sport = SportType.fromString(session.getSportType());
         if (sport != SportType.CYCLING) {
-            normalizedSpeedService.computeFromFit(session.getFitFileId(), sport)
+            normalizedSpeedService.computeFromFit(session, sport)
                     .ifPresent(session::setNormalizedSpeed);
         }
         userRepository.findById(session.getUserId())

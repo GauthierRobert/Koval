@@ -88,6 +88,19 @@ storage:
       application/vnd.openxmlformats-officedocument.presentationml.presentation,
       text/plain,text/csv
     unconfirmed-retention: PT24H        # purge unconfirmed Media after 24h
+  # FIT file storage routing. Mongo GridFS is the legacy backend; GCS is the
+  # new one. During the transition we dual-write to both and keep reading from
+  # Mongo (mode = DUAL_WRITE_READ_MONGODB). Run the migration once with
+  # storage.fit.migration.enabled=true to backfill existing files, then flip
+  # the mode to DUAL_WRITE_READ_GCS once GCS reads are verified, and finally
+  # to GCS_ONLY to stop paying for GridFS storage.
+  fit:
+    mode: ${STORAGE_FIT_MODE:DUAL_WRITE_READ_MONGODB}
+    bucket: ${GCS_FIT_BUCKET:}            # blank → reuse storage.gcs.bucket
+    object-prefix: ${GCS_FIT_PREFIX:fit}
+    migration:
+      enabled: ${STORAGE_FIT_MIGRATION_ENABLED:false}
+      batch-size: ${STORAGE_FIT_MIGRATION_BATCH_SIZE:50}
 
 server:
   port: 8080

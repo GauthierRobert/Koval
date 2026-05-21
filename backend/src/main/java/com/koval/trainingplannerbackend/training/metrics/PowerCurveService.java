@@ -2,16 +2,11 @@ package com.koval.trainingplannerbackend.training.metrics;
 
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
-import com.mongodb.client.gridfs.model.GridFSFile;
-import org.bson.types.ObjectId;
+import com.koval.trainingplannerbackend.training.history.fit.FitFileStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.gridfs.GridFsOperations;
-import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,8 +21,9 @@ import java.util.stream.Collectors;
 /**
  * Power curve analysis and volume aggregation across completed sessions.
  *
- * <p>Curves are computed server-side from the FIT files stored in GridFS. The first request
- * for a given session parses the FIT, runs the mean-max algorithm, and persists the result
+ * <p>Curves are computed server-side from the FIT file backing each session (read via
+ * {@link FitFileStore}, which routes between GridFS and GCS). The first request for a
+ * given session parses the FIT, runs the mean-max algorithm, and persists the result
  * to {@link CompletedSession#powerCurve}. Subsequent requests are served from the cache or
  * the persisted field. Only cycling sessions are processed.
  */
@@ -42,12 +38,12 @@ public class PowerCurveService {
     };
 
     private final CompletedSessionRepository sessionRepository;
-    private final GridFsOperations gridFsOperations;
+    private final FitFileStore fitFileStore;
 
     public PowerCurveService(CompletedSessionRepository sessionRepository,
-                             GridFsOperations gridFsOperations) {
+                             FitFileStore fitFileStore) {
         this.sessionRepository = sessionRepository;
-        this.gridFsOperations = gridFsOperations;
+        this.fitFileStore = fitFileStore;
     }
 
     /**
@@ -167,9 +163,9 @@ public class PowerCurveService {
         Map<Integer, Double> existing = session.getPowerCurve();
         if (existing != null && !existing.isEmpty()) return existing;
 
-        if (session.getFitFileId() == null) return Map.of();
+        if (session.getFitFileId() == null && session.getFitGcsObject() == null) return Map.of();
 
-        Map<Integer, Double> curve = computePowerCurveFromFit(session.getFitFileId());
+        Map<Integer, Double> curve = computePowerCurveFromFit(session);
         if (curve.isEmpty()) return Map.of();
 
         session.setPowerCurve(curve);
@@ -177,17 +173,14 @@ public class PowerCurveService {
         return curve;
     }
 
-    private Map<Integer, Double> computePowerCurveFromFit(String fitFileId) {
+    private Map<Integer, Double> computePowerCurveFromFit(CompletedSession session) {
         try {
-            GridFSFile gridFile = gridFsOperations.findOne(
-                    Query.query(Criteria.where("_id").is(new ObjectId(fitFileId))));
-            if (gridFile == null) return Map.of();
-            GridFsResource resource = gridFsOperations.getResource(gridFile);
-            byte[] bytes = resource.getInputStream().readAllBytes();
-            List<Integer> samples = FitPowerExtractor.extractPower(bytes);
+            Optional<byte[]> bytes = fitFileStore.read(session);
+            if (bytes.isEmpty()) return Map.of();
+            List<Integer> samples = FitPowerExtractor.extractPower(bytes.get());
             return computeMeanMaxCurve(samples);
         } catch (Exception e) {
-            log.warn("Failed to compute power curve for fitFileId={}: {}", fitFileId, e.getMessage());
+            log.warn("Failed to compute power curve for session {}: {}", session.getId(), e.getMessage());
             return Map.of();
         }
     }

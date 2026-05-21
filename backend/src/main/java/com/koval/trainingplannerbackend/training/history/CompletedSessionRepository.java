@@ -43,4 +43,12 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
             List<String> userIds, LocalDateTime from, LocalDateTime to);
 
     List<CompletedSession> findByUserIdAndGroupId(String userId, String groupId);
+
+    /**
+     * Sessions with a GridFS FIT pointer but no GCS object yet — i.e. waiting to
+     * be backfilled into Cloud Storage. Used by the one-shot migration runner.
+     */
+    @Query(value = "{ 'fitFileId': { $ne: null }, $or: [ { 'fitGcsObject': null }, { 'fitGcsObject': { $exists: false } } ] }",
+            fields = "{ '_id': 1, 'userId': 1, 'fitFileId': 1, 'fitGcsObject': 1 }")
+    Page<CompletedSession> findFitMigrationCandidates(Pageable pageable);
 }

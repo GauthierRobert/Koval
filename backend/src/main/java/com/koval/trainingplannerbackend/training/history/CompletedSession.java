@@ -62,7 +62,15 @@ public class CompletedSession {
     private Boolean tssFromRpe;
     private Double intensityFactor;
     private Double normalizedSpeed; // m/s — NGP for running, NSS for swimming, when computed from FIT
-    private String fitFileId; // GridFS ObjectId; null when no FIT stored
+    private String fitFileId; // GridFS ObjectId; null when no FIT stored in MongoDB
+
+    /**
+     * GCS object name (e.g. {@code fit/{userId}/{sessionId}.fit}) when the FIT
+     * blob is also stored in Cloud Storage. Populated by dual-write and the
+     * migration backfill; independent of {@link #fitFileId}. Either, both, or
+     * neither may be set.
+     */
+    private String fitGcsObject;
     private Integer rpe;
     private Boolean syntheticCompletion; // true when created from planned data via COMPLETE button
     private Boolean manuallyCreated; // true when added by the athlete via the manual-add UI (no FIT/Strava source)
