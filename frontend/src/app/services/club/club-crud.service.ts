@@ -9,11 +9,13 @@ import {
   CreateClubData,
   MyClubRoleEntry,
 } from '../../models/club.model';
+import {AuthService} from '../auth.service';
 
 @Injectable({providedIn: 'root'})
 export class ClubCrudService {
   private readonly apiUrl = `${environment.apiUrl}/api/clubs`;
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
   private userClubsSubject = new BehaviorSubject<ClubSummary[]>([]);
   userClubs$ = this.userClubsSubject.asObservable();
@@ -26,6 +28,17 @@ export class ClubCrudService {
 
   private myClubRolesSubject = new BehaviorSubject<MyClubRoleEntry[]>([]);
   myClubRoles$ = this.myClubRolesSubject.asObservable();
+
+  private myClubRolesLoaded = false;
+
+  constructor() {
+    this.authService.user$.subscribe((u) => {
+      if (!u) {
+        this.myClubRolesLoaded = false;
+        this.myClubRolesSubject.next([]);
+      }
+    });
+  }
 
   loadUserClubs(): void {
     this.userClubsLoadingSubject.next(true);
@@ -64,7 +77,9 @@ export class ClubCrudService {
       .pipe(catchError(() => of(null as ClubDetail | null)));
   }
 
-  loadMyClubRoles(): void {
+  loadMyClubRoles(force = false): void {
+    if (this.myClubRolesLoaded && !force) return;
+    this.myClubRolesLoaded = true;
     this.http
       .get<MyClubRoleEntry[]>(`${this.apiUrl}/my-roles`)
       .pipe(catchError(() => of([] as MyClubRoleEntry[])))

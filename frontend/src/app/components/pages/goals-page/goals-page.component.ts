@@ -88,8 +88,6 @@ export class GoalsPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.raceGoalService.loadGoals();
-
     this.route.queryParams.subscribe((params) => {
       const raceId = params['raceId'];
       if (raceId) {

@@ -184,7 +184,6 @@ export class CalendarComponent implements OnInit {
       map(([plans]) => computeBannerSegments(plans, this.monthDays))
     );
 
-    this.raceGoalService.loadGoals();
     this.loadClubPrefsData();
   }
 

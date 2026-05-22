@@ -106,7 +106,6 @@ export class PmcPageComponent implements OnInit {
         this.loadPmc();
         if (!this.athleteId) {
             this.loadScheduledWorkouts();
-            this.raceGoalService.loadGoals();
         }
 
         this.viewRange$.pipe(
