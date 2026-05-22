@@ -1,9 +1,14 @@
-import {Routes} from '@angular/router';
-import {authGuard} from './guards/auth.guard';
-import {coachGuard} from './guards/coach.guard';
+import { Routes } from '@angular/router';
+import { authGuard } from './guards/auth.guard';
+import { coachGuard } from './guards/coach.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./components/pages/showcase/showcase.component').then((m) => m.ShowcaseComponent),
+    pathMatch: 'full',
+  },
   {
     path: 'dashboard',
     loadComponent: () =>
@@ -89,13 +94,17 @@ export const routes: Routes = [
   {
     path: 'zones',
     loadComponent: () =>
-      import('./components/pages/zone-manager/zone-manager.component').then((m) => m.ZoneManagerComponent),
+      import('./components/pages/zone-manager/zone-manager.component').then(
+        (m) => m.ZoneManagerComponent,
+      ),
     canActivate: [authGuard],
   },
   {
     path: 'chat',
     loadComponent: () =>
-      import('./components/pages/ai-chat-page/ai-chat-page.component').then((m) => m.AIChatPageComponent),
+      import('./components/pages/ai-chat-page/ai-chat-page.component').then(
+        (m) => m.AIChatPageComponent,
+      ),
     canActivate: [authGuard, coachGuard],
   },
   // Legacy redirect — old `/analysis/:sessionId` URLs go to `/history/:sessionId`.
@@ -141,9 +150,9 @@ export const routes: Routes = [
   {
     path: 'analytics/reference-values',
     loadComponent: () =>
-      import(
-        './components/pages/analytics/reference-values-page/reference-values-page.component'
-      ).then((m) => m.ReferenceValuesPageComponent),
+      import('./components/pages/analytics/reference-values-page/reference-values-page.component').then(
+        (m) => m.ReferenceValuesPageComponent,
+      ),
     canActivate: [authGuard],
   },
   {
@@ -165,13 +174,17 @@ export const routes: Routes = [
   {
     path: 'goals',
     loadComponent: () =>
-      import('./components/pages/goals-page/goals-page.component').then((m) => m.GoalsPageComponent),
+      import('./components/pages/goals-page/goals-page.component').then(
+        (m) => m.GoalsPageComponent,
+      ),
     canActivate: [authGuard],
   },
   {
     path: 'races',
     loadComponent: () =>
-      import('./components/pages/races-page/races-page.component').then((m) => m.RacesPageComponent),
+      import('./components/pages/races-page/races-page.component').then(
+        (m) => m.RacesPageComponent,
+      ),
     canActivate: [authGuard],
   },
   {
@@ -207,7 +220,9 @@ export const routes: Routes = [
   {
     path: 'onboarding',
     loadComponent: () =>
-      import('./components/pages/onboarding/onboarding.component').then((m) => m.OnboardingComponent),
+      import('./components/pages/onboarding/onboarding.component').then(
+        (m) => m.OnboardingComponent,
+      ),
     canActivate: [authGuard],
   },
   {
@@ -255,17 +270,23 @@ export const routes: Routes = [
   {
     path: 'auth/callback',
     loadComponent: () =>
-      import('./components/pages/auth/auth-callback.component').then((m) => m.AuthCallbackComponent),
+      import('./components/pages/auth/auth-callback.component').then(
+        (m) => m.AuthCallbackComponent,
+      ),
   },
   {
     path: 'auth/google/callback',
     loadComponent: () =>
-      import('./components/pages/auth/auth-callback.component').then((m) => m.AuthCallbackComponent),
+      import('./components/pages/auth/auth-callback.component').then(
+        (m) => m.AuthCallbackComponent,
+      ),
   },
   {
     path: 'auth/polar/callback',
     loadComponent: () =>
-      import('./components/pages/auth/polar-callback.component').then((m) => m.PolarCallbackComponent),
+      import('./components/pages/auth/polar-callback.component').then(
+        (m) => m.PolarCallbackComponent,
+      ),
     canActivate: [authGuard],
   },
   {

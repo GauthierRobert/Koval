@@ -1,7 +1,9 @@
 <div class="app-container">
   <main class="main-content">
-    <app-top-bar />
-    <div class="page-content">
+    @if (showChrome$ | async) {
+      <app-top-bar />
+    }
+    <div class="page-content" [class.page-content--bare]="(showChrome$ | async) === false">
       <router-outlet />
     </div>
   </main>

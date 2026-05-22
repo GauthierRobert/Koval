@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { map, startWith } from 'rxjs/operators';
 import { ActiveSessionState, WorkoutExecutionService } from './services/workout-execution.service';
 import { LiveDashboardComponent } from './components/pages/live-session/live-dashboard.component';
 import { TopBarComponent } from './components/layout/top-bar/top-bar.component';
@@ -9,6 +10,7 @@ import { TrainingService } from './services/training.service';
 import { Training } from './models/training.model';
 import { Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
+// (NavigationEnd / map / startWith imported above)
 import { DeviceManagerComponent } from './components/shared/device-manager/device-manager.component';
 import { SettingsComponent } from './components/layout/settings/settings.component';
 import { BluetoothService } from './services/bluetooth.service';
@@ -43,6 +45,7 @@ export class AppComponent {
   executionState$: Observable<ActiveSessionState>;
   showDeviceManager$: Observable<boolean>;
   showSettings$: Observable<boolean>;
+  showChrome$: Observable<boolean>;
 
   private destroyRef = inject(DestroyRef);
 
@@ -53,7 +56,17 @@ export class AppComponent {
     private authService: AuthService,
     private notificationService: NotificationService,
     private translate: TranslateService,
+    private router: Router,
   ) {
+    this.showChrome$ = this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects),
+      startWith(this.router.url),
+      map((url) => {
+        const path = url.split('#')[0].split('?')[0];
+        return path !== '/' && path !== '';
+      }),
+    );
     this.selectedTraining$ = this.trainingService.selectedTraining$;
     this.executionState$ = this.executionService.state$;
     this.showDeviceManager$ = this.bluetoothService.showDeviceManager$;

@@ -1,0 +1,402 @@
+<main class="showcase">
+  <div class="atmosphere" aria-hidden="true">
+    <span class="orb orb--1"></span>
+    <span class="orb orb--2"></span>
+    <span class="grid-overlay"></span>
+  </div>
+
+  <header class="topbar-wrap">
+    <div class="shell shell--top">
+      <div class="topbar">
+        <a class="brand" routerLink="/">
+          <img src="koval-logo.svg" alt="Koval logo" width="32" height="32" />
+          <span class="brand__title">Koval</span>
+        </a>
+        <nav class="topnav">
+          <a class="topnav__link" href="#platform">Platform</a>
+          <a class="topnav__link" href="#mcp">MCP</a>
+          <a class="topnav__link" href="#workflow">Workflow</a>
+          <a class="topnav__link" href="#fit">Who it's for</a>
+          <a class="cta cta--solid cta--sm" routerLink="/login">Open app</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <section class="shell shell--hero">
+    <div class="hero">
+      <div class="hero__copy reveal">
+        <p class="eyebrow"><span class="eyebrow__dot"></span>Built for cyclists & triathletes</p>
+        <h1 class="hero__title">
+          The training
+          <span class="hero__title-accent">control room</span>
+          for your season.
+        </h1>
+        <p class="hero__lead">
+          Design workouts, plan multi-week blocks, read your form, and run race day — all in one
+          dark-first cockpit. Then plug it into Claude and let the assistant drive the boring parts.
+        </p>
+        <div class="hero__ctas">
+          <a class="cta cta--solid" routerLink="/login">
+            Start free
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              <path
+                d="M3 8h10M9 4l4 4-4 4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </a>
+          <a class="cta cta--ghost" href="#mcp">See it with Claude</a>
+        </div>
+        <ul class="proof">
+          <li class="proof__chip proof__chip--accent">
+            <span class="proof__dot"></span>MCP for Claude — plan & coach from your AI client
+          </li>
+          <li class="proof__chip"><span class="proof__dot"></span>Cycling · Run · Swim · Brick</li>
+          <li class="proof__chip">
+            <span class="proof__dot"></span>Strava · Google · Polar · Suunto
+          </li>
+          <li class="proof__chip"><span class="proof__dot"></span>Installable PWA</li>
+        </ul>
+      </div>
+
+      <figure class="hero__panel reveal reveal--delay">
+        <div class="hero__chrome">
+          <span class="hero__chrome-dot"></span>
+          <span class="hero__chrome-dot"></span>
+          <span class="hero__chrome-dot"></span>
+          <span class="hero__chrome-url">koval.training / dashboard</span>
+        </div>
+        <img
+          src="assets/showcase/dashboard.png"
+          alt="Koval dashboard showing today's focus, fitness/fatigue/form and weekly mix."
+          loading="eager"
+        />
+      </figure>
+    </div>
+
+    <div class="stats reveal">
+      <div class="stats__item">
+        <p class="stats__num">4<span>sports</span></p>
+        <p class="stats__label">Cycling · Run · Swim · Brick</p>
+      </div>
+      <div class="stats__divider" aria-hidden="true"></div>
+      <div class="stats__item">
+        <p class="stats__num">7<span>blocks</span></p>
+        <p class="stats__label">Warmup · Interval · Steady · Ramp · Free · Cooldown · Repeat</p>
+      </div>
+      <div class="stats__divider" aria-hidden="true"></div>
+      <div class="stats__item">
+        <p class="stats__num">1<span>cockpit</span></p>
+        <p class="stats__label">Plan · Review · Race — no tab-switching</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="mcp" class="shell shell--mcp shell--mcp-feature">
+    <div class="mcp">
+      <div class="mcp__halo" aria-hidden="true"></div>
+
+      <header class="mcp__head reveal">
+        <p class="eyebrow eyebrow--invert">
+          <span class="eyebrow__dot"></span>MCP Connector — real, working today
+        </p>
+        <h2 class="mcp__title">
+          Claude plans your week. <span class="hero__title-accent">Live, on your data.</span>
+        </h2>
+        <p class="mcp__lead">
+          Koval ships as a Model Context Protocol server. Connect Claude Desktop, Claude.ai or
+          Claude Code once — the assistant reads your history, schedules sessions, rebuilds the week
+          around conflicts, and creates workouts in your library. The three shots below are real
+          Claude.ai output, not mockups.
+        </p>
+      </header>
+
+      <div class="mcp__gallery">
+        @for (shot of mcpShots; track shot.shot) {
+          <figure class="mcp-shot reveal">
+            <div class="mcp-shot__chrome">
+              <span class="mcp-shot__chrome-dot"></span>
+              <span class="mcp-shot__chrome-dot"></span>
+              <span class="mcp-shot__chrome-dot"></span>
+              <span class="mcp-shot__chrome-url">claude.ai / koval mcp</span>
+              <span class="mcp-shot__chrome-live">
+                <span class="mcp-shot__chrome-live-dot"></span>live
+              </span>
+            </div>
+            <div class="mcp-shot__media">
+              <img
+                [src]="shot.shot"
+                [alt]="'Claude.ai using Koval MCP — ' + shot.title"
+                loading="lazy"
+              />
+              <span class="mcp-shot__step">{{ shot.step }}</span>
+            </div>
+            <figcaption class="mcp-shot__caption">
+              <p class="mcp-shot__tag">{{ shot.tag }}</p>
+              <h3 class="mcp-shot__title">{{ shot.title }}</h3>
+              <p class="mcp-shot__copy">{{ shot.copy }}</p>
+            </figcaption>
+          </figure>
+        }
+      </div>
+
+      <div class="mcp__connect-row reveal">
+        <div class="mcp__connect">
+          <p class="mcp__connect-label">Endpoint</p>
+          <code class="mcp__endpoint">https://koval.training/mcp/sse</code>
+          <p class="mcp__connect-hint">
+            Add the URL in your Claude client, sign in with Strava or Google, done.
+          </p>
+        </div>
+
+        <ul class="mcp__clients">
+          @for (client of mcpClients; track client) {
+            <li class="mcp__client"><span class="mcp__client-dot"></span>{{ client }}</li>
+          }
+        </ul>
+      </div>
+
+      <div class="mcp__caps">
+        @for (cap of mcpCapabilities; track cap.label) {
+          <article class="mcp__cap reveal">
+            <p class="mcp__cap-label">{{ cap.label }}</p>
+            <p class="mcp__cap-copy">{{ cap.copy }}</p>
+            <ul class="mcp__cap-tools">
+              @for (tool of cap.tools; track tool) {
+                <li>{{ tool }}</li>
+              }
+            </ul>
+          </article>
+        }
+      </div>
+
+      <div class="mcp__prompts reveal">
+        <p class="mcp__prompts-label">Try saying</p>
+        <ul>
+          @for (prompt of mcpPrompts; track prompt) {
+            <li>&ldquo;{{ prompt }}&rdquo;</li>
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="ticker" aria-hidden="true">
+    <div class="ticker__track">
+      @for (item of tickerItems; track item + '-a') {
+        <span class="ticker__item">{{ item }}</span>
+      }
+      @for (item of tickerItems; track item + '-b') {
+        <span class="ticker__item">{{ item }}</span>
+      }
+    </div>
+  </section>
+
+  <section id="workflow" class="shell">
+    <div class="section-head reveal">
+      <p class="eyebrow">Workflow</p>
+      <h2 class="section-title">From the first interval to the finish line.</h2>
+      <p class="section-lead">
+        One flow for designing, reviewing, and executing the season — less switching, sharper calls.
+      </p>
+    </div>
+    <div class="steps">
+      <article class="step reveal">
+        <div class="step__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path
+              d="M4 18V8m4 10V4m4 14v-8m4 8V6m4 12v-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+        <p class="step__num">01 — Plan</p>
+        <h3 class="step__title">Build the block</h3>
+        <p class="step__copy">
+          Shape sessions and multi-week plans with explicit zones and durations — intervals, ramps,
+          steady, warmup, cooldown.
+        </p>
+      </article>
+      <article class="step reveal">
+        <div class="step__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path
+              d="M3 17l5-6 4 4 7-9"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <circle cx="19" cy="6" r="1.5" fill="currentColor" />
+          </svg>
+        </div>
+        <p class="step__num">02 — Review</p>
+        <h3 class="step__title">Read the signal</h3>
+        <p class="step__copy">
+          CTL, ATL, TSB and power curves stay attached to the plan that produced them.
+        </p>
+      </article>
+      <article class="step reveal">
+        <div class="step__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path
+              d="M5 21l3-9 4-2 5 4-3 7M14 5l3 3M12 3l9 9"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <p class="step__num">03 — Race</p>
+        <h3 class="step__title">Arrive race-ready</h3>
+        <p class="step__copy">
+          Race desk, taper decisions, and club coordination from the same room you train in.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section id="platform" class="shell">
+    <div class="section-head section-head--row reveal">
+      <div>
+        <p class="eyebrow">Platform</p>
+        <h2 class="section-title">Every layer of training, under one roof.</h2>
+      </div>
+      <a class="cta cta--ghost cta--sm" routerLink="/login">Enter the product</a>
+    </div>
+
+    <div class="modules">
+      @for (mod of modules; track mod.title; let i = $index) {
+        <article class="module reveal" [class.module--feature]="i === 0">
+          <figure class="module__shot">
+            <img [src]="mod.shot" [alt]="mod.alt" loading="lazy" />
+          </figure>
+          <div class="module__body">
+            <p class="module__label">{{ mod.label }}</p>
+            <h3 class="module__title">{{ mod.title }}</h3>
+            <p class="module__copy">{{ mod.copy }}</p>
+          </div>
+        </article>
+      }
+      <article class="module module--text reveal">
+        <div class="module__body">
+          <p class="module__label">Community</p>
+          <h3 class="module__title">Club Layer</h3>
+          <p class="module__copy">
+            Club sessions, athlete groups, a live feed, and a gazette publisher — shared momentum in
+            the same place as the plan.
+          </p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="fit" class="shell">
+    <div class="section-head reveal">
+      <p class="eyebrow">Who it's for</p>
+      <h2 class="section-title">Athletes, coaches and clubs that train with intent.</h2>
+    </div>
+    <div class="audience__cards">
+      <article class="audience__card reveal">
+        <div class="audience__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <circle cx="12" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="1.75" />
+            <path
+              d="M4 21c1-4 4-6 8-6s7 2 8 6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+        <h3>Self-coached athletes</h3>
+        <p>
+          Riders and triathletes who want structure without flattening training into a spreadsheet.
+        </p>
+      </article>
+      <article class="audience__card reveal">
+        <div class="audience__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path
+              d="M3 12l9-6 9 6-9 6-9-6z M6 13.5V18l6 3 6-3v-4.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <h3>Coaches</h3>
+        <p>Planning, review and athlete communication living inside one system.</p>
+      </article>
+      <article class="audience__card reveal">
+        <div class="audience__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <circle cx="9" cy="9" r="3" fill="none" stroke="currentColor" stroke-width="1.75" />
+            <circle cx="17" cy="11" r="2.5" fill="none" stroke="currentColor" stroke-width="1.75" />
+            <path
+              d="M3 20c.5-3 3-5 6-5s5.5 2 6 5M14 20c.4-2 2-3.5 4-3.5s3.6 1.5 4 3.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+        <h3>Clubs</h3>
+        <p>Teams coordinating sessions, groups, and shared goals across a season.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="shell shell--cta">
+    <div class="final-cta reveal">
+      <p class="eyebrow eyebrow--invert"><span class="eyebrow__dot"></span>Ready when you are</p>
+      <h2 class="final-cta__title">Run your next block <br />from one cockpit.</h2>
+      <p class="final-cta__lead">
+        Sign in with Strava, Google, Polar or Suunto. Free during preview — no card required.
+      </p>
+      <div class="final-cta__actions">
+        <a class="cta cta--solid cta--lg" routerLink="/login">
+          Launch Koval Training
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path
+              d="M3 8h10M9 4l4 4-4 4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+        <a class="cta cta--ghost cta--lg" href="#workflow">How it works</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="shell shell--footer">
+    <div class="footer__brand">
+      <img src="koval-logo.svg" alt="" width="24" height="24" />
+      <p>© {{ 2026 }} Koval Training</p>
+    </div>
+    <nav>
+      <a routerLink="/login">Login</a>
+      <a href="#platform">Platform</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#fit">Who it's for</a>
+    </nav>
+  </footer>
+</main>
