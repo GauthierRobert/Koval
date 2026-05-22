@@ -216,9 +216,14 @@ public class ClubStatsService {
                 default -> { /* unknown/null sport: skip distance bucket */ }
             }
             tss += Optional.ofNullable(s.getTss()).orElse(0.0);
-            durationSec += s.getTotalDurationSeconds();
+            durationSec += effectiveDurationSec(s);
         }
         return new WeeklyVolume(swim, bike, run, tss, durationSec / 3600.0);
+    }
+
+    private static int effectiveDurationSec(CompletedSession s) {
+        Integer moving = s.getMovingTimeSeconds();
+        return moving != null && moving > 0 ? moving : s.getTotalDurationSeconds();
     }
 
     private List<ClubExtendedStatsResponse.RecurringTemplateAttendance> computeRecurringAttendance(
@@ -340,7 +345,7 @@ public class ClubStatsService {
             List<CompletedSession> wSessions = filterBetween(
                     allCompletedSessions, CompletedSession::getCompletedAt, wStartDt, wEndDt);
             double wTss = wSessions.stream().mapToDouble(s -> Optional.ofNullable(s.getTss()).orElse(0.0)).sum();
-            double wHours = wSessions.stream().mapToLong(CompletedSession::getTotalDurationSeconds).sum() / 3600.0;
+            double wHours = wSessions.stream().mapToInt(ClubStatsService::effectiveDurationSec).sum() / 3600.0;
             List<ClubTrainingSession> wClubSessions = filterBetween(
                     pastClubSessions, ClubTrainingSession::getScheduledAt, wStartDt, wEndDt);
             double wAttendance = computeAttendanceRate(wClubSessions, memberCount);
@@ -358,7 +363,7 @@ public class ClubStatsService {
         Map<String, MemberActivity> stats = new LinkedHashMap<>();
         for (CompletedSession s : weeklySessions) {
             stats.merge(s.getUserId(),
-                    new MemberActivity(s.getTotalDurationSeconds(), 1,
+                    new MemberActivity(effectiveDurationSec(s), 1,
                             Math.round(Optional.ofNullable(s.getTss()).orElse(0.0))),
                     MemberActivity::plus);
         }

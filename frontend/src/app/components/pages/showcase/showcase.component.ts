@@ -69,6 +69,21 @@ export class ShowcaseComponent implements OnInit {
 
   readonly mcpClients = ['Claude Desktop', 'Claude.ai', 'Claude Code', 'Any MCP-compatible client'];
 
+  readonly mcpSetupSteps = [
+    {
+      step: '01',
+      title: 'Complete your athlete profile',
+      copy: 'Set your FTP, weight, threshold pace and swim CSS in Koval. The MCP exposes these to Claude so every workout, TSS estimate and zone recommendation lands on your real numbers — not generic defaults.',
+      hint: 'Profile → Settings · or ask Claude: "update my FTP to 285 watts"',
+    },
+    {
+      step: '02',
+      title: 'Create a Claude Project with a profile pre-prompt',
+      copy: 'In Claude.ai, open a new Project for your training. Paste a short pre-prompt that pins your sport, goals, current block and constraints. Claude carries that context into every conversation and pairs it with live data from Koval through the MCP.',
+      hint: 'Tip: ask Claude in chat to "draft a Koval project pre-prompt from my profile" — then paste it into the Project instructions.',
+    },
+  ];
+
   readonly mcpShots = [
     {
       shot: 'assets/showcase/claude.ia.1.png',
@@ -94,13 +109,6 @@ export class ShowcaseComponent implements OnInit {
   ];
 
   readonly modules = [
-    {
-      label: 'Plans + workouts',
-      title: 'Training Builder',
-      copy: 'Design sessions block by block, group repeats, and keep the week coherent from base work through race sharpening.',
-      shot: 'assets/showcase/builder.png',
-      alt: 'Koval workout builder showing block types, intensity targets, and live preview.',
-    },
     {
       label: 'Weekly control',
       title: 'Training Calendar',

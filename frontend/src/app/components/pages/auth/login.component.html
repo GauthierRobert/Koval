@@ -71,13 +71,17 @@
       >
         <img src="/assets/polar.svg" alt="Connect with Polar" class="polar-badge" />
       </button>
-      <button
-        class="auth-btn suunto"
-        (click)="loginWithSuunto()"
-        [attr.aria-label]="'LOGIN.BTN_CONTINUE_SUUNTO' | translate"
-      >
-        <img src="/assets/suunto.svg" alt="Connect with Suunto" class="suunto-badge" />
-      </button>
+      <div class="auth-btn-wrapper">
+        <button
+          class="auth-btn suunto"
+          type="button"
+          disabled
+          [attr.aria-label]="'LOGIN.BTN_CONTINUE_SUUNTO' | translate"
+        >
+          <img src="/assets/suunto.svg" alt="Connect with Suunto" class="suunto-badge" />
+        </button>
+        <span class="auth-btn-subtitle">{{ 'LOGIN.COMING_SOON' | translate }}</span>
+      </div>
       <button class="auth-btn google" (click)="loginWithGoogle()">
         <svg class="google-logo" viewBox="0 0 24 24" width="18" height="18">
           <path
@@ -106,7 +110,26 @@
           disabled
           [attr.aria-label]="'LOGIN.BTN_CONNECT_GARMIN' | translate"
         >
-          <span class="btn-text">{{ 'LOGIN.BTN_CONNECT_GARMIN' | translate }}</span>
+          <svg class="garmin-mark" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true">
+            <rect width="100" height="100" rx="14" fill="#3F4042" />
+            <path d="M0 0 H100 V28 L0 55 Z" fill="#29ABE2" />
+            <text
+              x="50"
+              y="32"
+              transform="rotate(-15 50 32)"
+              text-anchor="middle"
+              font-family="Arial, Helvetica, sans-serif"
+              font-weight="700"
+              font-size="16"
+              letter-spacing="1"
+              fill="#3F4042"
+            >
+              GARMIN
+            </text>
+            <path d="M28 66 A22 22 0 0 1 72 66 L64 66 A14 14 0 0 0 36 66 Z" fill="#29ABE2" />
+            <path d="M28 74 A22 22 0 0 0 72 74 L64 74 A14 14 0 0 1 36 74 Z" fill="#29ABE2" />
+          </svg>
+          <span class="garmin-wordmark">Garmin Connect</span>
         </button>
         <span class="auth-btn-subtitle">{{ 'LOGIN.COMING_SOON' | translate }}</span>
       </div>
