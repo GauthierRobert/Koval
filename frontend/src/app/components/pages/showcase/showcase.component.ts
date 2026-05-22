@@ -70,15 +70,15 @@ export class ShowcaseComponent {
   readonly mcpSetupSteps = [
     {
       step: '01',
-      title: 'Complete your athlete profile',
-      copy: 'Set your FTP, weight, threshold pace and swim CSS in Koval. The MCP exposes these to Claude so every workout, TSS estimate and zone recommendation lands on your real numbers — not generic defaults.',
-      hint: 'Profile → Settings · or ask Claude: "update my FTP to 285 watts"',
+      title: 'Run the Koval onboarding in Claude',
+      copy: 'Ask Claude to run the Koval onboarding. It walks you through your sport, FTP, threshold pace, swim CSS, goals and current block, writes it all back into Koval through the MCP, and produces a profile.md you can reuse anywhere.',
+      hint: 'Try: "run the Koval onboarding and give me my profile.md when you\'re done"',
     },
     {
       step: '02',
-      title: 'Create a Claude Project with a profile pre-prompt',
-      copy: 'In Claude.ai, open a new Project for your training. Paste a short pre-prompt that pins your sport, goals, current block and constraints. Claude carries that context into every conversation and pairs it with live data from Koval through the MCP.',
-      hint: 'Tip: ask Claude in chat to "draft a Koval project pre-prompt from my profile" — then paste it into the Project instructions.',
+      title: 'Paste profile.md into a Claude Project pre-prompt',
+      copy: 'Open a new Project in Claude.ai for your training and paste the profile.md from step 1 into the Project instructions. Claude carries that context into every conversation and pairs it with live data from Koval through the MCP.',
+      hint: 'One profile.md, one Project — every new chat starts already knowing your numbers and goals.',
     },
   ];
 
