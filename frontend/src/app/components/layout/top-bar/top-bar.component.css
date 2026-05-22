@@ -247,6 +247,20 @@
   color: var(--accent-color);
 }
 
+/* ─── Discover nav (leaves dashboard to showcase) ────────── */
+.nav-link--discover .nav-arrow {
+  margin-left: 4px;
+  opacity: 0.7;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.nav-link--discover:hover .nav-arrow {
+  transform: translate(2px, -2px);
+  opacity: 1;
+}
+
 /* ─── Coach nav ──────────────────────────────────────────── */
 .nav-link--coach {
   color: color-mix(in oklch, var(--secondary-color) 55%, transparent);
@@ -541,6 +555,10 @@
   }
 
   .topbar-controls .control-btn:not(.mobile-visible) {
+    display: none;
+  }
+
+  .discover-aside {
     display: none;
   }
 

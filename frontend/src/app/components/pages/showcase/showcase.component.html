@@ -175,6 +175,23 @@
         }
       </div>
 
+      <div class="mcp__setup reveal">
+        <p class="mcp__setup-label">Get the most out of it</p>
+        <h3 class="mcp__setup-title">Two steps before your first prompt</h3>
+        <ol class="mcp__setup-steps">
+          @for (step of mcpSetupSteps; track step.step) {
+            <li class="mcp__setup-step">
+              <span class="mcp__setup-num">{{ step.step }}</span>
+              <div class="mcp__setup-body">
+                <h4 class="mcp__setup-step-title">{{ step.title }}</h4>
+                <p class="mcp__setup-copy">{{ step.copy }}</p>
+                <p class="mcp__setup-hint">{{ step.hint }}</p>
+              </div>
+            </li>
+          }
+        </ol>
+      </div>
+
       <div class="mcp__prompts reveal">
         <p class="mcp__prompts-label">Try saying</p>
         <ul>

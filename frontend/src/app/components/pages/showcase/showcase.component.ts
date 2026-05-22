@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-showcase',
@@ -10,8 +9,7 @@ import { AuthService } from '../../../services/auth.service';
   styleUrl: './showcase.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ShowcaseComponent implements OnInit {
-  private readonly auth = inject(AuthService);
+export class ShowcaseComponent {
   private readonly router = inject(Router);
 
   readonly tickerItems = [
@@ -145,12 +143,6 @@ export class ShowcaseComponent implements OnInit {
       alt: 'Koval session detail showing blocks, zone time and power curve.',
     },
   ];
-
-  ngOnInit(): void {
-    if (this.auth.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
-    }
-  }
 
   goToLogin(): void {
     this.router.navigate(['/login']);

@@ -43,6 +43,7 @@
   },
   "TOP_BAR": {
     "NAV_DASHBOARD": "DASHBOARD",
+    "NAV_DISCOVER": "DISCOVER",
     "NAV_ASSISTANT": "ASSISTANT",
     "NAV_ASSISTANT_DISABLED": "The assistant is temporarily unavailable",
     "NAV_CLUBS": "CLUBS",

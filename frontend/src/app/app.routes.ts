@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { Router, Routes } from '@angular/router';
+import { inject } from '@angular/core';
 import { authGuard } from './guards/auth.guard';
 import { coachGuard } from './guards/coach.guard';
 
@@ -8,6 +9,20 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/pages/showcase/showcase.component').then((m) => m.ShowcaseComponent),
     pathMatch: 'full',
+    canActivate: [
+      () => {
+        const router = inject(Router);
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('token')) {
+          return router.createUrlTree(['/dashboard']);
+        }
+        return true;
+      },
+    ],
+  },
+  {
+    path: 'discover',
+    loadComponent: () =>
+      import('./components/pages/showcase/showcase.component').then((m) => m.ShowcaseComponent),
   },
   {
     path: 'dashboard',
@@ -266,6 +281,15 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () =>
       import('./components/pages/auth/login.component').then((m) => m.LoginComponent),
+    canActivate: [
+      () => {
+        const router = inject(Router);
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('token')) {
+          return router.createUrlTree(['/dashboard']);
+        }
+        return true;
+      },
+    ],
   },
   {
     path: 'auth/callback',

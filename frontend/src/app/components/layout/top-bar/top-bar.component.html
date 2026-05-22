@@ -527,6 +527,40 @@
   </nav>
 
   <div class="right-section">
+    <a
+      routerLink="/discover"
+      class="nav-link nav-link--discover discover-aside"
+      (click)="closeMobileMenu()"
+    >
+      <svg
+        class="nav-icon"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+      </svg>
+      {{ 'TOP_BAR.NAV_DISCOVER' | translate }}
+      <svg
+        class="nav-arrow"
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <line x1="7" y1="17" x2="17" y2="7" />
+        <polyline points="7 7 17 7 17 17" />
+      </svg>
+    </a>
     <div class="topbar-controls">
       <button
         class="control-btn mobile-visible"
