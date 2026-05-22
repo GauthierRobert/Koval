@@ -213,16 +213,13 @@
         <!-- Suunto -->
         <div class="linked-app-row">
           <div class="app-info">
-            <svg class="app-icon suunto" viewBox="0 0 24 24" width="20" height="20">
-              <circle cx="12" cy="12" r="10" fill="#000" />
-              <circle cx="12" cy="12" r="6" fill="none" stroke="#fff" stroke-width="1.5" />
-              <path
-                d="M8 12h8M12 8v8"
-                stroke="#fff"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              />
-            </svg>
+            <img
+              class="app-icon suunto"
+              src="assets/suunto.svg"
+              width="20"
+              height="20"
+              alt="Suunto"
+            />
             <div class="app-details">
               <span class="app-name">Suunto</span>
               <span class="app-status" [class.connected]="user.linkedAccounts?.suunto">

@@ -195,6 +195,23 @@ h1 .accent {
   margin: 0 auto;
 }
 
+.auth-btn.suunto {
+  background: #ffffff;
+  border: 1px solid var(--google-border);
+  padding: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 42px;
+  width: 207px;
+}
+
+.suunto-badge {
+  display: block;
+  width: 110px;
+  height: auto;
+  margin: 0 auto;
+}
+
 .auth-btn-wrapper {
   display: flex;
   flex-direction: column;
