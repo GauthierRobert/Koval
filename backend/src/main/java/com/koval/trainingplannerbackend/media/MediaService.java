@@ -87,7 +87,7 @@ public class MediaService {
         if (!media.getOwnerId().equals(userId)) {
             throw new IllegalStateException("Only the uploader can confirm this media");
         }
-        if (media.isConfirmed()) {
+        if (Boolean.TRUE.equals(media.getConfirmed())) {
             return new ConfirmUploadResponse(media.getId(), true,
                     media.getSizeBytes(), media.getWidth(), media.getHeight(),
                     media.getProcessingStatus(), media.getBlurHash());
@@ -125,7 +125,7 @@ public class MediaService {
     public MediaResponse getReadResponse(String mediaId) {
         Media media = mediaRepository.findById(mediaId)
                 .orElseThrow(() -> new IllegalArgumentException("Media not found"));
-        if (!media.isConfirmed()) {
+        if (!Boolean.TRUE.equals(media.getConfirmed())) {
             throw new IllegalStateException("Media not confirmed yet");
         }
         return buildMediaResponse(media);
@@ -184,7 +184,7 @@ public class MediaService {
             if (!m.getOwnerId().equals(userId)) {
                 throw new IllegalStateException("Media " + mediaId + " not owned by user");
             }
-            if (!m.isConfirmed()) {
+            if (!Boolean.TRUE.equals(m.getConfirmed())) {
                 throw new IllegalStateException("Media " + mediaId + " not confirmed");
             }
             if (m.getPurpose() != expectedPurpose) {

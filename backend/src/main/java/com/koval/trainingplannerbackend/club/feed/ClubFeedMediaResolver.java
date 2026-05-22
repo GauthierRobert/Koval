@@ -22,7 +22,7 @@ public class ClubFeedMediaResolver {
 
     public MediaResponse resolve(String mediaId) {
         return mediaService.findById(mediaId)
-                .filter(Media::isConfirmed)
+                .filter(m -> Boolean.TRUE.equals(m.getConfirmed()))
                 .map(mediaService::buildMediaResponse)
                 .orElse(null);
     }

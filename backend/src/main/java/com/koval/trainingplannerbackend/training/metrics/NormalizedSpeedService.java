@@ -37,8 +37,7 @@ public class NormalizedSpeedService {
             if (samples.isEmpty()) return OptionalDouble.empty();
 
             double normalized = switch (sport) {
-                case RUNNING, BRICK -> NormalizedSpeedCalculator.computeNgp(
-                        samples.speedMps(), samples.altitudeMeters());
+                case RUNNING, BRICK -> NormalizedSpeedCalculator.computeNgp(samples.speedMps());
                 case SWIMMING -> NormalizedSpeedCalculator.computeNss(samples.speedMps());
                 case CYCLING -> 0.0;
             };

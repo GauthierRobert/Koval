@@ -43,7 +43,7 @@ public class Media {
     private Integer width;
     private Integer height;
 
-    private boolean confirmed;
+    private Boolean confirmed;
     private LocalDateTime createdAt;
     private LocalDateTime confirmedAt;
 
