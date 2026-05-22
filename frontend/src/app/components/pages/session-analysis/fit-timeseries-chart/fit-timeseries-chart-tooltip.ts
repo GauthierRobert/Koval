@@ -115,6 +115,7 @@ export function buildTooltipContent(ctx: HoverContext): TooltipContent {
     bpMax: number | null = null;
   let bhr: number | null = null,
     bcad: number | null = null;
+  let bSpeedKmh: number | null = null;
   if (useZoneBlocks(ctx)) {
     const zb = ctx.zoneBlocks.find(
       (b) => ctx.hoverIdx >= b.startIndex && ctx.hoverIdx <= b.endIndex,
@@ -124,6 +125,7 @@ export function buildTooltipContent(ctx: HoverContext): TooltipContent {
       bpMax = cycling ? zb.maxPower : zb.maxSpeed;
       bhr = zb.avgHR;
       bcad = getCadBlockFromValue(zb.avgCadence, ctx.sportType);
+      if (cycling) bSpeedKmh = zb.avgSpeed;
       blockLabel = `${zb.zoneLabel} · ${zb.zoneDescription}`;
       blockDuration = ctx.records[zb.endIndex].timestamp - ctx.records[zb.startIndex].timestamp;
     }
@@ -139,6 +141,9 @@ export function buildTooltipContent(ctx: HoverContext): TooltipContent {
             : 0;
         bhr = b.actualHR;
         bcad = getCadBlockFromValue(b.actualCadence, ctx.sportType);
+        if (cycling && b.distanceMeters && b.durationSeconds > 0) {
+          bSpeedKmh = (b.distanceMeters / b.durationSeconds) * 3.6;
+        }
         blockLabel = b.label;
         blockDuration = b.durationSeconds;
         break;
@@ -172,6 +177,13 @@ export function buildTooltipContent(ctx: HoverContext): TooltipContent {
       if (cycling) {
         rows.push({ label: 'Avg Power', value: `${Math.round(bp!)}W`, color: accent });
         if (bpMax) rows.push({ label: 'Max Power', value: `${Math.round(bpMax)}W`, color: accent });
+        if (bSpeedKmh != null && bSpeedKmh > 0) {
+          rows.push({
+            label: 'Avg Speed',
+            value: `${bSpeedKmh.toFixed(1)} km/h`,
+            color: '#22d3ee',
+          });
+        }
       } else if (swimming) {
         const avgPace = kmhToPace(bp!);
         rows.push({
@@ -211,6 +223,10 @@ export function buildTooltipContent(ctx: HoverContext): TooltipContent {
       if (cycling) {
         const p = lerpDsValue(ctx.downsampled, tRec, (r) => r.power);
         rows.push({ label: 'Power', value: `${Math.round(p)}W`, color: accent });
+        const kmh = lerpDsValue(ctx.downsampled, tRec, (r) => (r.speed || 0) * 3.6);
+        if (kmh > 0) {
+          rows.push({ label: 'Speed', value: `${kmh.toFixed(1)} km/h`, color: '#22d3ee' });
+        }
       } else if (swimming) {
         const kmh = lerpDsValue(ctx.downsampled, tRec, (r) => (r.speed || 0) * 3.6);
         const pace = kmhToPace(kmh);

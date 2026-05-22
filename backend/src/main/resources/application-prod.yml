@@ -60,6 +60,9 @@ firebase:
 cors:
   allowed-origins: ${ALLOWED_ORIGINS}
 
+storage:
+  gcs:
+    enabled: ${GCS_MEDIA_ENABLED:true}
 app:
   ai:
     debug-calls: false
