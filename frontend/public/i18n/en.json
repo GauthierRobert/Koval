@@ -1647,7 +1647,8 @@
     "COUNTDOWN_WEEKS": "weeks",
     "COUNTDOWN_PAST": "past",
     "SECTION_COUNTDOWN": "COUNTDOWN",
-    "SECTION_DETAILS": "DETAILS"
+    "SECTION_DETAILS": "DETAILS",
+    "VIEW_SESSION": "View session"
   },
   "RACES": {
     "PAGE_TITLE": "Races",
