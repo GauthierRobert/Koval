@@ -44,8 +44,15 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
 
     List<CompletedSession> findByUserIdAndGroupId(String userId, String groupId);
 
-    /** Sessions the user classified against a race day with the given role (e.g. RACE). */
-    List<CompletedSession> findByUserIdAndRaceRole(String userId, RaceRole raceRole);
+    /**
+     * Lightweight references to the user's RACE-classified sessions: only {@code _id},
+     * {@code raceId} and {@code totalDurationSeconds} are populated (power curve, block
+     * summaries etc. are left null). Used to deep-link a club race objective to the session
+     * the viewer logged for it — do NOT reuse where a full session is expected.
+     */
+    @Query(value = "{ 'userId': ?0, 'raceRole': 'RACE' }",
+            fields = "{ 'raceId': 1, 'totalDurationSeconds': 1 }")
+    List<CompletedSession> findRaceSessionRefsByUserId(String userId);
 
     /**
      * Sessions with a GridFS FIT pointer but no GCS object yet — i.e. waiting to

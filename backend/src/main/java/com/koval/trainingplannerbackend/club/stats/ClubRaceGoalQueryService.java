@@ -11,7 +11,6 @@ import com.koval.trainingplannerbackend.race.Race;
 import com.koval.trainingplannerbackend.race.RaceRepository;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
-import com.koval.trainingplannerbackend.training.history.RaceRole;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -98,15 +97,22 @@ public class ClubRaceGoalQueryService {
         // past objective to the session the viewer logged for it. Resolved only for the caller —
         // sessions are visible to their owner (or coach) only, so we never expose other members'.
         // When several sessions share a raceId (e.g. a triathlon chain) the longest effort wins.
-        Map<String, String> viewerSessionByRaceId = completedSessionRepository
-                .findByUserIdAndRaceRole(userId, RaceRole.RACE).stream()
-                .filter(s -> s.getRaceId() != null)
-                .collect(Collectors.toMap(
-                        CompletedSession::getRaceId,
-                        s -> s,
-                        (a, b) -> a.getTotalDurationSeconds() >= b.getTotalDurationSeconds() ? a : b))
-                .entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getId()));
+        // Skipped entirely when the club has no past races, since the links only surface there.
+        boolean hasPastRaces = referencedRaceIds.stream()
+                .map(raceMap::get)
+                .filter(Objects::nonNull)
+                .map(Race::getScheduledDate)
+                .anyMatch(date -> date != null && date.compareTo(todayIso) < 0);
+        Map<String, String> viewerSessionByRaceId = !hasPastRaces
+                ? Map.of()
+                : completedSessionRepository.findRaceSessionRefsByUserId(userId).stream()
+                        .filter(s -> s.getRaceId() != null)
+                        .collect(Collectors.toMap(
+                                CompletedSession::getRaceId,
+                                s -> s,
+                                (a, b) -> a.getTotalDurationSeconds() >= b.getTotalDurationSeconds() ? a : b))
+                        .entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getId()));
 
         return goalsByRace.values().stream().map(raceGoals -> {
             RaceGoal representative = raceGoals.getFirst();
