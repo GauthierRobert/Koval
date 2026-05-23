@@ -7,13 +7,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
 /**
- * Reads a session's FIT file and produces a sport-appropriate normalized speed:
- * NGP for running, NSS for swimming. Returns empty for cycling (TSS uses power
- * directly) and on any read or parse failure.
+ * Reads a session's FIT file and produces sport-appropriate normalized metrics:
+ * NGP for running, NSS for swimming, NP for cycling. Returns empty on any
+ * read or parse failure.
  */
 @Service
 public class NormalizedSpeedService {
@@ -44,6 +45,28 @@ public class NormalizedSpeedService {
             return normalized > 0 ? OptionalDouble.of(normalized) : OptionalDouble.empty();
         } catch (Exception e) {
             log.warn("Failed to compute normalized speed for session {}: {}", session.getId(), e.getMessage());
+            return OptionalDouble.empty();
+        }
+    }
+
+    /**
+     * Cycling-only Normalized Power in watts, computed from the FIT power stream.
+     * Returns empty for non-cycling sports, missing FIT files, FITs without power
+     * data, or any parse failure.
+     */
+    public OptionalDouble computeNormalizedPowerFromFit(CompletedSession session, SportType sport) {
+        if (session == null || sport == null) return OptionalDouble.empty();
+        if (sport != SportType.CYCLING && sport != SportType.BRICK) return OptionalDouble.empty();
+
+        try {
+            Optional<byte[]> bytes = fitFileStore.read(session);
+            if (bytes.isEmpty()) return OptionalDouble.empty();
+            List<Integer> watts = FitPowerExtractor.extractPower(bytes.get());
+            if (watts.isEmpty()) return OptionalDouble.empty();
+            double np = NormalizedPowerCalculator.computeNp(watts);
+            return np > 0 ? OptionalDouble.of(np) : OptionalDouble.empty();
+        } catch (Exception e) {
+            log.warn("Failed to compute normalized power for session {}: {}", session.getId(), e.getMessage());
             return OptionalDouble.empty();
         }
     }

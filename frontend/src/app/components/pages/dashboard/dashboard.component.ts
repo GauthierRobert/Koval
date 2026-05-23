@@ -53,13 +53,22 @@ export interface WeekMetrics {
   previous: SportStats[];
 }
 
+function sessionDistanceMeters(s: SavedSession): number {
+  // Prefer the recorded total distance — Strava/FIT report the device's
+  // measured value. Falling back to avgSpeed × totalDuration would inflate
+  // distance, because avgSpeed is usually moving-time-based while
+  // totalDuration is elapsed.
+  if (s.totalDistance != null && s.totalDistance > 0) return s.totalDistance;
+  return s.avgSpeed > 0 ? s.avgSpeed * s.totalDuration : 0;
+}
+
 function agg(sessions: SavedSession[], sport: string): SportStats {
   const ss = sessions.filter((s) => s.sportType === sport);
   return {
     sport,
     sessionCount: ss.length,
     durationSeconds: ss.reduce((a, s) => a + s.totalDuration, 0),
-    distanceMeters: ss.reduce((a, s) => a + (s.avgSpeed > 0 ? s.avgSpeed * s.totalDuration : 0), 0),
+    distanceMeters: ss.reduce((a, s) => a + sessionDistanceMeters(s), 0),
     tss: ss.reduce((a, s) => a + (s.tss ?? 0), 0),
   };
 }

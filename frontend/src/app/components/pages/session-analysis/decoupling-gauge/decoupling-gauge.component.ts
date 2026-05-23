@@ -20,9 +20,36 @@ export interface DecouplingResult {
 
 const NINETY_MINUTES = 5400;
 const MIN_RECORDS = 300; // 5 minutes minimum
+const NP_ROLLING_WINDOW = 30;
 const GREEN = 'var(--success-color)';
 const AMBER = 'oklch(0.75 0.16 75)';
 const RED = 'var(--danger-color)';
+
+/**
+ * Coggan Normalized Power: 30 s rolling mean → 4th-power mean → 4th root.
+ * Mirrors the backend `NormalizedPowerCalculator` so the segment value
+ * lines up with the session-level NP shown in the header.
+ */
+function normalizedPower(watts: number[]): number {
+  if (!watts.length) return 0;
+  const series = watts.length >= NP_ROLLING_WINDOW ? rollingMean(watts, NP_ROLLING_WINDOW) : watts;
+  let sum4 = 0;
+  for (const v of series) sum4 += v * v * v * v;
+  return Math.pow(sum4 / series.length, 0.25);
+}
+
+function rollingMean(values: number[], window: number): number[] {
+  const n = values.length;
+  const out = new Array<number>(n - window + 1);
+  let sum = 0;
+  for (let i = 0; i < window; i++) sum += values[i];
+  out[0] = sum / window;
+  for (let i = window; i < n; i++) {
+    sum += values[i] - values[i - window];
+    out[i - window + 1] = sum / window;
+  }
+  return out;
+}
 
 @Component({
   selector: 'app-decoupling-gauge',
@@ -87,9 +114,12 @@ export class DecouplingGaugeComponent {
     if (this.sportType === 'CYCLING' && !hasPower) return null;
     const usePower = hasPower;
 
+    // Drop only HR-less records. Coasting seconds (power = 0) stay in the
+    // sample so the segment's reported NP / avg metric stays comparable to
+    // the session-level value shown in the header.
     const filtered = this.records.filter((r) => {
       if (r.heartRate <= 0) return false;
-      return usePower ? r.power > 0 : r.speed > 0;
+      return usePower ? true : r.speed > 0;
     });
 
     if (filtered.length < MIN_RECORDS) return null;
@@ -111,23 +141,24 @@ export class DecouplingGaugeComponent {
       const end = i === segmentCount - 1 ? filtered.length : (i + 1) * segmentSize;
       const slice = filtered.slice(start, end);
 
-      let metricSum = 0;
       let hrSum = 0;
-      for (const r of slice) {
-        metricSum += usePower ? r.power : r.speed;
-        hrSum += r.heartRate;
-      }
-      const avgMetric = metricSum / slice.length;
+      for (const r of slice) hrSum += r.heartRate;
       const avgHR = hrSum / slice.length;
+      // For cycling, use Normalized Power for the segment — this matches the
+      // Coggan Pa:Hr decoupling convention and makes the segment metric
+      // directly comparable to the session header's NP.
+      const segmentMetric = usePower
+        ? normalizedPower(slice.map((r) => r.power))
+        : slice.reduce((a, r) => a + r.speed, 0) / slice.length;
       // Raw efficiency kept unrounded for decoupling % computation — for
       // running, speed (m/s) / HR is ~0.02, so rounding to 2 decimals
       // collapses segments to identical values and masks the drift.
-      const rawEfficiency = avgHR > 0 ? avgMetric / avgHR : 0;
+      const rawEfficiency = avgHR > 0 ? segmentMetric / avgHR : 0;
       rawEfficiencies.push(rawEfficiency);
 
       // Display values: power as W, speed as km/h. Efficiency display
       // precision scales with the metric's magnitude.
-      const displayMetric = usePower ? avgMetric : avgMetric * 3.6;
+      const displayMetric = usePower ? segmentMetric : segmentMetric * 3.6;
       const metricDecimals = usePower ? 0 : 1;
       const efficiencyDecimals = usePower ? 2 : 4;
       const pow = (n: number) => Math.pow(10, n);

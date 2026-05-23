@@ -62,6 +62,7 @@ public class CompletedSession {
     private Boolean tssFromRpe;
     private Double intensityFactor;
     private Double normalizedSpeed; // m/s — NGP for running, NSS for swimming, when computed from FIT
+    private Double normalizedPower; // watts — NP for cycling, when computed from FIT
     private String fitFileId; // GridFS ObjectId; null when no FIT stored in MongoDB
 
     /**

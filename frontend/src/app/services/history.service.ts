@@ -22,6 +22,8 @@ export interface SavedSession extends SessionSummary {
   /** True when {@link tss} was derived from RPE — UI may recompute optimistically on RPE change. */
   tssFromRpe?: boolean;
   intensityFactor?: number;
+  /** Cycling Normalized Power in watts (NP), computed from the FIT power stream. */
+  normalizedPower?: number;
   fitFileId?: string;
   rpe?: number;
   scheduledWorkoutId?: string;
@@ -99,6 +101,7 @@ interface RawSavedSession {
   completedAt: string | number | Date;
   tss?: number | null;
   intensityFactor?: number | null;
+  normalizedPower?: number | null;
   fitFileId?: string | null;
   rpe?: number | null;
   scheduledWorkoutId?: string | null;
@@ -532,6 +535,7 @@ export class HistoryService {
     syncedToGarmin: false,
     tss: s.tss ?? undefined,
     intensityFactor: s.intensityFactor ?? undefined,
+    normalizedPower: s.normalizedPower ?? undefined,
     fitFileId: s.fitFileId ?? undefined,
     rpe: s.rpe ?? undefined,
     scheduledWorkoutId: s.scheduledWorkoutId ?? undefined,

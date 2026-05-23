@@ -95,6 +95,28 @@ class AnalyticsServiceTest {
         }
 
         @Test
+        void cycling_prefersNormalizedPowerOverAverage() {
+            // Variable session: avg=200W, NP=230W. IF must use NP (the Coggan
+            // definition) — using avg would understate physiological load.
+            CompletedSession s = session("CYCLING", 3600, 200, 0);
+            s.setNormalizedPower(230.0);
+            service.computeAndAttachMetrics(s, userWithFtp(250));
+
+            assertEquals(0.92, s.getIntensityFactor(), 0.001);
+            assertEquals(84.6, s.getTss(), 0.1); // 0.92^2 * 100
+        }
+
+        @Test
+        void cycling_fallsBackToAvgWhenNoNp() {
+            // Manually-added session with no FIT → no NP. avgPower must drive IF.
+            CompletedSession s = session("CYCLING", 3600, 200, 0);
+            s.setNormalizedPower(null);
+            service.computeAndAttachMetrics(s, userWithFtp(250));
+
+            assertEquals(0.8, s.getIntensityFactor(), 0.001);
+        }
+
+        @Test
         void cycling_noFtp_usesRpeFallback() {
             CompletedSession s = session("CYCLING", 3600, 200, 0);
             s.setRpe(7);
