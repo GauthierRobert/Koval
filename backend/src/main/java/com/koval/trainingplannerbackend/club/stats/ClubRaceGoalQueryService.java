@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -49,12 +50,29 @@ public class ClubRaceGoalQueryService {
         this.authorizationService = authorizationService;
     }
 
-    public List<ClubRaceGoalResponse> getRaceGoals(String userId, String clubId) {
+    /**
+     * Builds the date filter for race goals. A season spans 1 November of its start
+     * year to 1 November of the next, so races dated January–October belong to the
+     * season that opened the previous November. When no season is requested we keep
+     * the historical behaviour: upcoming races only (today onward), including undated
+     * goals — the club feed and chat objective channels depend on this.
+     */
+    static Predicate<String> dateFilter(Integer season) {
+        if (season == null) {
+            String todayIso = LocalDate.now().toString();
+            return date -> date == null || date.compareTo(todayIso) >= 0;
+        }
+        String startIso = LocalDate.of(season, 11, 1).toString();       // inclusive
+        String endIso = LocalDate.of(season + 1, 11, 1).toString();     // exclusive
+        return date -> date != null && date.compareTo(startIso) >= 0 && date.compareTo(endIso) < 0;
+    }
+
+    public List<ClubRaceGoalResponse> getRaceGoals(String userId, String clubId, Integer season) {
         authorizationService.requireActiveMember(userId, clubId);
         List<String> memberIds = clubMembershipService.getActiveMemberIds(clubId);
         if (memberIds.isEmpty()) return List.of();
 
-        String todayIso = LocalDate.now().toString();
+        Predicate<String> dateFilter = dateFilter(season);
         List<RaceGoal> allGoals = raceGoalRepository.findByAthleteIdIn(memberIds);
 
         // Batch-fetch every referenced race in a single Mongo round-trip. Building a
@@ -75,7 +93,7 @@ public class ClubRaceGoalQueryService {
                 .filter(g -> {
                     String date = Optional.ofNullable(resolveRace.apply(g.getRaceId()))
                             .map(Race::getScheduledDate).orElse(null);
-                    return date == null || date.compareTo(todayIso) >= 0;
+                    return dateFilter.test(date);
                 })
                 .sorted(Comparator.comparing(g -> Optional.ofNullable(resolveRace.apply(g.getRaceId()))
                         .map(Race::getScheduledDate).orElse("9999-99-99")))

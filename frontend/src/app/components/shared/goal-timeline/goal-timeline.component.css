@@ -3,9 +3,15 @@
   display: block;
 }
 
-:host .accent { color: var(--accent-color); }
-:host .info { color: var(--secondary-color); }
-:host .dim { color: var(--text-40); }
+:host .accent {
+  color: var(--accent-color);
+}
+:host .info {
+  color: var(--secondary-color);
+}
+:host .dim {
+  color: var(--text-40);
+}
 
 /* ── Panel ────────────────────────────────────────────────────────── */
 .rm-panel {
@@ -56,10 +62,18 @@
   display: inline-block;
 }
 
-.leg-dot.a { background: var(--accent-color); }
-.leg-dot.b { background: var(--text-50); }
-.leg-dot.c { background: var(--text-30); }
-.leg-dot.done { background: var(--success-color); }
+.leg-dot.a {
+  background: var(--accent-color);
+}
+.leg-dot.b {
+  background: var(--text-50);
+}
+.leg-dot.c {
+  background: var(--text-30);
+}
+.leg-dot.done {
+  background: var(--success-color);
+}
 
 /* ── Canvas (axis + lanes) ────────────────────────────────────────── */
 .rm-canvas {
@@ -70,7 +84,14 @@
   -webkit-user-select: none;
 }
 
-.rm-marker { cursor: pointer; }
+/* Locked to a fixed window: no pan/zoom, so let the page scroll over it. */
+.rm-canvas.locked {
+  touch-action: auto;
+}
+
+.rm-marker {
+  cursor: pointer;
+}
 
 /* ── Tiered grid (month / week / day) ─────────────────────────────── */
 .rm-grid {
@@ -92,17 +113,17 @@
   border-left-style: solid;
 }
 
-.rm-grid-line[data-type="month"] {
+.rm-grid-line[data-type='month'] {
   border-left-style: dashed;
   border-left-color: color-mix(in oklch, var(--text-50) 60%, transparent);
 }
 
-.rm-grid-line[data-type="week"] {
+.rm-grid-line[data-type='week'] {
   border-left-style: dotted;
   border-left-color: color-mix(in oklch, var(--text-50) 38%, transparent);
 }
 
-.rm-grid-line[data-type="day"] {
+.rm-grid-line[data-type='day'] {
   border-left-color: color-mix(in oklch, var(--text-50) 14%, transparent);
 }
 
@@ -149,7 +170,9 @@
   border-bottom: 1px solid var(--overlay-3);
 }
 
-.rm-row:last-child { border-bottom: none; }
+.rm-row:last-child {
+  border-bottom: none;
+}
 
 .rm-lane-lbl {
   display: flex;
@@ -174,11 +197,13 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg,
+  background: linear-gradient(
+    90deg,
     transparent 0%,
     var(--overlay-8) 6%,
     var(--overlay-8) 94%,
-    transparent 100%);
+    transparent 100%
+  );
   transform: translateY(-50%);
 }
 
@@ -209,8 +234,12 @@
   transition: transform var(--transition-fast);
 }
 
-.rm-marker:hover { z-index: 5; }
-.rm-marker:hover .rm-dot { transform: scale(1.08); }
+.rm-marker:hover {
+  z-index: 5;
+}
+.rm-marker:hover .rm-dot {
+  transform: scale(1.08);
+}
 
 .rm-dot {
   width: 22px;
@@ -229,22 +258,22 @@
   transition: all var(--transition-fast);
 }
 
-.rm-marker[data-status="A"] .rm-dot {
+.rm-marker[data-status='A'] .rm-dot {
   border-color: var(--accent-color);
   color: var(--accent-color);
 }
 
-.rm-marker[data-status="B"] .rm-dot {
+.rm-marker[data-status='B'] .rm-dot {
   border-color: var(--text-55);
   color: var(--text-80);
 }
 
-.rm-marker[data-status="C"] .rm-dot {
+.rm-marker[data-status='C'] .rm-dot {
   border-color: var(--text-30);
   color: var(--text-50);
 }
 
-.rm-marker[data-status="PASSED"] .rm-dot {
+.rm-marker[data-status='PASSED'] .rm-dot {
   border-color: var(--success-color);
   background: color-mix(in oklch, var(--success-color) 18%, var(--surface-color));
   color: var(--success-color);
@@ -283,7 +312,9 @@
   bottom: calc(100% + 6px);
 }
 
-.rm-marker:hover .rm-card { border-color: var(--overlay-20); }
+.rm-marker:hover .rm-card {
+  border-color: var(--overlay-20);
+}
 
 .rm-marker.primary .rm-card {
   border-color: color-mix(in oklch, var(--accent-color) 40%, transparent);
@@ -300,9 +331,15 @@
   margin-bottom: 2px;
 }
 
-.rm-marker[data-status="B"] .rm-card-tag { color: var(--secondary-color); }
-.rm-marker[data-status="C"] .rm-card-tag { color: var(--text-50); }
-.rm-marker[data-status="PASSED"] .rm-card-tag { color: var(--success-color); }
+.rm-marker[data-status='B'] .rm-card-tag {
+  color: var(--secondary-color);
+}
+.rm-marker[data-status='C'] .rm-card-tag {
+  color: var(--text-50);
+}
+.rm-marker[data-status='PASSED'] .rm-card-tag {
+  color: var(--success-color);
+}
 
 .rm-card-name {
   font-size: 0.74rem;
@@ -342,10 +379,12 @@
   bottom: 0;
   left: 0;
   width: 1.5px;
-  background: linear-gradient(180deg,
+  background: linear-gradient(
+    180deg,
     var(--accent-color) 0%,
     color-mix(in oklch, var(--accent-color) 60%, transparent) 50%,
-    color-mix(in oklch, var(--accent-color) 25%, transparent) 100%);
+    color-mix(in oklch, var(--accent-color) 25%, transparent) 100%
+  );
   box-shadow: 0 0 14px color-mix(in oklch, var(--accent-color) 50%, transparent);
 }
 
@@ -368,8 +407,17 @@
 
 /* ── Responsive ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  :host { --label-w: 70px; }
-  .rm-row { min-height: 120px; }
-  .rm-card { min-width: 80px; max-width: 110px; }
-  .rm-card-name { font-size: 0.68rem; }
+  :host {
+    --label-w: 70px;
+  }
+  .rm-row {
+    min-height: 120px;
+  }
+  .rm-card {
+    min-width: 80px;
+    max-width: 110px;
+  }
+  .rm-card-name {
+    font-size: 0.68rem;
+  }
 }

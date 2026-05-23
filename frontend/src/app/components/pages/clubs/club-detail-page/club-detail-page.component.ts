@@ -1,8 +1,16 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnDestroy, OnInit} from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {CommonModule} from '@angular/common';
-import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import {TranslateModule, TranslateService} from '@ngx-translate/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  inject,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   canManageClub,
   ClubDetail,
@@ -13,25 +21,34 @@ import {
   GroupLinkedTraining,
   getEffectiveLinkedTrainings,
 } from '../../../../services/club.service';
-import {ClubSessionService} from '../../../../services/club-session.service';
-import {ClubFeedService} from '../../../../services/club-feed.service';
-import {AuthService} from '../../../../services/auth.service';
-import {ClubFeedTabComponent} from './tabs/club-feed-tab/club-feed-tab.component';
-import {ClubSessionsTabComponent} from './tabs/club-sessions-tab/club-sessions-tab.component';
-import {ClubMembersTabComponent} from './tabs/club-members-tab/club-members-tab.component';
-import {ClubStatsTabComponent} from './tabs/club-stats-tab/club-stats-tab.component';
-import {ClubLeaderboardTabComponent} from './tabs/club-leaderboard-tab/club-leaderboard-tab.component';
-import {ClubRaceGoalsTabComponent} from './tabs/club-race-goals-tab/club-race-goals-tab.component';
-import {ClubChatTabComponent} from './tabs/club-chat-tab/club-chat-tab.component';
-import {ClubGazetteTabComponent} from './tabs/club-gazette-tab/club-gazette-tab.component';
-import {ClubTestsTabComponent} from './tabs/club-tests-tab/club-tests-tab.component';
-import {ClubTestService} from '../../../../services/club-test.service';
-import {TrainingActionModalComponent} from '../../../shared/training-action-modal/training-action-modal.component';
-import {ChartPanelSkeletonComponent} from '../../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
-import {ActionContext} from '../../../../services/ai-action.service';
-import {BehaviorSubject, map, Observable} from 'rxjs';
+import { ClubSessionService } from '../../../../services/club-session.service';
+import { ClubFeedService } from '../../../../services/club-feed.service';
+import { AuthService } from '../../../../services/auth.service';
+import { ClubFeedTabComponent } from './tabs/club-feed-tab/club-feed-tab.component';
+import { ClubSessionsTabComponent } from './tabs/club-sessions-tab/club-sessions-tab.component';
+import { ClubMembersTabComponent } from './tabs/club-members-tab/club-members-tab.component';
+import { ClubStatsTabComponent } from './tabs/club-stats-tab/club-stats-tab.component';
+import { ClubLeaderboardTabComponent } from './tabs/club-leaderboard-tab/club-leaderboard-tab.component';
+import { ClubRaceGoalsTabComponent } from './tabs/club-race-goals-tab/club-race-goals-tab.component';
+import { ClubChatTabComponent } from './tabs/club-chat-tab/club-chat-tab.component';
+import { ClubGazetteTabComponent } from './tabs/club-gazette-tab/club-gazette-tab.component';
+import { ClubTestsTabComponent } from './tabs/club-tests-tab/club-tests-tab.component';
+import { ClubTestService } from '../../../../services/club-test.service';
+import { TrainingActionModalComponent } from '../../../shared/training-action-modal/training-action-modal.component';
+import { ChartPanelSkeletonComponent } from '../../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
+import { ActionContext } from '../../../../services/ai-action.service';
+import { BehaviorSubject, map, Observable } from 'rxjs';
 
-type TabId = 'feed' | 'sessions' | 'members' | 'stats' | 'leaderboard' | 'race-goals' | 'chat' | 'gazette' | 'tests';
+type TabId =
+  | 'feed'
+  | 'sessions'
+  | 'members'
+  | 'stats'
+  | 'leaderboard'
+  | 'race-goals'
+  | 'chat'
+  | 'gazette'
+  | 'tests';
 
 @Component({
   selector: 'app-club-detail-page',
@@ -93,12 +110,28 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
 
   readonly tabs: Array<{ id: TabId; label: string; shortLabel: string }> = [
     { id: 'feed', label: 'CLUB_DETAIL.TAB_FEED', shortLabel: 'CLUB_DETAIL.TAB_FEED_SHORT' },
-    { id: 'sessions', label: 'CLUB_DETAIL.TAB_SESSIONS', shortLabel: 'CLUB_DETAIL.TAB_SESSIONS_SHORT' },
-    { id: 'members', label: 'CLUB_DETAIL.TAB_MEMBERS', shortLabel: 'CLUB_DETAIL.TAB_MEMBERS_SHORT' },
+    {
+      id: 'sessions',
+      label: 'CLUB_DETAIL.TAB_SESSIONS',
+      shortLabel: 'CLUB_DETAIL.TAB_SESSIONS_SHORT',
+    },
+    {
+      id: 'members',
+      label: 'CLUB_DETAIL.TAB_MEMBERS',
+      shortLabel: 'CLUB_DETAIL.TAB_MEMBERS_SHORT',
+    },
     { id: 'stats', label: 'CLUB_DETAIL.TAB_STATS', shortLabel: 'CLUB_DETAIL.TAB_STATS_SHORT' },
-    { id: 'race-goals', label: 'CLUB_DETAIL.TAB_RACE_GOALS', shortLabel: 'CLUB_DETAIL.TAB_RACE_GOALS_SHORT' },
+    {
+      id: 'race-goals',
+      label: 'CLUB_DETAIL.TAB_RACE_GOALS',
+      shortLabel: 'CLUB_DETAIL.TAB_RACE_GOALS_SHORT',
+    },
     { id: 'tests', label: 'CLUB_DETAIL.TAB_TESTS', shortLabel: 'CLUB_DETAIL.TAB_TESTS_SHORT' },
-    { id: 'gazette', label: 'CLUB_DETAIL.TAB_GAZETTE', shortLabel: 'CLUB_DETAIL.TAB_GAZETTE_SHORT' },
+    {
+      id: 'gazette',
+      label: 'CLUB_DETAIL.TAB_GAZETTE',
+      shortLabel: 'CLUB_DETAIL.TAB_GAZETTE_SHORT',
+    },
     { id: 'chat', label: 'CLUB_DETAIL.TAB_CHAT', shortLabel: 'CLUB_DETAIL.TAB_CHAT_SHORT' },
   ];
 
@@ -181,7 +214,7 @@ export class ClubDetailPageComponent implements OnInit, OnDestroy {
         this.clubFeedService.loadLeaderboard(this.clubId);
         break;
       case 'race-goals':
-        this.clubFeedService.loadRaceGoals(this.clubId);
+        // The race-goals tab owns its own season-scoped load (see its ngOnInit).
         break;
       case 'chat':
         break;

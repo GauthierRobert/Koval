@@ -12,6 +12,47 @@
   flex-wrap: wrap;
 }
 
+.season-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-8);
+  border-radius: var(--radius-pill);
+  padding: 3px 6px;
+}
+
+.season-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-50);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring-gentle);
+}
+
+.season-nav:hover {
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+}
+
+.season-label {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-color);
+  min-width: 92px;
+  text-align: center;
+}
+
 .view-toggle {
   display: inline-flex;
   background: var(--overlay-5);
@@ -100,7 +141,9 @@
   letter-spacing: 0.04em;
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.2s var(--ease-spring-gentle), border-color 0.2s var(--ease-spring-gentle);
+  transition:
+    color 0.2s var(--ease-spring-gentle),
+    border-color 0.2s var(--ease-spring-gentle);
 }
 
 .add-to-goals-btn:hover:not(:disabled) {
@@ -365,7 +408,7 @@
 }
 
 .modal-member-row:hover {
-  background: var(--surface-raised);;
+  background: var(--surface-raised);
 }
 
 .modal-member-avatar {
