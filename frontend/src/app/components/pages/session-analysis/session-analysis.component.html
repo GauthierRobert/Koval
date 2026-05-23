@@ -16,6 +16,11 @@
       (downloadClicked)="downloadClicked.emit(session)"
     />
 
+    <!-- Pending action: confirm a plan link or classify a race day -->
+    @if (pendingAction) {
+      <app-session-action-panel [session]="session" [kind]="pendingAction" />
+    }
+
     <!-- FIT timeseries chart -->
     @if (fitState$ | async; as fit) {
       <div class="chart-section glass">

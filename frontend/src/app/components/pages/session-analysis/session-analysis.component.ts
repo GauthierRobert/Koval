@@ -49,6 +49,10 @@ import { WPrimeBalanceChartComponent } from './wprime-balance-chart/wprime-balan
 import { ChartPanelSkeletonComponent } from '../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
 import { AiFeedbackPanelComponent } from '../../shared/ai-feedback-panel/ai-feedback-panel.component';
 import {
+  SessionActionKind,
+  SessionActionPanelComponent,
+} from './session-action-panel/session-action-panel.component';
+import {
   formatBlockDistance,
   formatLongDate,
   formatSpeed,
@@ -88,6 +92,7 @@ interface FitState {
     WPrimeBalanceChartComponent,
     ChartPanelSkeletonComponent,
     AiFeedbackPanelComponent,
+    SessionActionPanelComponent,
   ],
   templateUrl: './session-analysis.component.html',
   styleUrl: './session-analysis.component.css',
@@ -128,6 +133,9 @@ export class SessionAnalysisComponent implements OnDestroy {
 
   /** Sessions linked together (same groupId). Includes the current one. */
   @Input() linkedSessions: SavedSession[] = [];
+
+  /** Pending action surfaced as the colored dot in the list, resolved inline below the header. */
+  @Input() pendingAction: SessionActionKind | null = null;
 
   @Output() navTo = new EventEmitter<string>();
   @Output() linkClicked = new EventEmitter<SavedSession>();

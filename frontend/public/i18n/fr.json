@@ -1128,7 +1128,11 @@
     "CLASSIFY_RACE_NO_CANDIDATES": "Aucune course ce jour. La puce ne réapparaîtra plus.",
     "CLASSIFY_RACE_BTN_NONE": "Sans rapport",
     "CLASSIFY_RACE_BTN_WARMUP": "Échauffement",
-    "CLASSIFY_RACE_BTN_RACE": "Course"
+    "CLASSIFY_RACE_BTN_RACE": "Course",
+    "DOT_LINK_LABEL": "Action requise : lier à une séance planifiée",
+    "DOT_RACE_LABEL": "Action requise : classer ce jour de course",
+    "ACTION_PANEL_LINK_TITLE": "Est-ce une séance planifiée ?",
+    "ACTION_PANEL_RACE_TITLE": "Jour de course — comment l'enregistrer ?"
   },
   "SESSION_ANALYSIS": {
     "BREADCRUMB_TRAINING": "Entraînement",

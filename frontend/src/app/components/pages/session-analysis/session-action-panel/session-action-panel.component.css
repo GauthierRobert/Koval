@@ -1,0 +1,212 @@
+/* Panel color is driven by the action kind: blue for a plan link, amber for a race day.
+   Border, dot and selected-card accents all derive from --panel-color. */
+.action-panel {
+  --panel-color: var(--info-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--card-padding);
+  border-left: 3px solid var(--panel-color);
+}
+
+.action-panel.race {
+  --panel-color: var(--accent-color);
+}
+
+.action-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.action-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--panel-color);
+  box-shadow: 0 0 0 4px color-mix(in oklch, var(--panel-color) 22%, transparent);
+}
+
+.action-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.action-title {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.action-desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.action-loading,
+.action-empty {
+  padding: var(--space-md);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* ── Candidate / race lists ─────────────────────────────────────── */
+.candidate-list,
+.race-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.candidate-card,
+.race-card {
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  background: var(--glass-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.candidate-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.race-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.candidate-card:hover,
+.race-card:hover,
+.candidate-card.selected,
+.race-card.selected {
+  border-color: var(--panel-color);
+}
+
+.candidate-card.selected,
+.race-card.selected {
+  background: color-mix(in oklch, var(--panel-color) 8%, transparent);
+}
+
+.candidate-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.candidate-title,
+.race-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-score {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--panel-color);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--panel-color) 12%, transparent);
+}
+
+.candidate-meta,
+.race-meta {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.race-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.single-race-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--panel-color);
+}
+
+/* ── Score cues ─────────────────────────────────────────────────── */
+.candidate-cues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.cue {
+  font-size: var(--text-xs);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  text-transform: lowercase;
+  border: 1px solid transparent;
+}
+
+.cue[data-state='full'] {
+  background: var(--success-subtle);
+  color: var(--success-color);
+  border-color: var(--success-border);
+}
+
+.cue[data-state='partial'] {
+  background: color-mix(in oklch, var(--accent-color) 14%, transparent);
+  color: var(--accent-color);
+  border-color: color-mix(in oklch, var(--accent-color) 32%, transparent);
+}
+
+.cue[data-state='none'] {
+  background: var(--glass-bg);
+  color: var(--text-muted);
+  border-color: var(--border-color);
+  opacity: 0.55;
+}
+
+/* ── Footer actions ─────────────────────────────────────────────── */
+.action-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.action-footer-right {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 480px) {
+  .action-footer {
+    flex-wrap: wrap;
+  }
+}

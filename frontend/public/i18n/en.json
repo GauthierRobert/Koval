@@ -1128,7 +1128,11 @@
     "CLASSIFY_RACE_NO_CANDIDATES": "No race on this day. The chip won't reappear.",
     "CLASSIFY_RACE_BTN_NONE": "Not race-related",
     "CLASSIFY_RACE_BTN_WARMUP": "Warm-up",
-    "CLASSIFY_RACE_BTN_RACE": "Race"
+    "CLASSIFY_RACE_BTN_RACE": "Race",
+    "DOT_LINK_LABEL": "Action needed: link to a planned workout",
+    "DOT_RACE_LABEL": "Action needed: classify this race day",
+    "ACTION_PANEL_LINK_TITLE": "Is this a planned workout?",
+    "ACTION_PANEL_RACE_TITLE": "Race day — how should we log this?"
   },
   "SESSION_ANALYSIS": {
     "BREADCRUMB_TRAINING": "Training",
