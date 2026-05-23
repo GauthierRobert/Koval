@@ -47,6 +47,9 @@ export interface RenderInput {
   driftCurves: DriftCurves | null;
   hoverIdx: number | null;
   theme: ThemeColors;
+  /** Visible time window in elapsed seconds from session start. null = full range. */
+  viewStartSec: number | null;
+  viewEndSec: number | null;
 }
 
 export interface RenderResult {
@@ -67,9 +70,21 @@ interface CanvasFrame {
   mR: number;
 }
 
+/** Resolve the visible [startSec, endSec] window, defaulting to the full session. */
+function viewWindow(input: RenderInput): { startSec: number; endSec: number } {
+  const records = input.records;
+  const t0 = records[0].timestamp;
+  const full = records[records.length - 1].timestamp - t0 || records.length;
+  return {
+    startSec: input.viewStartSec ?? 0,
+    endSec: input.viewEndSec ?? full,
+  };
+}
+
 function initCanvas(
   canvas: HTMLCanvasElement | null | undefined,
   records: FitRecord[],
+  view: { startSec: number; endSec: number } | null,
 ): CanvasFrame | null {
   if (!canvas) return null;
   const dpr = window.devicePixelRatio || 1;
@@ -88,10 +103,22 @@ function initCanvas(
   const cW = W - mL - mR;
   const t0 = records[0].timestamp;
   const n = records.length;
-  const totalSec = records[n - 1].timestamp - t0 || n;
-  const xOf = (i: number) => mL + ((records[i].timestamp - t0) / totalSec) * cW;
-  const xOfT = (sec: number) => mL + (sec / totalSec) * cW;
+  const fullSec = records[n - 1].timestamp - t0 || n;
+  const vStart = view ? view.startSec : 0;
+  const vEnd = view ? view.endSec : fullSec;
+  const span = vEnd - vStart || fullSec;
+  const xOf = (i: number) => mL + ((records[i].timestamp - t0 - vStart) / span) * cW;
+  const xOfT = (sec: number) => mL + ((sec - vStart) / span) * cW;
   return { ctx, W, H, cW, xOf, xOfT, mT, mB, mL, mR };
+}
+
+/** Clip subsequent drawing to the plot region so zoomed-out content doesn't
+ * bleed over the Y-axis labels in the left margin or past the right edge. */
+function clipPlot(s: { ctx: CanvasRenderingContext2D; H: number; cW: number; mL: number }): void {
+  s.ctx.save();
+  s.ctx.beginPath();
+  s.ctx.rect(s.mL, 0, s.cW, s.H);
+  s.ctx.clip();
 }
 
 /** Draws just the left vertical (Y) axis spine on each sub-canvas. We don't
@@ -300,13 +327,12 @@ function drawPrimary(
   canvas: HTMLCanvasElement | null | undefined,
   input: RenderInput,
 ): { min: number; max: number } {
-  const s = initCanvas(canvas, input.records);
+  const s = initCanvas(canvas, input.records, viewWindow(input));
   if (!s) return { min: 0, max: 0 };
   const { ctx, W, H, xOf, xOfT, mT, mB, mL, mR } = s;
   const accent = input.theme.accentHex;
   const records = input.records;
   const t0 = records[0].timestamp;
-  const totalSec = records[records.length - 1].timestamp - t0 || records.length;
   const chartH = H - mT - mB;
   const top = mT,
     bottom = mT + chartH;
@@ -351,6 +377,8 @@ function drawPrimary(
   }
 
   const plotValue = (speedKmh: number) => speedToPlotValue(speedKmh, swimming, primaryMax);
+
+  clipPlot(s);
 
   if (cycling && input.ftp) {
     const fy = yOf(input.ftp);
@@ -495,6 +523,20 @@ function drawPrimary(
     }
   }
 
+  drawBlockBounds(ctx, input, xOfT, top, bottom);
+
+  if (input.hoverIdx !== null) {
+    const hx = xOf(input.hoverIdx);
+    drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
+    const hCtx = buildHoverContext(input, primaryMax);
+    if (hCtx) {
+      const val = hoverPrimaryValue(hCtx, input.hoverIdx, t0);
+      drawDot(ctx, input.theme, hx, yOf(val), accent);
+    }
+  }
+
+  ctx.restore();
+
   ctx.fillStyle = input.theme.textAlpha40;
   ctx.font = '9px monospace';
   ctx.textAlign = 'right';
@@ -527,23 +569,12 @@ function drawPrimary(
   }
 
   drawAxisSpine(ctx, s);
-  drawBlockBounds(ctx, input, xOfT, top, bottom);
-
-  if (input.hoverIdx !== null) {
-    const hx = xOf(input.hoverIdx);
-    drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
-    const hCtx = buildHoverContext(input, primaryMax);
-    if (hCtx) {
-      const val = hoverPrimaryValue(hCtx, input.hoverIdx, t0);
-      drawDot(ctx, input.theme, hx, yOf(val), accent);
-    }
-  }
 
   return { min: primaryMin, max: primaryMax };
 }
 
 function drawSpeed(canvas: HTMLCanvasElement | null | undefined, input: RenderInput): void {
-  const s = initCanvas(canvas, input.records);
+  const s = initCanvas(canvas, input.records, viewWindow(input));
   if (!s) return;
   const { ctx, H, xOf, xOfT, mT, mB, mL } = s;
   const records = input.records;
@@ -558,6 +589,8 @@ function drawSpeed(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
   const sp = records.map((r) => (r.speed || 0) * 3.6);
   const maxS = Math.max(...sp.filter((v) => v > 0), 1);
   const yOf = (v: number) => top + chartH * (1 - v / maxS);
+
+  clipPlot(s);
 
   if (useZoneBlocks(input)) {
     drawSteppedLine(
@@ -604,14 +637,6 @@ function drawSpeed(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
     }
   }
 
-  ctx.fillStyle = color;
-  ctx.font = '9px monospace';
-  ctx.textAlign = 'right';
-  [maxS, maxS / 2, 0].forEach((v) =>
-    ctx.fillText(`${v.toFixed(v < 10 ? 1 : 0)}`, mL - 4, yOf(v) + 4),
-  );
-
-  drawAxisSpine(ctx, s);
   drawBlockBounds(ctx, input, xOfT, top, bottom);
 
   if (input.hoverIdx !== null) {
@@ -620,6 +645,17 @@ function drawSpeed(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
     const v = (records[input.hoverIdx].speed || 0) * 3.6;
     drawDot(ctx, input.theme, hx, yOf(v), color);
   }
+
+  ctx.restore();
+
+  ctx.fillStyle = color;
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'right';
+  [maxS, maxS / 2, 0].forEach((v) =>
+    ctx.fillText(`${v.toFixed(v < 10 ? 1 : 0)}`, mL - 4, yOf(v) + 4),
+  );
+
+  drawAxisSpine(ctx, s);
 }
 
 function drawHR(
@@ -627,7 +663,7 @@ function drawHR(
   input: RenderInput,
   hoverCtx: HoverContext | null,
 ): void {
-  const s = initCanvas(canvas, input.records);
+  const s = initCanvas(canvas, input.records, viewWindow(input));
   if (!s) return;
   const { ctx, H, xOf, xOfT, mT, mB, mL } = s;
   const records = input.records;
@@ -643,6 +679,8 @@ function drawHR(
   const minHR = 100;
   const maxHR = hrs.length ? Math.max(Math.max(...hrs) * 1.05, minHR + 20) : 220;
   const yOf = (hr: number) => top + chartH * (1 - (Math.max(hr, minHR) - minHR) / (maxHR - minHR));
+
+  clipPlot(s);
 
   if (useZoneBlocks(input)) {
     drawSteppedLine(
@@ -684,13 +722,6 @@ function drawHR(
     ctx.stroke();
   }
 
-  ctx.fillStyle = color;
-  ctx.font = '9px monospace';
-  ctx.textAlign = 'right';
-  const mid = Math.round((minHR + maxHR) / 2);
-  [Math.round(maxHR), mid, minHR].forEach((v) => ctx.fillText(String(v), mL - 4, yOf(v) + 4));
-
-  drawAxisSpine(ctx, s);
   drawBlockBounds(ctx, input, xOfT, top, bottom);
 
   if (input.hoverIdx !== null && hoverCtx) {
@@ -699,6 +730,16 @@ function drawHR(
     const hr = hoverHR(hoverCtx, input.hoverIdx, t0);
     if (hr) drawDot(ctx, input.theme, hx, yOf(hr), color);
   }
+
+  ctx.restore();
+
+  ctx.fillStyle = color;
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'right';
+  const mid = Math.round((minHR + maxHR) / 2);
+  [Math.round(maxHR), mid, minHR].forEach((v) => ctx.fillText(String(v), mL - 4, yOf(v) + 4));
+
+  drawAxisSpine(ctx, s);
 }
 
 function drawCadence(
@@ -706,7 +747,7 @@ function drawCadence(
   input: RenderInput,
   hoverCtx: HoverContext | null,
 ): void {
-  const s = initCanvas(canvas, input.records);
+  const s = initCanvas(canvas, input.records, viewWindow(input));
   if (!s) return;
   const { ctx, H, xOf, xOfT, mT, mB, mL } = s;
   const records = input.records;
@@ -723,6 +764,8 @@ function drawCadence(
   const maxCad = cads.length ? Math.max(Math.max(...cads) * 1.05, minCad + 20) : 120;
   const yOf = (c: number) =>
     top + chartH * (1 - (Math.max(c, minCad) - minCad) / (maxCad - minCad));
+
+  clipPlot(s);
 
   if (useZoneBlocks(input)) {
     drawSteppedLine(
@@ -765,13 +808,6 @@ function drawCadence(
     ctx.stroke();
   }
 
-  ctx.fillStyle = color;
-  ctx.font = '9px monospace';
-  ctx.textAlign = 'right';
-  const mid = Math.round((minCad + maxCad) / 2);
-  [Math.round(maxCad), mid, minCad].forEach((v) => ctx.fillText(String(v), mL - 4, yOf(v) + 4));
-
-  drawAxisSpine(ctx, s);
   drawBlockBounds(ctx, input, xOfT, top, bottom);
 
   if (input.hoverIdx !== null && hoverCtx) {
@@ -780,10 +816,20 @@ function drawCadence(
     const c = hoverCadence(hoverCtx, input.hoverIdx, t0);
     if (c) drawDot(ctx, input.theme, hx, yOf(c), color);
   }
+
+  ctx.restore();
+
+  ctx.fillStyle = color;
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'right';
+  const mid = Math.round((minCad + maxCad) / 2);
+  [Math.round(maxCad), mid, minCad].forEach((v) => ctx.fillText(String(v), mL - 4, yOf(v) + 4));
+
+  drawAxisSpine(ctx, s);
 }
 
 function drawDrift(canvas: HTMLCanvasElement | null | undefined, input: RenderInput): void {
-  const s = initCanvas(canvas, input.records);
+  const s = initCanvas(canvas, input.records, viewWindow(input));
   if (!s || !input.driftCurves) return;
   const { ctx, W, H, xOf, xOfT, mT, mB, mL, mR } = s;
   const records = input.records;
@@ -794,8 +840,9 @@ function drawDrift(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
   const hrColor = '#e74c3c';
   const outColor = input.theme.accentHex;
 
-  const { hrNormPct, outNormPct, usePower, baselineStartSec, baselineEndSec } =
-    input.driftCurves;
+  const { hrNormPct, outNormPct, usePower, baselineStartSec, baselineEndSec } = input.driftCurves;
+
+  clipPlot(s);
 
   // Faint shaded band marking the baseline window so the user can see what
   // "100%" is calibrated against. Drawn first so everything else paints over it.
@@ -810,9 +857,11 @@ function drawDrift(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
 
   // Auto-fit y range across both curves, padded; always include 100% baseline
   // so the reference line never sits at the chart edge.
-  let lo = 100, hi = 100;
+  let lo = 100,
+    hi = 100;
   for (let i = 0; i < hrNormPct.length; i++) {
-    const a = hrNormPct[i], b = outNormPct[i];
+    const a = hrNormPct[i],
+      b = outNormPct[i];
     if (Number.isFinite(a)) {
       if (a < lo) lo = a;
       if (a > hi) hi = a;
@@ -851,10 +900,7 @@ function drawDrift(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
   const outPts: Array<{ x: number; y: number; v: number } | null> = [];
   let lastIdx = 0;
   for (const r of ds) {
-    while (
-      lastIdx < records.length - 1 &&
-      records[lastIdx + 1].timestamp <= r.timestamp
-    ) {
+    while (lastIdx < records.length - 1 && records[lastIdx + 1].timestamp <= r.timestamp) {
       lastIdx++;
     }
     const x = xOfT(r.timestamp - t0);
@@ -869,8 +915,10 @@ function drawDrift(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
   const driftRgb: [number, number, number] = [231, 76, 60];
   const goodRgb: [number, number, number] = [76, 175, 80];
   for (let i = 0; i < hrPts.length - 1; i++) {
-    const a1 = hrPts[i], a2 = hrPts[i + 1];
-    const b1 = outPts[i], b2 = outPts[i + 1];
+    const a1 = hrPts[i],
+      a2 = hrPts[i + 1];
+    const b1 = outPts[i],
+      b2 = outPts[i + 1];
     if (!a1 || !a2 || !b1 || !b2) continue;
     const drifting = (a1.v + a2.v) / 2 > (b1.v + b2.v) / 2;
     const [r, g, b] = drifting ? driftRgb : goodRgb;
@@ -918,11 +966,24 @@ function drawDrift(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
   }
   ctx.stroke();
 
+  drawBlockBounds(ctx, input, xOfT, top, bottom);
+
+  if (input.hoverIdx !== null) {
+    const hx = xOf(input.hoverIdx);
+    drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
+    const a = hrNormPct[input.hoverIdx];
+    const b = outNormPct[input.hoverIdx];
+    if (Number.isFinite(b)) drawDot(ctx, input.theme, hx, yOf(b), outColor);
+    if (Number.isFinite(a)) drawDot(ctx, input.theme, hx, yOf(a), hrColor);
+  }
+
+  ctx.restore();
+
   // Y-axis labels: low / 100 / high.
   ctx.fillStyle = input.theme.textAlpha40;
   ctx.font = '9px monospace';
   ctx.textAlign = 'right';
-  [hi, 100, lo].forEach(v => ctx.fillText(`${Math.round(v)}%`, mL - 4, yOf(v) + 4));
+  [hi, 100, lo].forEach((v) => ctx.fillText(`${Math.round(v)}%`, mL - 4, yOf(v) + 4));
 
   // Compact legend (top-right) so the panel is self-explanatory without a header.
   const legendY = top + 8;
@@ -934,20 +995,10 @@ function drawDrift(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
   ctx.fillText(outLabel, W - mR - 4, legendY + 10);
 
   drawAxisSpine(ctx, s);
-  drawBlockBounds(ctx, input, xOfT, top, bottom);
-
-  if (input.hoverIdx !== null) {
-    const hx = xOf(input.hoverIdx);
-    drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
-    const a = hrNormPct[input.hoverIdx];
-    const b = outNormPct[input.hoverIdx];
-    if (Number.isFinite(b)) drawDot(ctx, input.theme, hx, yOf(b), outColor);
-    if (Number.isFinite(a)) drawDot(ctx, input.theme, hx, yOf(a), hrColor);
-  }
 }
 
 function drawElevation(canvas: HTMLCanvasElement | null | undefined, input: RenderInput): void {
-  const s = initCanvas(canvas, input.records);
+  const s = initCanvas(canvas, input.records, viewWindow(input));
   if (!s) return;
   const { ctx, H, xOf, xOfT, mT, mB, mL } = s;
   const chartH = H - mT - mB;
@@ -963,6 +1014,8 @@ function drawElevation(canvas: HTMLCanvasElement | null | undefined, input: Rend
   const maxE = Math.max(...elevs) + 5;
   const range = maxE - minE || 1;
   const yOf = (e: number) => top + chartH * (1 - (e - minE) / range);
+
+  clipPlot(s);
 
   ctx.beginPath();
   let started = false;
@@ -998,6 +1051,15 @@ function drawElevation(canvas: HTMLCanvasElement | null | undefined, input: Rend
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
+  if (input.hoverIdx !== null) {
+    const hx = xOf(input.hoverIdx);
+    drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
+    const e = records[input.hoverIdx].elevation;
+    if (e != null) drawDot(ctx, input.theme, hx, yOf(e), '#4caf50');
+  }
+
+  ctx.restore();
+
   ctx.fillStyle = 'rgba(76,175,80,0.6)';
   ctx.font = '9px monospace';
   ctx.textAlign = 'right';
@@ -1007,13 +1069,16 @@ function drawElevation(canvas: HTMLCanvasElement | null | undefined, input: Rend
   );
 
   drawAxisSpine(ctx, s);
+}
 
-  if (input.hoverIdx !== null) {
-    const hx = xOf(input.hoverIdx);
-    drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
-    const e = records[input.hoverIdx].elevation;
-    if (e != null) drawDot(ctx, input.theme, hx, yOf(e), '#4caf50');
-  }
+/** Axis tick label: minutes (e.g. "12m") when on a whole minute, "m:ss" or
+ * seconds for the finer ticks that appear when zoomed in. */
+function fmtAxisLabel(sec: number): string {
+  const r = Math.round(sec);
+  if (r < 60) return `${r}s`;
+  const m = Math.floor(r / 60);
+  const s = r % 60;
+  return s === 0 ? `${m}m` : `${m}:${String(s).padStart(2, '0')}`;
 }
 
 function drawXAxis(canvas: HTMLCanvasElement | null | undefined, input: RenderInput): void {
@@ -1031,20 +1096,25 @@ function drawXAxis(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
   const records = input.records;
   const n = records.length;
   const t0 = records[0].timestamp;
-  const totalSec = records[n - 1].timestamp - t0 || n;
+  const fullSec = records[n - 1].timestamp - t0 || n;
   const cW = W - mL - mR;
+  const view = viewWindow(input);
+  const vStart = view.startSec;
+  const vEnd = view.endSec;
+  const span = vEnd - vStart || fullSec;
+  const xOfT = (sec: number) => mL + ((sec - vStart) / span) * cW;
 
-  const tick = pickTickInterval(totalSec);
+  const tick = pickTickInterval(span);
   ctx.fillStyle = input.theme.textAlpha40;
   ctx.font = '9px monospace';
   ctx.textAlign = 'center';
-  for (let s = 0; s <= totalSec; s += tick) {
-    const x = mL + (s / totalSec) * cW;
-    ctx.fillText(`${Math.round(s / 60)}m`, x, 14);
+  const firstTick = Math.ceil(vStart / tick) * tick;
+  for (let sec = firstTick; sec <= vEnd + 0.5; sec += tick) {
+    ctx.fillText(fmtAxisLabel(sec), xOfT(sec), 14);
   }
 
   if (input.hoverIdx !== null) {
-    const hx = mL + ((records[input.hoverIdx].timestamp - t0) / totalSec) * cW;
+    const hx = xOfT(records[input.hoverIdx].timestamp - t0);
     ctx.save();
     ctx.strokeStyle = input.theme.crosshairAlpha;
     ctx.lineWidth = 1;
