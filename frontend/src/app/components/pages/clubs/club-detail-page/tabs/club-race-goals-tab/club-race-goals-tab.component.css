@@ -100,7 +100,9 @@
   letter-spacing: 0.04em;
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.2s var(--ease-spring-gentle), border-color 0.2s var(--ease-spring-gentle);
+  transition:
+    color 0.2s var(--ease-spring-gentle),
+    border-color 0.2s var(--ease-spring-gentle);
 }
 
 .add-to-goals-btn:hover:not(:disabled) {
@@ -286,6 +288,92 @@
   color: var(--accent-color);
 }
 
+.view-session-btn {
+  background: none;
+  border: 1px solid var(--info-border, var(--glass-border));
+  color: var(--info-color);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.25s var(--ease-spring-gentle);
+}
+
+.view-session-btn:hover {
+  background: var(--info-subtle, var(--accent-subtle));
+  border-color: var(--info-color);
+}
+
+/* ── Past races, grouped by Nov→Nov season ── */
+.past-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--glass-border);
+}
+
+.season-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.season-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.season-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s var(--ease-spring-gentle);
+}
+
+.season-chevron.collapsed {
+  transform: rotate(-90deg);
+}
+
+.season-label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-color);
+}
+
+.season-count {
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: var(--overlay-8);
+  color: var(--text-muted);
+}
+
+.goal-row.past {
+  opacity: 0.85;
+}
+
+.goal-row.past:hover {
+  opacity: 1;
+}
+
 /* ── Members Modal ── */
 
 .modal-backdrop {
@@ -365,7 +453,7 @@
 }
 
 .modal-member-row:hover {
-  background: var(--surface-raised);;
+  background: var(--surface-raised);
 }
 
 .modal-member-avatar {

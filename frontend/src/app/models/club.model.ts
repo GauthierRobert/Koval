@@ -272,12 +272,16 @@ export interface ClubRaceGoalResponse {
   /** Structured race-distance enum (e.g. TRI_OLYMPIC, RUN_HALF_MARATHON) — sourced from the linked Race. */
   distanceCategory?: import('../services/race.service').DistanceCategory;
   location?: string;
+  /** True when the race date is before today — drives the season-grouped past list. */
+  past?: boolean;
   participants: {
     userId: string;
     displayName: string;
     profilePicture: string | null;
     priority: string;
     targetTime?: string;
+    /** The viewer's own RACE session for this race, when one exists (past races only). */
+    completedSessionId?: string | null;
   }[];
 }
 

@@ -793,6 +793,8 @@
   },
   "CLUB_RACE_GOALS": {
     "SECTION_UPCOMING_RACES": "Prochaines courses",
+    "SECTION_PAST_RACES": "Courses passées",
+    "BTN_VIEW_SESSION": "Voir ma séance",
     "DAYS_TO_GO": "{{days}}j restants",
     "BTN_VIEW_MEMBERS_SINGULAR": "Voir {{count}} membre",
     "BTN_VIEW_MEMBERS_PLURAL": "Voir {{count}} membres",

@@ -44,6 +44,9 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
 
     List<CompletedSession> findByUserIdAndGroupId(String userId, String groupId);
 
+    /** Sessions the user classified against a race day with the given role (e.g. RACE). */
+    List<CompletedSession> findByUserIdAndRaceRole(String userId, RaceRole raceRole);
+
     /**
      * Sessions with a GridFS FIT pointer but no GCS object yet — i.e. waiting to
      * be backfilled into Cloud Storage. Used by the one-shot migration runner.

@@ -9,6 +9,9 @@ import com.koval.trainingplannerbackend.goal.RaceGoal;
 import com.koval.trainingplannerbackend.goal.RaceGoalRepository;
 import com.koval.trainingplannerbackend.race.Race;
 import com.koval.trainingplannerbackend.race.RaceRepository;
+import com.koval.trainingplannerbackend.training.history.CompletedSession;
+import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
+import com.koval.trainingplannerbackend.training.history.RaceRole;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,7 +26,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Aggregates a club's upcoming race goals, grouping athletes targeting the same race.
+ * Aggregates a club's race goals (upcoming and past), grouping athletes targeting the same race.
  *
  * <p>Split out of {@code ClubStatsService} because race-goal aggregation is a goals
  * concern, not an athletic-statistics one.
@@ -36,17 +39,20 @@ public class ClubRaceGoalQueryService {
     private final UserService userService;
     private final ClubMembershipService clubMembershipService;
     private final ClubAuthorizationService authorizationService;
+    private final CompletedSessionRepository completedSessionRepository;
 
     public ClubRaceGoalQueryService(RaceGoalRepository raceGoalRepository,
                                     RaceRepository raceRepository,
                                     UserService userService,
                                     ClubMembershipService clubMembershipService,
-                                    ClubAuthorizationService authorizationService) {
+                                    ClubAuthorizationService authorizationService,
+                                    CompletedSessionRepository completedSessionRepository) {
         this.raceGoalRepository = raceGoalRepository;
         this.raceRepository = raceRepository;
         this.userService = userService;
         this.clubMembershipService = clubMembershipService;
         this.authorizationService = authorizationService;
+        this.completedSessionRepository = completedSessionRepository;
     }
 
     public List<ClubRaceGoalResponse> getRaceGoals(String userId, String clubId) {
@@ -71,12 +77,10 @@ public class ClubRaceGoalQueryService {
                         .collect(Collectors.toMap(Race::getId, r -> r));
         Function<String, Race> resolveRace = raceId -> raceId == null ? null : raceMap.get(raceId);
 
+        // Both upcoming and past goals are returned; the frontend splits them by date and
+        // groups past races season-by-season. Ordered ascending by date so callers can render
+        // a chronological timeline; the past section re-sorts within each season.
         List<RaceGoal> goals = allGoals.stream()
-                .filter(g -> {
-                    String date = Optional.ofNullable(resolveRace.apply(g.getRaceId()))
-                            .map(Race::getScheduledDate).orElse(null);
-                    return date == null || date.compareTo(todayIso) >= 0;
-                })
                 .sorted(Comparator.comparing(g -> Optional.ofNullable(resolveRace.apply(g.getRaceId()))
                         .map(Race::getScheduledDate).orElse("9999-99-99")))
                 .toList();
@@ -90,30 +94,52 @@ public class ClubRaceGoalQueryService {
         Map<String, User> userMap = userService.findAllById(athleteIds).stream()
                 .collect(Collectors.toMap(User::getId, u -> u));
 
+        // The viewer's own RACE-classified sessions, keyed by raceId, so we can deep-link from a
+        // past objective to the session the viewer logged for it. Resolved only for the caller —
+        // sessions are visible to their owner (or coach) only, so we never expose other members'.
+        // When several sessions share a raceId (e.g. a triathlon chain) the longest effort wins.
+        Map<String, String> viewerSessionByRaceId = completedSessionRepository
+                .findByUserIdAndRaceRole(userId, RaceRole.RACE).stream()
+                .filter(s -> s.getRaceId() != null)
+                .collect(Collectors.toMap(
+                        CompletedSession::getRaceId,
+                        s -> s,
+                        (a, b) -> a.getTotalDurationSeconds() >= b.getTotalDurationSeconds() ? a : b))
+                .entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getId()));
+
         return goalsByRace.values().stream().map(raceGoals -> {
             RaceGoal representative = raceGoals.getFirst();
             Race race = resolveRace.apply(representative.getRaceId());
+            String raceId = representative.getRaceId();
             List<ClubRaceGoalResponse.RaceParticipant> participants = raceGoals.stream()
                     .map(g -> {
                         Optional<User> uOpt = Optional.ofNullable(userMap.get(g.getAthleteId()));
+                        String completedSessionId = g.getAthleteId().equals(userId) && raceId != null
+                                ? viewerSessionByRaceId.get(raceId)
+                                : null;
                         return new ClubRaceGoalResponse.RaceParticipant(
                                 g.getAthleteId(),
                                 uOpt.map(User::getDisplayName).orElse(g.getAthleteId()),
                                 uOpt.map(User::getProfilePicture).orElse(null),
                                 g.getPriority(),
-                                g.getTargetTime());
+                                g.getTargetTime(),
+                                completedSessionId);
                     })
                     .toList();
 
             Optional<Race> raceOpt = Optional.ofNullable(race);
+            String raceDate = raceOpt.map(Race::getScheduledDate).orElse(null);
+            boolean past = raceDate != null && raceDate.compareTo(todayIso) < 0;
             return new ClubRaceGoalResponse(
-                    representative.getRaceId(),
+                    raceId,
                     raceOpt.map(Race::getTitle).orElseGet(representative::getTitle),
                     raceOpt.map(Race::getSport).filter(Objects::nonNull).orElseGet(representative::getSport),
-                    raceOpt.map(Race::getScheduledDate).orElse(null),
+                    raceDate,
                     raceOpt.map(Race::getDistance).filter(Objects::nonNull).orElseGet(representative::getDistance),
                     raceOpt.map(Race::getDistanceCategory).orElse(null),
                     raceOpt.map(Race::getLocation).filter(Objects::nonNull).orElseGet(representative::getLocation),
+                    past,
                     participants);
         }).toList();
     }

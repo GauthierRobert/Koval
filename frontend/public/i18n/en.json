@@ -793,6 +793,8 @@
   },
   "CLUB_RACE_GOALS": {
     "SECTION_UPCOMING_RACES": "Upcoming Races",
+    "SECTION_PAST_RACES": "Past Races",
+    "BTN_VIEW_SESSION": "View my session",
     "DAYS_TO_GO": "{{days}}d to go",
     "BTN_VIEW_MEMBERS_SINGULAR": "View {{count}} member",
     "BTN_VIEW_MEMBERS_PLURAL": "View {{count}} members",

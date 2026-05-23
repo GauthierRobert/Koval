@@ -12,6 +12,7 @@ public record ClubRaceGoalResponse(
         String distance,
         DistanceCategory distanceCategory,
         String location,
+        boolean past,      // true when the race's scheduledDate is before today
         List<RaceParticipant> participants
 ) {
     public record RaceParticipant(
@@ -19,6 +20,7 @@ public record ClubRaceGoalResponse(
             String displayName,
             String profilePicture,
             String priority,
-            String targetTime
+            String targetTime,
+            String completedSessionId  // viewer's own RACE session for this race, when one exists
     ) {}
 }

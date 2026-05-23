@@ -1,13 +1,13 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {ActivatedRoute} from '@angular/router';
-import {TranslateModule} from '@ngx-translate/core';
-import {map} from 'rxjs/operators';
-import {AuthService} from '../../../../../../services/auth.service';
-import {ClubFeedService} from '../../../../../../services/club-feed.service';
-import {RaceGoal, RaceGoalService} from '../../../../../../services/race-goal.service';
-import {ClubRaceGoalResponse} from '../../../../../../models/club.model';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { map } from 'rxjs/operators';
+import { AuthService } from '../../../../../../services/auth.service';
+import { ClubFeedService } from '../../../../../../services/club-feed.service';
+import { RaceGoal, RaceGoalService } from '../../../../../../services/race-goal.service';
+import { ClubRaceGoalResponse } from '../../../../../../models/club.model';
 import {
   GoalTimelineComponent,
   TimelineItem,
@@ -17,10 +17,18 @@ import {
 type ViewMode = 'timeline' | 'list';
 type AddPriority = 'A' | 'B' | 'C';
 
+/** A group of past races within one Nov→Nov season, most recent race first. */
+export interface SeasonGroup {
+  /** Calendar year the season started in (its November). */
+  startYear: number;
+  label: string;
+  races: ClubRaceGoalResponse[];
+}
+
 @Component({
   selector: 'app-club-race-goals-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, GoalTimelineComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RouterLink, GoalTimelineComponent],
   templateUrl: './club-race-goals-tab.component.html',
   styleUrl: './club-race-goals-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,10 +43,19 @@ export class ClubRaceGoalsTabComponent {
   raceGoals$ = this.clubFeedService.raceGoals$;
   currentUserId$ = this.authService.user$.pipe(map((u) => u?.id ?? null));
 
+  /** Forward-looking goals (today or later, or undated) — drive the timeline/list views. */
+  upcomingGoals$ = this.raceGoals$.pipe(map((goals) => goals.filter((g) => !g.past)));
+
+  /** Past goals grouped by Nov→Nov season, most recent season first. */
+  pastSeasons$ = this.raceGoals$.pipe(map((goals) => this.groupBySeason(goals)));
+
   /** Timeline as default per design. */
   view: ViewMode = 'timeline';
 
-  timelineItems$ = this.raceGoals$.pipe(
+  /** Season startYears the user has collapsed; all expanded by default. */
+  private collapsedSeasons = new Set<number>();
+
+  timelineItems$ = this.upcomingGoals$.pipe(
     map((goals) =>
       goals.map<TimelineItem<ClubRaceGoalResponse>>((g) => ({
         id: this.rowKey(g),
@@ -123,8 +140,7 @@ export class ClubRaceGoalsTabComponent {
 
     this.raceGoalService.createGoal(payload).subscribe({
       next: () => {
-        const clubId =
-          this.route.parent?.snapshot.params['id'] ?? this.route.snapshot.params['id'];
+        const clubId = this.route.parent?.snapshot.params['id'] ?? this.route.snapshot.params['id'];
         if (clubId) this.clubFeedService.loadRaceGoals(clubId);
         this.isSavingAdd = false;
         this.addingKey = null;
@@ -156,7 +172,10 @@ export class ClubRaceGoalsTabComponent {
     const d = new Date(dateStr + 'T00:00:00');
     if (isNaN(d.getTime())) return '—';
     return d.toLocaleDateString('en-US', {
-      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     });
   }
 
@@ -170,5 +189,49 @@ export class ClubRaceGoalsTabComponent {
   getPriorityColor(priority: string): string {
     const map: Record<string, string> = { A: '#F59E0B', B: '#60A5FA', C: '#9CA3AF' };
     return map[priority] ?? '#9CA3AF';
+  }
+
+  /** The viewer's own linked session for a race, when one was recorded. */
+  mySessionId(goal: ClubRaceGoalResponse, userId: string | null): string | null {
+    if (!userId) return null;
+    return goal.participants.find((p) => p.userId === userId)?.completedSessionId ?? null;
+  }
+
+  toggleSeason(startYear: number): void {
+    if (this.collapsedSeasons.has(startYear)) this.collapsedSeasons.delete(startYear);
+    else this.collapsedSeasons.add(startYear);
+    this.cdr.markForCheck();
+  }
+
+  isSeasonCollapsed(startYear: number): boolean {
+    return this.collapsedSeasons.has(startYear);
+  }
+
+  /**
+   * Buckets past, dated races into seasons that run November→November. A race in Nov/Dec belongs
+   * to the season that opened that November; Jan–Oct belongs to the previous November's season.
+   */
+  private groupBySeason(goals: ClubRaceGoalResponse[]): SeasonGroup[] {
+    const bySeason = new Map<number, ClubRaceGoalResponse[]>();
+    for (const g of goals) {
+      if (!g.past || !g.raceDate) continue;
+      const startYear = this.seasonStartYear(g.raceDate);
+      const bucket = bySeason.get(startYear);
+      if (bucket) bucket.push(g);
+      else bySeason.set(startYear, [g]);
+    }
+    return [...bySeason.entries()]
+      .sort((a, b) => b[0] - a[0])
+      .map(([startYear, races]) => ({
+        startYear,
+        label: `${startYear} – ${startYear + 1}`,
+        races: races.sort((a, b) => (b.raceDate ?? '').localeCompare(a.raceDate ?? '')),
+      }));
+  }
+
+  private seasonStartYear(dateStr: string): number {
+    const d = new Date(dateStr + 'T00:00:00');
+    // getMonth() is 0-based; November = 10.
+    return d.getMonth() >= 10 ? d.getFullYear() : d.getFullYear() - 1;
   }
 }
