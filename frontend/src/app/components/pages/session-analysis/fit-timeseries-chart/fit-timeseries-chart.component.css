@@ -97,7 +97,9 @@
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.22));
   border-radius: 10px;
   padding: 12px 14px;
-  font: 11px/1.45 system-ui, sans-serif;
+  font:
+    11px/1.45 system-ui,
+    sans-serif;
   color: var(--text-color);
   z-index: 30;
   opacity: 0;
@@ -211,6 +213,30 @@
   flex-direction: column;
   gap: 4px;
   min-height: 0;
+}
+.zoom-reset {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 8;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface-card, rgba(32, 34, 52, 0.92));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.22));
+  color: var(--text-color);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: all 0.15s;
+}
+.zoom-reset:hover {
+  border-color: var(--accent-color, #ff9d00);
+  color: var(--accent-color, #ff9d00);
 }
 .mc {
   width: 100%;
