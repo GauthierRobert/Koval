@@ -1,21 +1,45 @@
 <div class="race-goals-tab">
   @if (raceGoals$ | async; as raceGoals) {
-    @if (raceGoals.length > 0) {
-      <div class="tab-header">
-        <h4 class="section-title">{{ 'CLUB_RACE_GOALS.SECTION_UPCOMING_RACES' | translate }}</h4>
-        <div class="view-toggle">
-          <button type="button" [class.active]="view === 'timeline'" (click)="setView('timeline')">
-            {{ 'CLUB_RACE_GOALS.VIEW_TIMELINE' | translate }}
-          </button>
-          <button type="button" [class.active]="view === 'list'" (click)="setView('list')">
-            {{ 'CLUB_RACE_GOALS.VIEW_LIST' | translate }}
-          </button>
-        </div>
+    <div class="tab-header">
+      <div class="season-switcher">
+        <button
+          type="button"
+          class="season-nav"
+          (click)="previousSeason()"
+          [attr.aria-label]="'CLUB_RACE_GOALS.SEASON_PREV' | translate"
+        >
+          &lsaquo;
+        </button>
+        <span class="season-label">{{ seasonLabel }}</span>
+        <button
+          type="button"
+          class="season-nav"
+          (click)="nextSeason()"
+          [attr.aria-label]="'CLUB_RACE_GOALS.SEASON_NEXT' | translate"
+        >
+          &rsaquo;
+        </button>
       </div>
+      <div class="view-toggle">
+        <button type="button" [class.active]="view === 'timeline'" (click)="setView('timeline')">
+          {{ 'CLUB_RACE_GOALS.VIEW_TIMELINE' | translate }}
+        </button>
+        <button type="button" [class.active]="view === 'list'" (click)="setView('list')">
+          {{ 'CLUB_RACE_GOALS.VIEW_LIST' | translate }}
+        </button>
+      </div>
+    </div>
 
+    @if (raceGoals.length > 0) {
       @if (view === 'timeline') {
         @if (timelineItems$ | async; as items) {
-          <app-goal-timeline [items]="items" (itemClick)="onTimelineItemClick($event)">
+          <app-goal-timeline
+            [items]="items"
+            [fixedStart]="seasonStart"
+            [fixedEnd]="seasonEnd"
+            [lockWindow]="true"
+            (itemClick)="onTimelineItemClick($event)"
+          >
             <ng-template #cardFooter let-item>
               @if (item.data?.participants?.length) {
                 <div class="club-card-participants">
@@ -125,7 +149,7 @@
           <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
           <line x1="4" x2="4" y1="22" y2="15" />
         </svg>
-        <p>{{ 'CLUB_RACE_GOALS.EMPTY_NO_GOALS' | translate }}</p>
+        <p>{{ 'CLUB_RACE_GOALS.EMPTY_NO_SEASON_RACES' | translate: { season: seasonLabel } }}</p>
       </div>
     }
   }

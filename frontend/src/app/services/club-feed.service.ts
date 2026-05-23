@@ -1,8 +1,8 @@
-import {inject, Injectable, NgZone} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable, of} from 'rxjs';
-import {catchError} from 'rxjs/operators';
-import {environment} from '../../environments/environment';
+import { inject, Injectable, NgZone } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import {
   ClubActivity,
   ClubExtendedStats,
@@ -85,9 +85,10 @@ export class ClubFeedService {
       .subscribe((lb) => this.ngZone.run(() => this.leaderboardSubject.next(lb)));
   }
 
-  loadRaceGoals(id: string): void {
+  loadRaceGoals(id: string, season?: number): void {
+    const options = season != null ? { params: { season: season.toString() } } : {};
     this.http
-      .get<ClubRaceGoalResponse[]>(`${this.apiUrl}/${id}/race-goals`)
+      .get<ClubRaceGoalResponse[]>(`${this.apiUrl}/${id}/race-goals`, options)
       .pipe(catchError(() => of([] as ClubRaceGoalResponse[])))
       .subscribe((goals) => this.ngZone.run(() => this.raceGoalsSubject.next(goals)));
   }
@@ -133,19 +134,21 @@ export class ClubFeedService {
     completionCount: number,
     latestCompletion: { userId: string; displayName: string; profilePicture?: string },
   ): void {
-    this.mutateFeed(updateEvent(feedEventId, (event) => {
-      const completions = [...(event.completions ?? [])];
-      if (!completions.find((c) => c.userId === latestCompletion.userId)) {
-        completions.push({
-          userId: latestCompletion.userId,
-          displayName: latestCompletion.displayName,
-          profilePicture: latestCompletion.profilePicture,
-          completedSessionId: '',
-          completedAt: new Date().toISOString(),
-        });
-      }
-      return { ...event, completions };
-    }));
+    this.mutateFeed(
+      updateEvent(feedEventId, (event) => {
+        const completions = [...(event.completions ?? [])];
+        if (!completions.find((c) => c.userId === latestCompletion.userId)) {
+          completions.push({
+            userId: latestCompletion.userId,
+            displayName: latestCompletion.displayName,
+            profilePicture: latestCompletion.profilePicture,
+            completedSessionId: '',
+            completedAt: new Date().toISOString(),
+          });
+        }
+        return { ...event, completions };
+      }),
+    );
   }
 
   addFeedEvent(event: ClubFeedEventResponse): void {
@@ -159,10 +162,12 @@ export class ClubFeedService {
   }
 
   markKudosGiven(feedEventId: string, userId: string): void {
-    this.mutateFeed(updateEvent(feedEventId, (event) => ({
-      ...event,
-      kudosGivenBy: [...(event.kudosGivenBy ?? []), userId],
-    })));
+    this.mutateFeed(
+      updateEvent(feedEventId, (event) => ({
+        ...event,
+        kudosGivenBy: [...(event.kudosGivenBy ?? []), userId],
+      })),
+    );
   }
 
   addComment(
@@ -276,14 +281,18 @@ export class ClubFeedService {
 
   /** Apply a reaction delta from SSE or HTTP response onto the in-memory feed. */
   applyReactionUpdate(payload: ReactionUpdatePayload): void {
-    this.mutateFeed(updateEvent(payload.feedEventId, (event) => applyReactionUpdateToEvent(event, payload)));
+    this.mutateFeed(
+      updateEvent(payload.feedEventId, (event) => applyReactionUpdateToEvent(event, payload)),
+    );
   }
 
   /** Look up a feed event in the current snapshot (pinned or items). */
   findEvent(eventId: string): ClubFeedEventResponse | undefined {
     const current = this.feedEventsSubject.value;
     if (!current) return undefined;
-    return current.pinned.find((e) => e.id === eventId) ?? current.items.find((e) => e.id === eventId);
+    return (
+      current.pinned.find((e) => e.id === eventId) ?? current.items.find((e) => e.id === eventId)
+    );
   }
 
   /** Optimistically toggle the given reaction on a feed event for `userId`. Returns whether it was added. */
@@ -314,10 +323,7 @@ export class ClubFeedService {
   // --- Spotlights ---
 
   createSpotlight(clubId: string, data: CreateSpotlightData): Observable<ClubFeedEventResponse> {
-    return this.http.post<ClubFeedEventResponse>(
-      `${this.apiUrl}/${clubId}/feed/spotlights`,
-      data,
-    );
+    return this.http.post<ClubFeedEventResponse>(`${this.apiUrl}/${clubId}/feed/spotlights`, data);
   }
 
   updateSpotlight(
