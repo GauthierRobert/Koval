@@ -160,6 +160,15 @@
                     <b class="mono">{{ g.targetTime || '—' }}</b>
                     <small>{{ g.priority }}-Race</small>
                   </div>
+                  @if (g.linkedSessionId) {
+                    <a
+                      class="rm-hist-session"
+                      [routerLink]="['/history', g.linkedSessionId]"
+                      (click)="$event.stopPropagation()"
+                    >
+                      {{ 'GOALS.VIEW_SESSION' | translate }}
+                    </a>
+                  }
                 </div>
               }
             </div>

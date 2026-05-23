@@ -1647,7 +1647,8 @@
     "COUNTDOWN_WEEKS": "semaines",
     "COUNTDOWN_PAST": "passé",
     "SECTION_COUNTDOWN": "COMPTE À REBOURS",
-    "SECTION_DETAILS": "DÉTAILS"
+    "SECTION_DETAILS": "DÉTAILS",
+    "VIEW_SESSION": "Voir la séance"
   },
   "RACES": {
     "PAGE_TITLE": "Courses",
