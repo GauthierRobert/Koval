@@ -45,7 +45,7 @@ export interface GridLine {
 }
 
 export const DAY_MS = 86_400_000;
-export const MIN_SPAN_MS = 30 * DAY_MS;
+export const MIN_SPAN_MS = 14 * DAY_MS;
 export const MAX_SPAN_MS = 366 * DAY_MS;
 export const WEEK_GRID_THRESHOLD = 120 * DAY_MS;
 export const DAY_GRID_THRESHOLD = 45 * DAY_MS;

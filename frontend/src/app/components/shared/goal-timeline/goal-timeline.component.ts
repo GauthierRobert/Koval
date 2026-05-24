@@ -212,6 +212,35 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnChan
     return ((cardMaxPx + buffer) / Math.max(this.trackWidthPx, 1)) * 100;
   }
 
+  private get effectiveMaxSpan(): number {
+    if (this.fixedStart && this.fixedEnd) {
+      const seasonSpan = this.fixedEnd.getTime() - this.fixedStart.getTime();
+      return Math.max(MIN_SPAN_MS, Math.min(MAX_SPAN_MS, seasonSpan));
+    }
+    return MAX_SPAN_MS;
+  }
+
+  private clampSpan(span: number): number {
+    return Math.max(MIN_SPAN_MS, Math.min(this.effectiveMaxSpan, span));
+  }
+
+  private clampStart(startMs: number, spanMs: number): number {
+    if (this.fixedStart && this.fixedEnd) {
+      const lo = this.fixedStart.getTime();
+      const hi = this.fixedEnd.getTime() - spanMs;
+      if (hi <= lo) return lo;
+      return Math.max(lo, Math.min(hi, startMs));
+    }
+    return startMs;
+  }
+
+  private applyWindow(startMs: number, spanMs: number): void {
+    const newSpan = this.clampSpan(spanMs);
+    const newStart = this.clampStart(startMs, newSpan);
+    this.windowStart = new Date(newStart);
+    this.windowEndDate = new Date(newStart + newSpan);
+  }
+
   private onWheel(e: WheelEvent): void {
     if (this.lockWindow) return;
     e.preventDefault();
@@ -227,12 +256,10 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnChan
 
     // Exponential zoom keeps trackpad pinches subtle and wheel ticks crisp.
     const factor = Math.exp(e.deltaY * WHEEL_SENSITIVITY);
-    const newSpan = Math.max(MIN_SPAN_MS, Math.min(MAX_SPAN_MS, oldSpan * factor));
+    const newSpan = this.clampSpan(oldSpan * factor);
     if (newSpan === oldSpan) return;
 
-    const newStartMs = anchorMs - frac * newSpan;
-    this.windowStart = new Date(newStartMs);
-    this.windowEndDate = new Date(newStartMs + newSpan);
+    this.applyWindow(anchorMs - frac * newSpan, newSpan);
     this.cdr.markForCheck();
   }
 
@@ -283,8 +310,7 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnChan
       if (this.drag.crossedThreshold) {
         const ratio = dx / this.drag.startTrackWidthPx;
         const newStartMs = this.drag.startWindowStartMs - ratio * this.drag.spanMsAtStart;
-        this.windowStart = new Date(newStartMs);
-        this.windowEndDate = new Date(newStartMs + this.drag.spanMsAtStart);
+        this.applyWindow(newStartMs, this.drag.spanMsAtStart);
         e.preventDefault();
         this.cdr.markForCheck();
       }
@@ -339,16 +365,11 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnChan
     if (pts.length < 2) return;
     const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
     const ratio = Math.max(dist / this.pinch.startDist, 0.0001);
-    const effectiveSpan = Math.max(
-      MIN_SPAN_MS,
-      Math.min(MAX_SPAN_MS, this.pinch.startSpanMs / ratio),
-    );
+    const effectiveSpan = this.clampSpan(this.pinch.startSpanMs / ratio);
 
     const anchorMs =
       this.pinch.startWindowStartMs + this.pinch.startMidpointFrac * this.pinch.startSpanMs;
-    const newStartMs = anchorMs - this.pinch.startMidpointFrac * effectiveSpan;
-    this.windowStart = new Date(newStartMs);
-    this.windowEndDate = new Date(newStartMs + effectiveSpan);
+    this.applyWindow(anchorMs - this.pinch.startMidpointFrac * effectiveSpan, effectiveSpan);
     this.cdr.markForCheck();
     e.preventDefault();
   }

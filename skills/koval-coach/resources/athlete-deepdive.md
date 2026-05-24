@@ -72,4 +72,5 @@ The action bullets should reference the coach's profile thresholds. Examples:
 - **Athlete has no recent sessions** → drop the "last session" and "power curve" sections, just show the profile + scheduled work.
 - **Cycling tools called on a runner** → skip the power curve; summarise duration / TSS / pace from `getAthleteContext(athleteId).recentSessions` instead.
 - **Athlete profile is private to athlete (free-form prefs)** → you cannot read `athlete-profile.md` — work from MCP data only.
+- **Athlete self-context (`athleteSelf`) contradicts what you're about to suggest** — surface it as a *signal*, not a veto. e.g. "Bob wrote 'Sundays off' but is missing his long ride — coach decides whether to push or reschedule." Self-context is a recommendation (SKILL.md rule 9); only flag injury / medical entries as something to pause on.
 - **Coach explicitly asks for a longer window** → adjust `from` to `today-180d` or whatever.
