@@ -139,7 +139,7 @@
         (touchcancel)="onTouchEnd($event)"
       ></canvas>
     }
-    @if (_hasElevation) {
+    @if (_hasElevation && showElevation) {
       <canvas
         #elevCanvas
         class="mc elev-h"
