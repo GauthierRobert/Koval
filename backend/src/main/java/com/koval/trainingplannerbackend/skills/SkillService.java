@@ -64,8 +64,7 @@ public class SkillService {
                     "resources/create-workout.md",
                     "resources/assign-workout.md",
                     "resources/build-plan.md",
-                    "resources/club-sessions.md",
-                    "resources/publish-club-gazette.md"
+                    "resources/club-sessions.md"
             }
     );
 

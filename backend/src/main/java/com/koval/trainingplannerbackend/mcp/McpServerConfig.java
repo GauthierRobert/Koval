@@ -24,10 +24,9 @@ public class McpServerConfig {
                                          McpClubTestTools clubTest,
                                          McpRaceTools race,
                                          McpProfileTools profile,
-                                         McpGazetteTools gazette,
                                          McpContextTools context) {
         return MethodToolCallbackProvider.builder()
-                .toolObjects(training, scheduling, history, coach, zone, plan, goal, club, clubTest, race, profile, gazette, context)
+                .toolObjects(training, scheduling, history, coach, zone, plan, goal, club, clubTest, race, profile, context)
                 .build();
     }
 }
