@@ -31,7 +31,7 @@ Read `coach-profile.md` for `defaultVisibility`, `restDay`, `longSessionDay`. Us
 5. **Assign**:
    - One athlete: `assignTraining(trainingId, athleteId, date, status='PENDING')`.
    - Whole group: iterate athletes, **one `assignTraining` per turn**, log `✓ [n/total] <athlete> — <date>`.
-6. **Confirm** with the affected athletes' `renderWeekSchedule` for that week — paste verbatim.
+6. **Confirm** by building a Mon-Sun week grid for the affected athlete from `getAthleteSchedule(athleteId, from, to)` for that week.
 
 ## Reschedule / unassign
 
@@ -45,7 +45,7 @@ Single athlete:
 ```
 Assigned **<title>** to <athlete> for <weekday DD MMM>.
 
-<renderWeekSchedule for athlete, that week>
+<Mon-Sun week grid for the athlete, built from getAthleteSchedule>
 ```
 
 Whole group (per turn):

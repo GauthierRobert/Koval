@@ -13,8 +13,8 @@ Pull all-time PRs plus 30-day and 90-day power curves and render a side-by-side 
 1. `getPersonalRecords` → all-time best mean-maximal watts at each standard duration (5s, 15s, 30s, 1m, 2m, 5m, 10m, 20m, 30m, 1h, 1.5h, 2h).
 2. Compute windows: `to = today`, `from30 = today - 30d`, `from90 = today - 90d` (or the user's custom window).
 3. In parallel:
-   - `renderPowerCurveReport(from30, to)` — last 30 days
-   - `renderPowerCurveReport(from90, to)` — last 90 days
+   - `getBestPowerCurve(from30, to)` — last 30 days → Map of duration(sec) → best watts
+   - `getBestPowerCurve(from90, to)` — last 90 days
 4. Build the comparison table: `Duration | All-time | 90d | 30d | Δ vs all-time` (Δ as a signed percentage).
 
 ## Output format
@@ -31,11 +31,8 @@ Pull all-time PRs plus 30-day and 90-day power curves and render a side-by-side 
 | 5m       | …        | …     | …     | …     |
 | 20m      | …        | …     | …     | …     |
 
-### Last 30 days
-<renderPowerCurveReport(30d) verbatim>
-
-### Last 90 days
-<renderPowerCurveReport(90d) verbatim>
+### Recent windows (optional bar rows)
+Render a unicode bar row per key duration from the 30d / 90d curves if a visual adds value — otherwise the table above is enough.
 
 **Sharpest right now:** <durations where 30d is within 2% of all-time>
 **Furthest off form:** <durations where 30d is 10%+ below all-time>

@@ -24,10 +24,10 @@ In parallel:
 - `getAthleteSchedule(athleteId, from=today, to=today+14d)` — what's already booked
 - `getBestPowerCurve(athleteId)` — all-time PRs (cycling)
 
-Render with the markdown helpers:
-- `renderPmcReport` for the form trend
-- `renderPowerCurveReport` for the curve (cycling only)
-- `renderSessionSummary(sessionId)` for the **most recent** session — paste verbatim
+Format the fetched data yourself — all of it is athlete-scoped from the `getAthlete*` calls above:
+- form trend → a CTL/ATL/TSB sparkline + latest-values table from `getAthletePmc`
+- power curve (cycling only) → a bar row / table from `getAthletePowerCurve` (vs all-time `getBestPowerCurve`)
+- most-recent session → a compact card from the newest entry in `getAthleteRecentSessions` (title, duration, avg power/HR, TSS, IF)
 
 ## Output format
 
@@ -38,13 +38,13 @@ Render with the markdown helpers:
 **Current form:** CTL <…> · ATL <…> · TSB <…>  → <flag emoji + label>
 
 ### Form trend (90d)
-<renderPmcReport>
+<CTL/ATL/TSB sparkline + latest-values table from getAthletePmc>
 
 ### Last session
-<renderSessionSummary>
+<compact card from the newest getAthleteRecentSessions entry>
 
 ### Power curve (last 90d, cycling)
-<renderPowerCurveReport>
+<table / bar rows from getAthletePowerCurve vs getBestPowerCurve>
 
 ### Next 14 days on the calendar
 | Date     | Workout           | Status   |
@@ -71,6 +71,6 @@ The action bullets should reference the coach's profile thresholds. Examples:
 
 ## Edge cases
 - **Athlete has no recent sessions** → drop the "last session" and "power curve" sections, just show the profile + scheduled work.
-- **Cycling tools called on a runner** → fall back to volume/pace charts (`renderVolumeReport`); skip power curve.
+- **Cycling tools called on a runner** → skip the power curve; summarise duration / TSS / pace from `getAthleteRecentSessions` instead.
 - **Athlete profile is private to athlete (free-form prefs)** → you cannot read `athlete-profile.md` — work from MCP data only.
 - **Coach explicitly asks for a longer window** → adjust `from` to `today-180d` or whatever.

@@ -114,17 +114,21 @@ public class McpPlanTools {
                 + " (" + day.getTrainingIds().size() + " workout(s) now scheduled).";
     }
 
-    @Tool(description = "Activate a training plan, creating scheduled workouts in the calendar for all planned days. Only works on DRAFT or PAUSED plans. Requires a start date.")
-    public Object activatePlan(
-            @ToolParam(description = "Plan ID to activate") String planId,
-            @ToolParam(description = "Start date in YYYY-MM-DD format (should be a Monday)") LocalDate startDate) {
+    @Tool(description = "Change a training plan's lifecycle status. status='ACTIVE' with a startDate (YYYY-MM-DD, ideally a Monday) materializes the plan onto the calendar, creating scheduled workouts for every planned day — works on DRAFT or PAUSED plans. status='ACTIVE' without a startDate resumes a PAUSED plan in place without recreating workouts. status='PAUSED' cancels future pending scheduled workouts but keeps past completed/skipped ones. Returns the updated plan summary.")
+    public PlanSummary setPlanStatus(
+            @ToolParam(description = "Plan ID") String planId,
+            @ToolParam(description = "Target status: 'ACTIVE' or 'PAUSED'.") String status,
+            @ToolParam(description = "Start date (YYYY-MM-DD, should be a Monday). Provide to activate/reschedule; omit (null) to resume a paused plan in place.") LocalDate startDate) {
+        if (planId == null || planId.isBlank()) throw new IllegalArgumentException("planId is required.");
+        if (status == null || status.isBlank()) throw new IllegalArgumentException("status is required ('ACTIVE' or 'PAUSED').");
         String userId = SecurityUtils.getCurrentUserId();
-        TrainingPlan activated = planService.activatePlan(planId, userId, startDate);
-        int totalWorkouts = activated.getWeeks().stream()
-                .flatMap(w -> w.getDays().stream())
-                .mapToInt(d -> d.getTrainingIds().size())
-                .sum();
-        return "Plan activated! " + totalWorkouts + " workouts scheduled starting " + activated.getStartDate();
+        return switch (status.trim().toUpperCase()) {
+            case "ACTIVE" -> startDate != null
+                    ? PlanSummary.from(planService.activatePlan(planId, userId, startDate))
+                    : PlanSummary.from(planService.resumePlan(planId, userId));
+            case "PAUSED" -> PlanSummary.from(planService.pausePlan(planId, userId));
+            default -> throw new IllegalArgumentException("status must be 'ACTIVE' or 'PAUSED'.");
+        };
     }
 
     @Tool(description = "Get progress of a training plan: how many workouts are completed, skipped, or pending.")
@@ -161,20 +165,6 @@ public class McpPlanTools {
         String userId = SecurityUtils.getCurrentUserId();
         planService.deletePlan(planId, userId);
         return "Plan deleted.";
-    }
-
-    @Tool(description = "Pause an ACTIVE training plan. Future pending scheduled workouts are cancelled but past completed/skipped ones are preserved. Use resumePlan to put it back into ACTIVE without recreating workouts, or activatePlan to reschedule from a new start date.")
-    public PlanSummary pausePlan(
-            @ToolParam(description = "Plan ID") String planId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        return PlanSummary.from(planService.pausePlan(planId, userId));
-    }
-
-    @Tool(description = "Resume a PAUSED plan back to ACTIVE without recreating any scheduled workouts. Use activatePlan if you also need to repopulate the calendar with future days.")
-    public PlanSummary resumePlan(
-            @ToolParam(description = "Plan ID") String planId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        return PlanSummary.from(planService.resumePlan(planId, userId));
     }
 
     @Tool(description = "Remove planned workouts from a specific day of a week. If trainingId is provided, removes only that workout from the day (leaving any others). If trainingId is null/blank, removes the entire day with all its workouts.")
