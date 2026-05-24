@@ -46,10 +46,10 @@ Method choice never overrides `forbiddenEfforts`. If a method's signature sharpe
   3. `addDayToPlan(planId, weekNumber, dayOfWeek, trainingId)`.
 
 ### Step 4 — Activate
-`activatePlan(planId)` so the sessions appear on the user's schedule.
+`setPlanStatus(planId, status='ACTIVE', startDate=<plan start Monday>)` so the sessions appear on the user's schedule.
 
 ### Step 5 — Preview
-`renderWeekSchedule(weekStart=monday)` for the next 1-2 weeks, paste each grid.
+`getMySchedule(from=monday, to=sunday)` for the next 1-2 weeks; build a Mon-Sun grid (○ pending / ✔ completed / ✗ skipped) for each.
 
 ## Output format
 
@@ -59,10 +59,10 @@ Method choice never overrides `forbiddenEfforts`. If a method's signature sharpe
 <N> days out. Plan: <one-sentence strategy>
 
 ### This week
-<renderWeekSchedule verbatim>
+<Mon-Sun week grid you build from getMySchedule>
 
 ### Next week
-<renderWeekSchedule verbatim>
+<Mon-Sun week grid you build from getMySchedule>
 
 Plan ID: <planId> — say "swap [day]" or "make [day] easier" to adjust.
 ```

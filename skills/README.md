@@ -108,5 +108,5 @@ Run onboarding once when you first connect — re-run any time your training rea
 ## Notes
 
 - Skills work best when your **profile** is complete (FTP, weight, threshold pace, CSS) — otherwise TSS/IF estimates fall back to defaults.
-- The `render*` tools (`renderPowerCurveReport`, `renderPmcReport`, `renderVolumeReport`, `renderWeekSchedule`, `renderSessionSummary`, `renderFriReport`) return ready-to-paste markdown — your client doesn't need any special rendering.
+- Analytics tools (`getPmcData`, `getBestPowerCurve`, `getVolume`, `getSessionDetail`, `getMySchedule`, etc.) return JSON; the skills format it into compact markdown tables and unicode sparklines/bar charts — no image rendering required.
 - Coach workflows check the `COACH` role and require an existing coach-athlete relationship in the app. Athlete workflows refuse if your account is `COACH` (run `koval-coach` instead).

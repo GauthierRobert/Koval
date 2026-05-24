@@ -70,6 +70,7 @@ public class McpCoachTools {
 
     @Tool(description = "List all athletes coached by the current user. Returns athlete profiles with FTP, weight, and performance metrics. Requires COACH role.")
     public List<AthleteResponse> listAthletes() {
+        SecurityUtils.requireCoach();
         String coachId = SecurityUtils.getCurrentUserId();
         return coachService.getAthletes(coachId);
     }
@@ -80,6 +81,7 @@ public class McpCoachTools {
             @ToolParam(description = "List of athlete IDs to assign to") List<String> athleteIds,
             @ToolParam(description = "Date to schedule (YYYY-MM-DD)") LocalDate scheduledDate,
             @ToolParam(description = "Optional notes for the athletes") String notes) {
+        SecurityUtils.requireCoach();
         if (trainingId == null || trainingId.isBlank()) return "Error: trainingId is required.";
         if (athleteIds == null || athleteIds.isEmpty()) return "Error: athleteIds list is required.";
         if (scheduledDate == null) return "Error: scheduledDate is required.";
@@ -98,6 +100,7 @@ public class McpCoachTools {
             @ToolParam(description = "Athlete ID") String athleteId,
             @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
             @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
+        SecurityUtils.requireCoach();
         List<ScheduledWorkout> workouts = scheduledWorkoutService.getAthleteSchedule(athleteId, from, to);
         Map<String, String> titles = batchResolveTitles(workouts);
         return workouts.stream()
@@ -109,6 +112,7 @@ public class McpCoachTools {
     @Tool(description = "Get a coached athlete's profile: name, FTP, weight, threshold pace, swim CSS, and current training load (CTL/ATL/TSB). Requires the current user to be the athlete's coach.")
     public AthleteProfile getAthleteProfile(
             @ToolParam(description = "Athlete user ID") String athleteId) {
+        SecurityUtils.requireCoach();
         String coachId = SecurityUtils.getCurrentUserId();
         verifyCoach(coachId, athleteId);
         User u = userService.getUserById(athleteId);
@@ -119,6 +123,7 @@ public class McpCoachTools {
     public List<McpHistoryTools.SessionSummary> getAthleteRecentSessions(
             @ToolParam(description = "Athlete user ID") String athleteId,
             @ToolParam(description = "Maximum number of sessions to return (default 10, max 50)") Integer limit) {
+        SecurityUtils.requireCoach();
         String coachId = SecurityUtils.getCurrentUserId();
         verifyCoach(coachId, athleteId);
         int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 50) : 10;
@@ -134,6 +139,7 @@ public class McpCoachTools {
             @ToolParam(description = "Athlete user ID") String athleteId,
             @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
             @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
+        SecurityUtils.requireCoach();
         String coachId = SecurityUtils.getCurrentUserId();
         verifyCoach(coachId, athleteId);
         return analyticsService.generatePmc(athleteId, from, to);
@@ -144,6 +150,7 @@ public class McpCoachTools {
             @ToolParam(description = "Athlete user ID") String athleteId,
             @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
             @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
+        SecurityUtils.requireCoach();
         String coachId = SecurityUtils.getCurrentUserId();
         verifyCoach(coachId, athleteId);
         return powerCurveService.getBestPowerCurve(athleteId, from, to);
@@ -157,6 +164,7 @@ public class McpCoachTools {
             @ToolParam(description = "Athlete user ID") String athleteId,
             @ToolParam(description = "Note body in markdown (max 10000 chars)") String body,
             @ToolParam(description = "Optional completed session ID this note refers to") String sessionId) {
+        SecurityUtils.requireCoach();
         String coachId = SecurityUtils.getCurrentUserId();
         CoachNote saved = coachNoteService.append(coachId, athleteId, sessionId, body, Provenance.mcp());
         return CoachNoteSummary.from(saved);

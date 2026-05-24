@@ -52,19 +52,18 @@ The connector exposes ~70 tools. The ones every coach workflow uses:
 - **Squad context**: `getMyProfile` (your own role + profile)
 - **Trainings**: `searchTrainings`, `createTraining`, `updateTraining`, `cloneTraining`, `getTraining`
 - **Assigning**: `assignTraining(trainingId, athleteId, date)`, `scheduleTraining`, `rescheduleWorkout`, `unassignWorkout`
-- **Plans**: `createPlan`, `addDayToPlan`, `removeDayFromPlan`, `activatePlan`, `pausePlan`, `clonePlan`, `getPlanProgress`, `getPlanAnalytics`
+- **Plans**: `createPlan`, `addDayToPlan`, `removeDayFromPlan`, `setPlanStatus` (status='ACTIVE'/'PAUSED'), `clonePlan`, `getPlanProgress`, `getPlanAnalytics`
 - **Zones**: `listZoneSystems`, `getDefaultZoneSystem`, `createZoneSystem`
 - **Groups**: list and assign training groups (coach Group + ClubGroup)
 - **Club**: `getClub`, `listClubMembers`, `createClubSession`, `createRecurringSession`, `listClubSessions`, `listClubTests`, `createClubTestFromPreset`, `applyTestReferences`, `postClubAnnouncement`, `getEngagementInsights`, `getClubFeed`
 - **Gazette**: `listOpenGazetteDrafts`, `getGazettePayload`, `previewGazetteAutoSections`, `publishGazetteWithPdf`, `discardGazetteDraft`
-- **Renderers** (markdown — paste verbatim): `renderWeekSchedule`, `renderPmcReport`, `renderPowerCurveReport`, `renderSessionSummary`, `renderVolumeReport`, `renderFriReport`
 
-All output stays in markdown — unicode bar charts / sparklines / tables. No images required.
+The analytics and schedule tools (`getAthletePmc`, `getAthletePowerCurve`, `getAthleteSchedule`, `getAthleteRecentSessions`, `getVolume`) return JSON. Format the numbers yourself into compact markdown — small tables, plus unicode sparklines (`▁▂▃▄▅▆▇█`) / bar rows (`█▉▊▋▌▍▎▏`) when a trend or comparison helps. No images required.
 
 ## Cross-cutting rules
 
 1. **Profile-first.** Every workflow reads `coach-profile.md` before deciding session structure / volume / voice / language. Defaults if absent — never block.
-2. **Markdown only.** Use `render*` tools wherever they exist; paste verbatim, add at most one prose verdict.
+2. **Format the data yourself.** Data tools return JSON — render it into compact markdown (small tables, unicode sparklines/bars), add at most one prose verdict. Keep it tight; never dump raw JSON.
 3. **One write per turn.** `createTraining` / `assignTraining` / `createPlan` / `publishGazetteWithPdf` are each called at most once per response. For multi-athlete assignments, iterate one athlete per turn (`✓ [n/total] Alice — Tue 14 May`).
 4. **Auth context.** `coachId` is resolved server-side from the JWT, never pass it. `athleteId` is required for athlete-targeted writes.
 5. **Per-athlete personalization.** Trainings stay coach-templates — written in **% of FTP / threshold pace / CSS**, never absolute watts/paces. Athlete-specific values are resolved server-side at assign / execution time.

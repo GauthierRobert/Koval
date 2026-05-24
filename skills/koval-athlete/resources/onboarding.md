@@ -85,7 +85,7 @@ Ask in **grouped batches**, not one-by-one. Wait for the answer before the next 
 
 ## Step 5 — Persist to backend
 Where a field maps to a real model field, write it back:
-- FTP / weight / threshold pace / CSS → `updateFtp`, `updateWeight`, `updateThresholdPace`, `updateSwimCss`
+- FTP / weight / threshold pace / CSS → one `updateProfile(ftp?, weightKg?, thresholdPaceSecPerKm?, swimCssSecPer100m?)` call with the fields you captured
 - A-priority goal with date → `createGoal(title, sport, priority, raceDate, raceId?, notes?)`. If found via `searchRaces`, also `linkRaceToGoal`.
 - No default zone system for the primary sport → `createZoneSystem(...)` with Coggan defaults, or hand to `zone-setup.md`.
 

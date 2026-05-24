@@ -48,14 +48,14 @@ For each `(weekNumber, dayOfWeek)` slot in the structure:
 To remove a slot later: `removeDayFromPlan(planId, weekNumber, dayOfWeek)`.
 
 ## Step 4 — Activate
-`activatePlan(planId)` to materialise scheduled workouts on the athlete's calendar from `startDate`.
+`setPlanStatus(planId, status='ACTIVE', startDate=<plan start Monday>)` to materialise scheduled workouts on the athlete's calendar from `startDate`.
 
-Pause anytime later with `pausePlan(planId)`.
+Pause anytime later with `setPlanStatus(planId, status='PAUSED')`.
 
 ## Step 5 — Preview
 - `getPlanProgress(planId)` for status numbers.
 - `getPlanAnalytics(planId)` for projected weekly TSS / hours per week.
-- `renderWeekSchedule(weekStart=monday)` for the next 2 weeks; paste verbatim.
+- `getAthleteSchedule(athleteId, from=monday, to=sunday)` for the next 2 weeks; build a Mon-Sun grid for each.
 
 ## Output format
 
@@ -70,10 +70,10 @@ Pause anytime later with `pausePlan(planId)`.
 - … (compact list)
 
 ### This week
-<renderWeekSchedule>
+<Mon-Sun week grid built from getAthleteSchedule>
 
 ### Next week
-<renderWeekSchedule>
+<Mon-Sun week grid built from getAthleteSchedule>
 
 Plan ID: <planId> — say "swap [day]" or "make [day] easier" to adjust.
 ```

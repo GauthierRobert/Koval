@@ -51,28 +51,35 @@ public class McpHistoryTools {
         this.aiAnalysisService = aiAnalysisService;
     }
 
-    @Tool(description = "Get the user's most recent completed workout sessions. Returns metrics like duration, average power, heart rate, TSS (Training Stress Score), and IF (Intensity Factor).")
-    public List<SessionSummary> getRecentSessions(
-            @ToolParam(description = "Maximum number of sessions to return (default 10, max 50)") Integer limit) {
+    @Tool(description = "Get completed workout sessions. mode='recent' returns the latest N sessions (use limit; default 10, max 50). mode='range' returns all sessions between from and to (YYYY-MM-DD, inclusive). Returns metrics like duration, average power, heart rate, TSS (Training Stress Score) and IF (Intensity Factor).")
+    public List<SessionSummary> getSessions(
+            @ToolParam(description = "Query mode: 'recent' for the latest sessions, or 'range' for a date window. Defaults to 'recent'.") String mode,
+            @ToolParam(description = "Start date inclusive (YYYY-MM-DD). Required when mode='range'.") LocalDate from,
+            @ToolParam(description = "End date inclusive (YYYY-MM-DD). Required when mode='range'.") LocalDate to,
+            @ToolParam(description = "Max sessions to return when mode='recent' (default 10, max 50). Ignored for 'range'.") Integer limit) {
         String userId = SecurityUtils.getCurrentUserId();
-        int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 50) : 10;
-        return sessionRepository
-                .findByUserIdOrderByCompletedAtDesc(userId, PageRequest.of(0, effectiveLimit))
-                .stream()
-                .map(SessionSummary::from)
-                .toList();
-    }
-
-    @Tool(description = "Get completed workout sessions within a specific date range.")
-    public List<SessionSummary> getSessionsByDateRange(
-            @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
-            @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
-        String userId = SecurityUtils.getCurrentUserId();
-        return sessionRepository.findByUserIdAndCompletedAtBetween(
-                        userId, LocalDateTime.of(from, LocalTime.MIN), LocalDateTime.of(to, LocalTime.MAX))
-                .stream()
-                .map(SessionSummary::from)
-                .toList();
+        String effectiveMode = (mode == null || mode.isBlank()) ? "recent" : mode.trim().toLowerCase();
+        return switch (effectiveMode) {
+            case "recent" -> {
+                int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 50) : 10;
+                yield sessionRepository
+                        .findByUserIdOrderByCompletedAtDesc(userId, PageRequest.of(0, effectiveLimit))
+                        .stream()
+                        .map(SessionSummary::from)
+                        .toList();
+            }
+            case "range" -> {
+                if (from == null || to == null) {
+                    throw new IllegalArgumentException("mode='range' requires both from and to dates (YYYY-MM-DD).");
+                }
+                yield sessionRepository.findByUserIdAndCompletedAtBetween(
+                                userId, LocalDateTime.of(from, LocalTime.MIN), LocalDateTime.of(to, LocalTime.MAX))
+                        .stream()
+                        .map(SessionSummary::from)
+                        .toList();
+            }
+            default -> throw new IllegalArgumentException("mode must be 'recent' or 'range'.");
+        };
     }
 
     @Tool(description = "Get Performance Management Chart (PMC) data for a date range. Returns daily CTL (Chronic Training Load / fitness), ATL (Acute Training Load / fatigue), and TSB (Training Stress Balance / form) values. Useful for analyzing training load progression.")
