@@ -10,6 +10,12 @@
     "COACH_PRIVATE_HINT": "Visible only to you — never shown to the athlete.",
     "ATHLETE_EMPTY": "This athlete hasn't shared any context yet."
   },
+  "CONTEXT_PAGE": {
+    "TITLE_ATHLETE": "Training context",
+    "TITLE_COACH": "Coaching philosophy",
+    "SUBTITLE_ATHLETE": "Tell your coach and the AI how you like to train — your availability, habits, goals and the things to avoid. This is shared with your coach and used to personalise everything generated for you.",
+    "SUBTITLE_COACH": "Describe how you coach — your periodization, intensity distribution, signature sessions and voice. This guides every plan and workout the AI builds for your athletes."
+  },
   "INSTALL_BANNER": {
     "TITLE": "Install Koval",
     "MESSAGE": "Install the app for a faster, full-screen experience.",
@@ -66,6 +72,8 @@
     "CLUBS_EMPTY": "No clubs yet",
     "CLUB_LIST_LABEL": "CLUB LIST",
     "CLUB_LIST_DESC": "Browse and manage your clubs",
+    "DROPDOWN_CONTEXT_LABEL": "CONTEXT",
+    "DROPDOWN_CONTEXT_DESC": "Your training context & preferences",
     "DROPDOWN_TRAININGS_LABEL": "TRAININGS",
     "DROPDOWN_TRAININGS_DESC": "Browse your training library",
     "DROPDOWN_HISTORY_LABEL": "HISTORY",

@@ -54,20 +54,6 @@ public class McpSchedulingTools {
                 }).toList();
     }
 
-    @Tool(description = "Mark a scheduled workout as completed.")
-    public ScheduleSummary markCompleted(
-            @ToolParam(description = "Scheduled workout ID") String scheduledWorkoutId) {
-        ScheduledWorkout sw = scheduledWorkoutService.markCompleted(scheduledWorkoutId, null, null);
-        return ScheduleSummary.from(sw, resolveTitle(sw.getTrainingId()));
-    }
-
-    @Tool(description = "Mark a scheduled workout as skipped.")
-    public ScheduleSummary markSkipped(
-            @ToolParam(description = "Scheduled workout ID") String scheduledWorkoutId) {
-        ScheduledWorkout sw = scheduledWorkoutService.markSkipped(scheduledWorkoutId);
-        return ScheduleSummary.from(sw, resolveTitle(sw.getTrainingId()));
-    }
-
     @Tool(description = "Move a scheduled workout to a different date. The status (PENDING/COMPLETED/SKIPPED) is preserved.")
     public ScheduleSummary rescheduleWorkout(
             @ToolParam(description = "Scheduled workout ID") String scheduledWorkoutId,

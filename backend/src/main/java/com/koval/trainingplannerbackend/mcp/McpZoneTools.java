@@ -47,14 +47,6 @@ public class McpZoneTools {
         return zoneSystemService.getZoneSystemWithAccess(systemId, userId);
     }
 
-    @Tool(description = "Delete one of the user's zone systems by id. Cannot be undone.")
-    public String deleteZoneSystem(
-            @ToolParam(description = "Zone system id to delete") String systemId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        zoneSystemService.deleteZoneSystem(systemId, userId);
-        return "Zone system deleted.";
-    }
-
     @Tool(description = "Given a raw value (e.g. watts for a power zone system, seconds/km for a pace zone system) and a reference value (FTP, threshold pace, CSS), resolve which zone label the value falls in. Returns the zone label, low/high percentage bounds and zone index. Returns 'Error:' if the zone system is not found or the value does not fall in any zone.")
     public String resolveZone(
             @ToolParam(description = "Zone system id") String systemId,

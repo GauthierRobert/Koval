@@ -465,6 +465,13 @@
   flex-shrink: 0;
 }
 
+/* Standalone race session: badge stays race-orange regardless of the
+ * session's own sport color so single-sport races are still visually
+ * tagged as races. */
+.group-kind-tag.race {
+  --sport-color: #f59e0b;
+}
+
 .group-sport-chain {
   display: inline-flex;
   align-items: center;

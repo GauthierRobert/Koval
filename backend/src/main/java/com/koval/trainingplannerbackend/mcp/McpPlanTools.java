@@ -241,12 +241,6 @@ public class McpPlanTools {
 
     public record DayDetail(String dayOfWeek, List<String> trainingIds, String notes, List<String> scheduledWorkoutIds) {}
 
-    @Tool(description = "Get detailed analytics for a training plan including weekly TSS adherence (actual vs target), completion rates per week, and overall adherence percentage.")
-    public PlanAnalytics getPlanAnalytics(
-            @ToolParam(description = "Plan ID") String planId) {
-        return analyticsService.getAnalytics(planId);
-    }
-
     public record PlanSummary(String id, String title, String sport, String status,
                                int durationWeeks, String startDate, int totalWorkouts) {
         public static PlanSummary from(TrainingPlan p) {

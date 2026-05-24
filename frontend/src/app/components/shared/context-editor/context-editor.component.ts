@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ContextSections } from '../../../models/context.model';
+import { ContextSections, SectionGuidance } from '../../../models/context.model';
 
 /**
  * Presentational editor for section-based context (title → markdown). Renders one textarea per
@@ -29,6 +29,8 @@ export class ContextEditorComponent implements OnChanges {
   @Input() sections: ContextSections | null = null;
   /** Recommended section headings to always show, in order. */
   @Input() sectionTitles: readonly string[] = [];
+  /** Optional per-section hint + example placeholder. Keyed by section title. */
+  @Input() sectionGuidance: Record<string, SectionGuidance> = {};
   @Input() readonly = false;
   @Input() saving = false;
   @Input() updatedAt: string | null = null;

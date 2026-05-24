@@ -236,7 +236,11 @@ function drawSteppedLine(
   color: string,
   fill?: AreaFill,
 ): void {
-  const pts = blocks.map((b) => ({ x1: xOf(b.s), x2: xOf(b.e), y: yOf(b.v) }));
+  const pts = blocks.map((b, i) => ({
+    x1: xOf(b.s),
+    x2: i + 1 < blocks.length ? xOf(blocks[i + 1].s) : xOf(b.e),
+    y: yOf(b.v),
+  }));
   if (fill) fillSteppedArea(ctx, pts, fill);
   ctx.strokeStyle = color;
   ctx.lineWidth = 1.5;
@@ -398,9 +402,11 @@ function drawPrimary(
   }
 
   if (useZoneBlocks(input)) {
-    for (const b of input.zoneBlocks) {
-      const x1 = xOf(b.startIndex),
-        x2 = xOf(b.endIndex);
+    const zBlocks = input.zoneBlocks;
+    for (let bi = 0; bi < zBlocks.length; bi++) {
+      const b = zBlocks[bi];
+      const x1 = xOf(b.startIndex);
+      const x2 = bi + 1 < zBlocks.length ? xOf(zBlocks[bi + 1].startIndex) : xOf(b.endIndex);
       const val = cycling ? b.avgPower : plotValue(b.avgSpeed);
       const y = yOf(val);
       const [br, bg, bb] = cssToRgb(b.color);

@@ -140,51 +140,5 @@
         </div>
       </div>
     </section>
-
-    <!-- Training context -->
-    @if (myContext$ | async; as myContext) {
-      <section class="settings-card">
-        <div class="card-header">
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-          </svg>
-          <h2>
-            {{
-              (myContext.role === 'COACH'
-                ? 'SETTINGS.SECTION_CONTEXT_COACH'
-                : 'SETTINGS.SECTION_CONTEXT'
-              ) | translate
-            }}
-          </h2>
-        </div>
-        <div class="card-body">
-          <p class="context-intro">
-            {{
-              (myContext.role === 'COACH'
-                ? 'SETTINGS.CONTEXT_HINT_COACH'
-                : 'SETTINGS.CONTEXT_HINT_ATHLETE'
-              ) | translate
-            }}
-          </p>
-          <app-context-editor
-            [sections]="myContext.sections"
-            [sectionTitles]="myContext.role === 'COACH' ? coachSections : athleteSections"
-            [updatedAt]="myContext.updatedAt ?? null"
-            [saving]="(saving$ | async) ?? false"
-            (save)="onSaveContext($event)"
-          />
-        </div>
-      </section>
-    }
   </div>
 </div>

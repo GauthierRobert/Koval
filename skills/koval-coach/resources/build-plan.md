@@ -9,10 +9,11 @@ Construct a `TrainingPlan` (weeks → days → trainings), activate it on an ath
 - "clone my classic 8-week build for <athlete>"
 
 ## Step 0 — Profile + athlete
-- Read `coach-profile.md` for periodization, weekly hours, max hard days, intensity distribution, signature templates, deload cadence, voice/language, neverInclude.
+- Read `coach-profile.md` for periodization, weekly hours, max hard days, intensity distribution, signature templates, deload cadence, voice/language, neverInclude. **This is binding.**
 - If `Training method` on `coach-profile.md` is set to anything other than `none`, **also read `training-methods/<slug>.md`** — its periodization style overrides the generic structure in Step 1 below.
 - Resolve the target athlete (see `assign-workout.md` step 2 for resolution rules). Refuse if not on the roster.
-- `getAthleteContext(athleteId)` → FTP/threshold/CSS (`subject`), current CTL/ATL/TSB (`trainingLoad`), weight (`subject.weightKg`), and the athlete's goals (`goals`).
+- `getAthleteContext(athleteId)` → FTP/threshold/CSS (`subject`), current CTL/ATL/TSB (`trainingLoad`), weight (`subject.weightKg`), goals (`goals`), and the athlete's `athleteSelf` self-context.
+- **`athleteSelf` is a recommendation, not a constraint** (SKILL.md rule 9). Use the athlete's stated weekly availability, preferred / disliked formats, voice and recovery notes as **defaults** when the coach is silent. The coach's explicit instructions and `coach-profile.md` always override. If the coach asked for something that contradicts a stated athlete preference (e.g. coach wants a Sunday long ride, athlete wrote "Sunday off"), proceed as the coach asked and flag the conflict once at the end. **Medical / injury constraints** stated in `athleteSelf` are the only items that warrant a pause-and-confirm before contradicting them.
 
 ## Step 1 — Decide structure
 From the request + profile + athlete state:
@@ -78,6 +79,7 @@ Plan ID: <planId> — say "swap [day]" or "make [day] easier" to adjust.
 ```
 
 ## Edge cases
+- **Athlete self-context conflicts with the coach's request** (e.g. athlete wrote "Sunday off, family day", coach said "build a Sunday long ride block") → build the plan as the coach requested, append one line at the end: *"Note: <athlete> flagged Sundays as a family day in their self-context; kept as requested — say 'respect that' to swap."* Never quietly downgrade the coach's instruction.
 - **Athlete is fatigued (TSB < `overreachTsb`)** → start the plan with a recovery week regardless of the request. Mention the choice.
 - **Athlete has no FTP** → refuse to set absolute `targetFtp`; ask for it or hand to `koval-athlete:zone-setup.md` (athlete-side).
 - **Periodization not set and `trainingMethod = none`** → default to **polarized 80-20**.

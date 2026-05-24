@@ -148,26 +148,6 @@ public class McpClubTools {
         return clubService.getClubDetail(clubId, userId);
     }
 
-    @Tool(description = "Join a club training session as a participant. If the session is full the user is added to the waiting list and will be auto-promoted when a spot opens.")
-    public String joinClubSession(
-            @ToolParam(description = "Club ID (used for authorization context)") String clubId,
-            @ToolParam(description = "Session ID to join") String sessionId) {
-        if (sessionId == null || sessionId.isBlank()) return "Error: sessionId is required.";
-        String userId = SecurityUtils.getCurrentUserId();
-        ClubTrainingSession s = participationService.joinSession(userId, sessionId);
-        return "Joined session '" + s.getTitle() + "'.";
-    }
-
-    @Tool(description = "Leave a club training session (or remove yourself from its waiting list).")
-    public String leaveClubSession(
-            @ToolParam(description = "Club ID (used for authorization context)") String clubId,
-            @ToolParam(description = "Session ID to leave") String sessionId) {
-        if (sessionId == null || sessionId.isBlank()) return "Error: sessionId is required.";
-        String userId = SecurityUtils.getCurrentUserId();
-        participationService.cancelSessionParticipation(userId, sessionId);
-        return "Left session.";
-    }
-
     @Tool(description = "Link a training workout to a club session so participants can follow the structured workout.")
     public String linkTrainingToSession(
             @ToolParam(description = "Club ID") String clubId,

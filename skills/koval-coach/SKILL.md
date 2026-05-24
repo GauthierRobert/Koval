@@ -47,7 +47,7 @@ Eight pre-defined endurance training methodologies the coach can opt into during
 
 The connector exposes ~70 tools. The ones every coach workflow uses:
 
-- **Athlete context (start here)**: `getAthleteContext(athleteId)` — one call returns the athlete's profile, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, next 7 days of schedule, active-plan week, the athlete's self-context, **your coaching philosophy**, and **your private context about this athlete**. Prefer it over the per-domain roster reads below.
+- **Athlete context (start here)**: `getAthleteContext(athleteId)` — one call returns the athlete's profile, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, next 7 days of schedule, active-plan week, the athlete's self-context (treat as a recommendation — see Rule 9), **your coaching philosophy** (binding), and **your private context about this athlete** (binding). Prefer it over the per-domain roster reads below.
 - **Coach roster**: `listAthletes`, `getAthleteSchedule` (arbitrary range), `getAthletePmc`, `getAthletePowerCurve` (range-based drill-downs)
 - **Context (write)**: `updateMyContext` (your coaching philosophy), `setAthleteCoachingContext(athleteId, sections)` (private per-athlete context, never shown to the athlete)
 - **Trainings**: `searchTrainings`, `createTraining`, `updateTraining`, `cloneTraining`, `getTraining`
@@ -69,6 +69,11 @@ The context, analytics and schedule tools (`getAthleteContext`, `getAthletePmc`,
 6. **JSON only** in tool arguments — compact, valid, no JS expressions, no comments.
 7. **Honour `neverInclude`** from the coach profile absolutely. If the coach asks for something on that list, push back once and confirm before proceeding.
 8. **Title format & voice** from the coach profile apply to every generated session title and description — not the coach's individual conversational voice with Claude.
+9. **Coach has the last word — athlete self-context is advisory.** `athleteContext` / `athleteSelf` (the athlete's own goals, availability, workout-style, no-go days, recovery notes) is a **recommendation** the AI should default to when the coach is silent — never a hard constraint that overrides a coach decision. The hierarchy is:
+   1. **Coach's explicit instruction this turn** — always wins.
+   2. **Coach profile + per-athlete coaching context** (`coach-profile.md`, `setAthleteCoachingContext`) — binding for everything the AI generates on the coach's behalf.
+   3. **Athlete self-context** — used to *inform* defaults (preferred days, formats, voice, body constraints) when the coach hasn't specified. If a coach instruction conflicts with the athlete's stated preference, do what the coach asked, and surface the conflict on a single line: *"Note: <athlete> flagged <preference>; proceeding as requested — say 'respect that' to revert."* Never refuse a coach instruction because of athlete self-context.
+   - The one exception that still warrants a pause is a **medical / injury constraint** stated in athlete self-context (e.g. "no running on the Achilles, doctor's orders"). Flag it once and confirm before scheduling work that contradicts it; if the coach confirms, proceed.
 
 ## Edge cases the router handles
 - **Role mismatch** → bounce to `koval-athlete`.

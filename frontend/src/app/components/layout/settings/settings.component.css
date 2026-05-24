@@ -621,10 +621,3 @@ h3 {
     border-radius: 16px;
   }
 }
-
-.context-intro {
-  margin: 0 0 var(--space-md, 16px);
-  font-size: 0.8rem;
-  line-height: 1.5;
-  color: var(--text-muted);
-}

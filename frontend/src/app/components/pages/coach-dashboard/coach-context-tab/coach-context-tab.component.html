@@ -16,6 +16,7 @@
       <app-context-editor
         [sections]="ctx.coachContext?.sections ?? null"
         [sectionTitles]="coachAthleteSections"
+        [sectionGuidance]="coachAthleteGuidance"
         [updatedAt]="ctx.coachContext?.updatedAt ?? null"
         [saving]="(saving$ | async) ?? false"
         (save)="onSaveCoachContext($event)"

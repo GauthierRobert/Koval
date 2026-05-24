@@ -109,17 +109,6 @@ public class McpCoachTools {
         return analyticsService.generatePmc(athleteId, from, to);
     }
 
-    @Tool(description = "Get a coached athlete's best mean-maximal power curve over a date range (cycling sessions only). Requires COACH relationship.")
-    public Map<Integer, Double> getAthletePowerCurve(
-            @ToolParam(description = "Athlete user ID") String athleteId,
-            @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
-            @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
-        SecurityUtils.requireCoach();
-        String coachId = SecurityUtils.getCurrentUserId();
-        verifyCoach(coachId, athleteId);
-        return powerCurveService.getBestPowerCurve(athleteId, from, to);
-    }
-
     @Tool(description = "Append a coach note about an athlete you manage. Use this to leave AI-drafted " +
             "feedback after reviewing the athlete's recent work — the note shows up on the athlete's coach " +
             "view with an AI-source badge. Pass sessionId to tie the note to a specific completed session, " +

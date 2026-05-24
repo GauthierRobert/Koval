@@ -6,6 +6,7 @@ import { ContextService } from '../../../../services/context.service';
 import {
   ATHLETE_CONTEXT_SECTIONS,
   COACH_ATHLETE_CONTEXT_SECTIONS,
+  COACH_ATHLETE_CONTEXT_SECTION_GUIDANCE,
   CoachAthleteContext,
   ContextSections,
 } from '../../../../models/context.model';
@@ -27,6 +28,7 @@ import { ContextEditorComponent } from '../../../shared/context-editor/context-e
 export class CoachContextTabComponent {
   readonly athleteSections = ATHLETE_CONTEXT_SECTIONS;
   readonly coachAthleteSections = COACH_ATHLETE_CONTEXT_SECTIONS;
+  readonly coachAthleteGuidance = COACH_ATHLETE_CONTEXT_SECTION_GUIDANCE;
 
   private athleteIdValue = '';
   @Input() set athleteId(value: string) {

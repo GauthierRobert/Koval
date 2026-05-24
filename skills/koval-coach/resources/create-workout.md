@@ -18,6 +18,8 @@ Read `coach-profile.md`. Use:
 - `titleFormat`, `descriptionStyle`, `language`, `signatureCues` — apply to the title and block descriptions.
 - `neverInclude` — refuse silently and redesign if the request hits it.
 
+**Athlete self-context (if the workout is being designed for one specific athlete):** the athlete's preferences (formats they enjoy, indoor vs outdoor, equipment, voice) are a **recommendation only** — lean on them for tone and block flavour when the coach hasn't specified, but **always defer to the coach's explicit instruction**. Templates that target a group or club should ignore athlete self-context entirely; the template must work for every athlete it gets assigned to.
+
 If the coach's method does not suit the requested sport (e.g. `daniels` is run-specific and the request is cycling), fall back to generic rules for this turn and note the mismatch on the Done line.
 
 ## Workflow
