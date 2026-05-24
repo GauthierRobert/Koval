@@ -46,7 +46,7 @@ import {
   LinkSessionsModalComponent,
 } from './link-sessions-modal/link-sessions-modal.component';
 import { LinkToScheduleModalComponent } from './link-to-schedule-modal/link-to-schedule-modal.component';
-import { ClassifyRaceModalComponent } from './classify-race-modal/classify-race-modal.component';
+import { SessionActionKind } from '../session-analysis/session-action-panel/session-action-panel.component';
 import { goalDate, RaceGoalService } from '../../../services/race-goal.service';
 import { forkJoin, of } from 'rxjs';
 
@@ -78,7 +78,6 @@ function toIsoDate(d: Date | string): string {
     ManualSessionModalComponent,
     LinkSessionsModalComponent,
     LinkToScheduleModalComponent,
-    ClassifyRaceModalComponent,
   ],
   templateUrl: './workout-history.component.html',
   styleUrl: './workout-history.component.css',
@@ -483,12 +482,6 @@ export class WorkoutHistoryComponent implements OnInit {
     this.closeLinkScheduleModal();
   }
 
-  /** Inline dismiss of a sub-threshold suggestion without opening the picker. */
-  dismissSuggestion(session: SavedSession, event: Event): void {
-    event.stopPropagation();
-    this.historyService.dismissSuggestion(session.id).subscribe();
-  }
-
   /** A session that needs the user's attention: orphan + has a pending candidate stored. */
   hasPendingSuggestion(session: SavedSession): boolean {
     return (
@@ -506,25 +499,12 @@ export class WorkoutHistoryComponent implements OnInit {
     return this.raceDatesValue.has(iso);
   }
 
-  // ── Classify race ─────────────────────────────────────────────
-  classifyRaceModalOpen = false;
-  classifyRaceSession: SavedSession | null = null;
-
-  openClassifyRaceModal(session: SavedSession, event: Event): void {
-    event.stopPropagation();
-    this.classifyRaceSession = session;
-    this.classifyRaceModalOpen = true;
-  }
-
-  closeClassifyRaceModal(): void {
-    this.classifyRaceModalOpen = false;
-    this.classifyRaceSession = null;
-  }
-
-  onRaceClassified(): void {
-    this.closeClassifyRaceModal();
-    // The race-derived groupId just changed — re-fold the grouping pass.
-    this.toggleSubject.next();
+  /** Pending action for a session — drives the list dot and the inline detail panel.
+   *  Race classification takes priority over a plan-link suggestion. */
+  pendingActionFor(session: SavedSession): SessionActionKind | null {
+    if (this.hasUnclassifiedRaceDay(session)) return 'race';
+    if (this.hasPendingSuggestion(session)) return 'link';
+    return null;
   }
 
   onLinkApply(change: LinkChange): void {

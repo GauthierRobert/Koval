@@ -1,0 +1,235 @@
+@if (session && kind) {
+  <section
+    class="action-panel glass"
+    [class.race]="kind === 'race'"
+    [class.link]="kind === 'link'"
+    role="region"
+    [attr.aria-label]="
+      (kind === 'race'
+        ? 'WORKOUT_HISTORY.ACTION_PANEL_RACE_TITLE'
+        : 'WORKOUT_HISTORY.ACTION_PANEL_LINK_TITLE'
+      ) | translate
+    "
+  >
+    <div class="action-head">
+      <span class="action-dot" aria-hidden="true"></span>
+      <div class="action-copy">
+        <span class="action-title">
+          {{
+            (kind === 'race'
+              ? 'WORKOUT_HISTORY.ACTION_PANEL_RACE_TITLE'
+              : 'WORKOUT_HISTORY.ACTION_PANEL_LINK_TITLE'
+            ) | translate
+          }}
+        </span>
+        <span class="action-desc">
+          {{
+            (kind === 'race'
+              ? 'WORKOUT_HISTORY.CLASSIFY_RACE_DESC'
+              : 'WORKOUT_HISTORY.LINK_SCHEDULE_DESC'
+            ) | translate
+          }}
+        </span>
+      </div>
+    </div>
+
+    @if (loading$ | async) {
+      <div class="action-loading">
+        {{
+          (kind === 'race'
+            ? 'WORKOUT_HISTORY.CLASSIFY_RACE_LOADING'
+            : 'WORKOUT_HISTORY.LINK_SCHEDULE_LOADING'
+          ) | translate
+        }}
+      </div>
+    } @else {
+      @switch (kind) {
+        @case ('link') {
+          @if (linkCandidates$ | async; as candidates) {
+            @if (candidates.length === 0) {
+              <div class="action-empty">
+                {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_NO_CANDIDATES' | translate }}
+              </div>
+              <div class="action-footer">
+                <button
+                  type="button"
+                  class="btn-ghost-neutral"
+                  (click)="declareUnplanned()"
+                  [disabled]="(submitting$ | async) === true"
+                >
+                  {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_BTN_UNPLANNED' | translate }}
+                </button>
+              </div>
+            } @else {
+              <ul class="candidate-list" role="radiogroup">
+                @for (c of candidates; track trackByLink($index, c)) {
+                  <li>
+                    <button
+                      type="button"
+                      role="radio"
+                      class="candidate-card"
+                      [class.selected]="c.scheduledWorkoutId === selectedLinkId"
+                      [attr.aria-checked]="c.scheduledWorkoutId === selectedLinkId"
+                      (click)="selectLink(c.scheduledWorkoutId)"
+                    >
+                      <div class="candidate-header">
+                        @if (c.sport) {
+                          <app-sport-icon [sport]="$any(c.sport)" [size]="14" />
+                        }
+                        <span class="candidate-title">{{ c.title }}</span>
+                        <span class="candidate-score">{{ c.totalScore }}</span>
+                      </div>
+                      <div class="candidate-meta">
+                        <span>{{ formatDate(c.scheduledDate) }}</span>
+                        <span aria-hidden="true">·</span>
+                        <span>{{ formatDuration(c.plannedDurationSeconds) }}</span>
+                      </div>
+                      <div class="candidate-cues" aria-hidden="true">
+                        <span class="cue" [attr.data-state]="scoreCue(c.sportScore, 30)">
+                          {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_CUE_SPORT' | translate }}
+                        </span>
+                        <span class="cue" [attr.data-state]="scoreCue(c.dateScore, 20)">
+                          {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_CUE_DATE' | translate }}
+                        </span>
+                        <span class="cue" [attr.data-state]="scoreCue(c.durationScore, 25)">
+                          {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_CUE_DURATION' | translate }}
+                        </span>
+                        <span class="cue" [attr.data-state]="scoreCue(c.titleScore, 25)">
+                          {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_CUE_TITLE' | translate }}
+                        </span>
+                      </div>
+                    </button>
+                  </li>
+                }
+              </ul>
+              <div class="action-footer">
+                <button
+                  type="button"
+                  class="btn-ghost-neutral"
+                  (click)="declareUnplanned()"
+                  [disabled]="(submitting$ | async) === true"
+                >
+                  {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_BTN_UNPLANNED' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="btn-primary"
+                  (click)="confirmLink()"
+                  [disabled]="!selectedLinkId || (submitting$ | async) === true"
+                >
+                  {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_BTN_CONFIRM' | translate }}
+                </button>
+              </div>
+            }
+          }
+        }
+        @case ('race') {
+          @if (raceCandidates$ | async; as races) {
+            @if (races.length === 0) {
+              <div class="action-empty">
+                {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_NO_CANDIDATES' | translate }}
+              </div>
+              <div class="action-footer">
+                <button
+                  type="button"
+                  class="btn-ghost-neutral"
+                  (click)="classify('NONE')"
+                  [disabled]="(submitting$ | async) === true"
+                >
+                  {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_NONE' | translate }}
+                </button>
+              </div>
+            } @else {
+              @if (races.length === 1) {
+                <div class="single-race-card">
+                  @if (races[0].sport) {
+                    <app-sport-icon [sport]="$any(races[0].sport)" [size]="16" />
+                  }
+                  <div class="race-info">
+                    <span class="race-title">{{ races[0].title }}</span>
+                    @if (races[0].distance || races[0].location) {
+                      <span class="race-meta">
+                        @if (races[0].distance) {
+                          {{ races[0].distance }}
+                        }
+                        @if (races[0].distance && races[0].location) {
+                          <span aria-hidden="true">·</span>
+                        }
+                        @if (races[0].location) {
+                          {{ races[0].location }}
+                        }
+                      </span>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <ul class="race-list" role="radiogroup">
+                  @for (race of races; track trackByRace($index, race)) {
+                    <li>
+                      <button
+                        type="button"
+                        role="radio"
+                        class="race-card"
+                        [class.selected]="race.id === selectedRaceId"
+                        [attr.aria-checked]="race.id === selectedRaceId"
+                        (click)="selectRace(race.id)"
+                      >
+                        @if (race.sport) {
+                          <app-sport-icon [sport]="$any(race.sport)" [size]="14" />
+                        }
+                        <div class="race-info">
+                          <span class="race-title">{{ race.title }}</span>
+                          @if (race.distance || race.location) {
+                            <span class="race-meta">
+                              @if (race.distance) {
+                                {{ race.distance }}
+                              }
+                              @if (race.distance && race.location) {
+                                <span aria-hidden="true">·</span>
+                              }
+                              @if (race.location) {
+                                {{ race.location }}
+                              }
+                            </span>
+                          }
+                        </div>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+              <div class="action-footer">
+                <button
+                  type="button"
+                  class="btn-ghost-neutral"
+                  (click)="classify('NONE')"
+                  [disabled]="(submitting$ | async) === true"
+                >
+                  {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_NONE' | translate }}
+                </button>
+                <div class="action-footer-right">
+                  <button
+                    type="button"
+                    class="btn-ghost-neutral"
+                    (click)="classify('WARMUP')"
+                    [disabled]="!selectedRaceId || (submitting$ | async) === true"
+                  >
+                    {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_WARMUP' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-primary"
+                    (click)="classify('RACE')"
+                    [disabled]="!selectedRaceId || (submitting$ | async) === true"
+                  >
+                    {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_RACE' | translate }}
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        }
+      }
+    }
+  </section>
+}
