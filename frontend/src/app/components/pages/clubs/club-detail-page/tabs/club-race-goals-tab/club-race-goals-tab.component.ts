@@ -1,13 +1,19 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, inject} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {ActivatedRoute} from '@angular/router';
-import {TranslateModule} from '@ngx-translate/core';
-import {map} from 'rxjs/operators';
-import {AuthService} from '../../../../../../services/auth.service';
-import {ClubFeedService} from '../../../../../../services/club-feed.service';
-import {RaceGoal, RaceGoalService} from '../../../../../../services/race-goal.service';
-import {ClubRaceGoalResponse} from '../../../../../../models/club.model';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  inject,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { map } from 'rxjs/operators';
+import { AuthService } from '../../../../../../services/auth.service';
+import { ClubFeedService } from '../../../../../../services/club-feed.service';
+import { RaceGoal, RaceGoalService } from '../../../../../../services/race-goal.service';
+import { ClubRaceGoalResponse } from '../../../../../../models/club.model';
 import {
   GoalTimelineComponent,
   TimelineItem,
@@ -25,7 +31,7 @@ type AddPriority = 'A' | 'B' | 'C';
   styleUrl: './club-race-goals-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ClubRaceGoalsTabComponent {
+export class ClubRaceGoalsTabComponent implements OnInit {
   private clubFeedService = inject(ClubFeedService);
   private raceGoalService = inject(RaceGoalService);
   private authService = inject(AuthService);
@@ -37,6 +43,52 @@ export class ClubRaceGoalsTabComponent {
 
   /** Timeline as default per design. */
   view: ViewMode = 'timeline';
+
+  /**
+   * A season runs 1 November → 1 November. `seasonStartYear` is the year the
+   * window opens in; races dated Jan–Oct belong to the previous November's season.
+   */
+  seasonStartYear = ClubRaceGoalsTabComponent.currentSeasonStartYear();
+  seasonStart = new Date(this.seasonStartYear, 10, 1);
+  seasonEnd = new Date(this.seasonStartYear + 1, 10, 1);
+
+  private static currentSeasonStartYear(): number {
+    const now = new Date();
+    return now.getMonth() >= 10 ? now.getFullYear() : now.getFullYear() - 1;
+  }
+
+  get seasonLabel(): string {
+    return `${this.seasonStartYear} – ${this.seasonStartYear + 1}`;
+  }
+
+  ngOnInit(): void {
+    this.reload();
+  }
+
+  previousSeason(): void {
+    this.setSeason(this.seasonStartYear - 1);
+  }
+
+  nextSeason(): void {
+    this.setSeason(this.seasonStartYear + 1);
+  }
+
+  private setSeason(year: number): void {
+    this.seasonStartYear = year;
+    this.seasonStart = new Date(year, 10, 1);
+    this.seasonEnd = new Date(year + 1, 10, 1);
+    this.reload();
+    this.cdr.markForCheck();
+  }
+
+  private reload(): void {
+    const clubId = this.clubId;
+    if (clubId) this.clubFeedService.loadRaceGoals(clubId, this.seasonStartYear);
+  }
+
+  private get clubId(): string | undefined {
+    return this.route.parent?.snapshot.params['id'] ?? this.route.snapshot.params['id'];
+  }
 
   timelineItems$ = this.raceGoals$.pipe(
     map((goals) =>
@@ -123,9 +175,7 @@ export class ClubRaceGoalsTabComponent {
 
     this.raceGoalService.createGoal(payload).subscribe({
       next: () => {
-        const clubId =
-          this.route.parent?.snapshot.params['id'] ?? this.route.snapshot.params['id'];
-        if (clubId) this.clubFeedService.loadRaceGoals(clubId);
+        this.reload();
         this.isSavingAdd = false;
         this.addingKey = null;
         this.addModalGoal = null;
@@ -156,7 +206,10 @@ export class ClubRaceGoalsTabComponent {
     const d = new Date(dateStr + 'T00:00:00');
     if (isNaN(d.getTime())) return '—';
     return d.toLocaleDateString('en-US', {
-      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     });
   }
 

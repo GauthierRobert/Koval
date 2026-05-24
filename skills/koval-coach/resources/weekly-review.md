@@ -13,12 +13,11 @@ Read `coach-profile.md`. Pull configured `overreachTsb` (default -25), `detraine
 
 ## Workflow
 
-1. `getMyProfile` → confirm COACH (already gated, double-check).
+1. `getAthleteContext` → confirm COACH (`subject.role`, already gated, double-check).
 2. `listAthletes` → coach's roster.
 3. For each athlete (parallel batches of 3-5 to keep latency reasonable):
-   - `getAthleteProfile(athleteId)` → name, FTP, current CTL/ATL/TSB
+   - `getAthleteContext(athleteId)` → name, FTP (`subject`), current CTL/ATL/TSB (`trainingLoad`), and the most recent 3 sessions (first 3 of `recentSessions`)
    - `getAthletePmc(athleteId, from=today-14d, to=today)` → last-week TSS sum and form trend
-   - `getAthleteRecentSessions(athleteId, limit=3)` → most recent 3 sessions
 4. Compute per-athlete flag (thresholds from profile):
    - **🔴 Overreached** — TSB < `overreachTsb`
    - **🟡 Inactive** — no sessions in the last `missedSessionAlertN` days

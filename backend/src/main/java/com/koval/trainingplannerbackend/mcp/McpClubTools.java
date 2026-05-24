@@ -6,15 +6,6 @@ import com.koval.trainingplannerbackend.club.dto.ClubDetailResponse;
 import com.koval.trainingplannerbackend.club.dto.ClubMemberResponse;
 import com.koval.trainingplannerbackend.club.dto.CreateRecurringSessionRequest;
 import com.koval.trainingplannerbackend.club.dto.CreateSessionRequest;
-import com.koval.trainingplannerbackend.club.feed.ClubEngagementInsightsService;
-import com.koval.trainingplannerbackend.club.feed.ClubAnnouncementService;
-import com.koval.trainingplannerbackend.club.feed.ClubFeedService;
-import com.koval.trainingplannerbackend.club.feed.ClubFeedSpotlightService;
-import com.koval.trainingplannerbackend.club.feed.SpotlightBadge;
-import com.koval.trainingplannerbackend.club.feed.dto.ClubFeedEventResponse;
-import com.koval.trainingplannerbackend.club.feed.dto.ClubFeedResponse;
-import com.koval.trainingplannerbackend.club.feed.dto.CreateSpotlightRequest;
-import com.koval.trainingplannerbackend.club.feed.dto.EngagementInsightsResponse;
 import com.koval.trainingplannerbackend.club.membership.ClubMembershipService;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionService;
 import com.koval.trainingplannerbackend.club.recurring.RecurringSessionTemplate;
@@ -45,31 +36,19 @@ public class McpClubTools {
     private final ClubMembershipService membershipService;
     private final ClubService clubService;
     private final SessionParticipationService participationService;
-    private final ClubFeedService feedService;
-    private final ClubAnnouncementService announcementService;
-    private final ClubFeedSpotlightService spotlightService;
-    private final ClubEngagementInsightsService insightsService;
 
     public McpClubTools(ClubSessionService sessionService,
                         SessionTrainingLinkService trainingLinkService,
                         RecurringSessionService recurringService,
                         ClubMembershipService membershipService,
                         ClubService clubService,
-                        SessionParticipationService participationService,
-                        ClubFeedService feedService,
-                        ClubAnnouncementService announcementService,
-                        ClubFeedSpotlightService spotlightService,
-                        ClubEngagementInsightsService insightsService) {
+                        SessionParticipationService participationService) {
         this.sessionService = sessionService;
         this.trainingLinkService = trainingLinkService;
         this.recurringService = recurringService;
         this.membershipService = membershipService;
         this.clubService = clubService;
         this.participationService = participationService;
-        this.feedService = feedService;
-        this.announcementService = announcementService;
-        this.spotlightService = spotlightService;
-        this.insightsService = insightsService;
     }
 
     private static final int MAX_SESSION_WINDOW_DAYS = 180;
@@ -167,77 +146,6 @@ public class McpClubTools {
         if (clubId == null || clubId.isBlank()) throw new IllegalArgumentException("clubId is required.");
         String userId = SecurityUtils.getCurrentUserId();
         return clubService.getClubDetail(clubId, userId);
-    }
-
-    @Tool(description = "Join a club training session as a participant. If the session is full the user is added to the waiting list and will be auto-promoted when a spot opens.")
-    public String joinClubSession(
-            @ToolParam(description = "Club ID (used for authorization context)") String clubId,
-            @ToolParam(description = "Session ID to join") String sessionId) {
-        if (sessionId == null || sessionId.isBlank()) return "Error: sessionId is required.";
-        String userId = SecurityUtils.getCurrentUserId();
-        ClubTrainingSession s = participationService.joinSession(userId, sessionId);
-        return "Joined session '" + s.getTitle() + "'.";
-    }
-
-    @Tool(description = "Leave a club training session (or remove yourself from its waiting list).")
-    public String leaveClubSession(
-            @ToolParam(description = "Club ID (used for authorization context)") String clubId,
-            @ToolParam(description = "Session ID to leave") String sessionId) {
-        if (sessionId == null || sessionId.isBlank()) return "Error: sessionId is required.";
-        String userId = SecurityUtils.getCurrentUserId();
-        participationService.cancelSessionParticipation(userId, sessionId);
-        return "Left session.";
-    }
-
-    @Tool(description = "Get the recent activity feed for a club: pinned events first then chronological. Items include session created/joined, member joined, training shared, etc.")
-    public ClubFeedResponse getClubFeed(
-            @ToolParam(description = "Club ID") String clubId,
-            @ToolParam(description = "Page size (default 20, max 100)") Integer limit) {
-        if (clubId == null || clubId.isBlank()) throw new IllegalArgumentException("clubId is required.");
-        String userId = SecurityUtils.getCurrentUserId();
-        int size = (limit != null && limit > 0) ? Math.min(limit, 100) : 20;
-        return feedService.getFeed(userId, clubId, 0, size);
-    }
-
-    @Tool(description = "Post a coach announcement to a club's feed. Coach/admin only. Returns the created feed event. Use to share news, motivation, schedule changes; supports optional @mentions of specific members by their userId.")
-    public ClubFeedEventResponse postClubAnnouncement(
-            @ToolParam(description = "Club ID") String clubId,
-            @ToolParam(description = "Announcement text content") String content,
-            @ToolParam(description = "Optional list of user IDs to @mention (notifies those members)") List<String> mentionUserIds) {
-        if (clubId == null || clubId.isBlank()) throw new IllegalArgumentException("clubId is required.");
-        if (content == null || content.isBlank()) throw new IllegalArgumentException("content is required.");
-        String userId = SecurityUtils.getCurrentUserId();
-        return announcementService.create(userId, clubId, content, List.of(),
-                mentionUserIds == null ? List.of() : mentionUserIds);
-    }
-
-    @Tool(description = "Spotlight a club member with a curated highlight that pins to the top of the feed for a configurable window. Coach/admin only. Use for milestones, comebacks, PRs, new members, grit moments. Badges: MILESTONE, COMEBACK, NEW_MEMBER, PR, GRIT, CUSTOM.")
-    public ClubFeedEventResponse createMemberSpotlight(
-            @ToolParam(description = "Club ID") String clubId,
-            @ToolParam(description = "User ID of the member to spotlight") String spotlightedUserId,
-            @ToolParam(description = "Short headline title (e.g. 'Sub-3 marathon!')") String title,
-            @ToolParam(description = "Body message celebrating the member") String message,
-            @ToolParam(description = "Badge: MILESTONE, COMEBACK, NEW_MEMBER, PR, GRIT, or CUSTOM") SpotlightBadge badge,
-            @ToolParam(description = "How many days to keep the spotlight pinned (default 7, max 30)") Integer expiresInDays) {
-        if (clubId == null || clubId.isBlank()) throw new IllegalArgumentException("clubId is required.");
-        if (spotlightedUserId == null || spotlightedUserId.isBlank()) {
-            throw new IllegalArgumentException("spotlightedUserId is required.");
-        }
-        if (title == null || title.isBlank()) throw new IllegalArgumentException("title is required.");
-        if (badge == null) throw new IllegalArgumentException("badge is required.");
-        String userId = SecurityUtils.getCurrentUserId();
-        var req = new CreateSpotlightRequest(spotlightedUserId, title, message, badge,
-                List.of(), expiresInDays, List.of());
-        return spotlightService.createSpotlight(userId, clubId, req);
-    }
-
-    @Tool(description = "Get per-member engagement insights for a club: comments posted, reactions given, sessions completed, and last activity over a lookback window. Coach/admin only. Use to identify dormant members worth re-engaging.")
-    public EngagementInsightsResponse getEngagementInsights(
-            @ToolParam(description = "Club ID") String clubId,
-            @ToolParam(description = "Lookback window in days (default 30, max 180)") Integer days) {
-        if (clubId == null || clubId.isBlank()) throw new IllegalArgumentException("clubId is required.");
-        String userId = SecurityUtils.getCurrentUserId();
-        return insightsService.getInsights(userId, clubId, days != null ? days : 30);
     }
 
     @Tool(description = "Link a training workout to a club session so participants can follow the structured workout.")

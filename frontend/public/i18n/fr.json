@@ -1,4 +1,21 @@
 {
+  "CONTEXT": {
+    "SAVE": "Enregistrer",
+    "SAVING": "Enregistrement…",
+    "LAST_UPDATED": "Dernière mise à jour",
+    "NEVER_SAVED": "Non renseigné",
+    "SECTION_PLACEHOLDER": "Ajouter des détails…",
+    "ATHLETE_SELF_TITLE": "Contexte propre à l'athlète",
+    "COACH_PRIVATE_TITLE": "Votre contexte de coaching privé",
+    "COACH_PRIVATE_HINT": "Visible uniquement par vous — jamais montré à l'athlète.",
+    "ATHLETE_EMPTY": "Cet athlète n'a pas encore partagé de contexte."
+  },
+  "CONTEXT_PAGE": {
+    "TITLE_ATHLETE": "Contexte d'entraînement",
+    "TITLE_COACH": "Philosophie d'entraînement",
+    "SUBTITLE_ATHLETE": "Indiquez à votre coach et à l'IA comment vous aimez vous entraîner — vos disponibilités, habitudes, objectifs et ce qu'il faut éviter. Ces informations sont partagées avec votre coach et servent à personnaliser tout ce qui est généré pour vous.",
+    "SUBTITLE_COACH": "Décrivez votre façon d'entraîner — périodisation, répartition des intensités, séances signature et ton. Cela guide chaque plan et séance que l'IA crée pour vos athlètes."
+  },
   "INSTALL_BANNER": {
     "TITLE": "Installer Koval",
     "MESSAGE": "Installez l'application pour une expérience plus rapide et plein écran.",
@@ -55,6 +72,8 @@
     "CLUBS_EMPTY": "Aucun club pour l'instant",
     "CLUB_LIST_LABEL": "LISTE DES CLUBS",
     "CLUB_LIST_DESC": "Parcourir et gérer tes clubs",
+    "DROPDOWN_CONTEXT_LABEL": "CONTEXTE",
+    "DROPDOWN_CONTEXT_DESC": "Ton contexte d'entraînement et tes préférences",
     "DROPDOWN_TRAININGS_LABEL": "ENTRAÎNEMENTS",
     "DROPDOWN_TRAININGS_DESC": "Parcourir ta bibliothèque d'entraînements",
     "DROPDOWN_HISTORY_LABEL": "HISTORIQUE",
@@ -137,6 +156,10 @@
     "SECTION_SWIMMING": "Natation",
     "SECTION_CUSTOM_ZONES": "Zones personnalisées",
     "SECTION_LANGUAGE": "Langue",
+    "SECTION_CONTEXT": "Contexte d'entraînement",
+    "SECTION_CONTEXT_COACH": "Philosophie d'entraînement",
+    "CONTEXT_HINT_ATHLETE": "Indiquez à votre coach et à l'IA comment vous aimez vous entraîner — vos disponibilités, habitudes, objectifs et ce qu'il faut éviter. Ces informations sont partagées avec votre coach et servent à personnaliser tout ce qui est généré pour vous.",
+    "CONTEXT_HINT_COACH": "Décrivez votre façon d'entraîner — périodisation, répartition des intensités, séances signature et ton. Cela guide chaque plan et séance que l'IA crée pour vos athlètes.",
     "SECTION_APPEARANCE": "Apparence",
     "THEME_DARK": "Sombre",
     "THEME_LIGHT": "Clair",
@@ -802,6 +825,9 @@
     "MODAL_RACING_PLURAL": "{{count}} membres en course",
     "VIEW_TIMELINE": "Timeline",
     "VIEW_LIST": "Liste",
+    "SEASON_PREV": "Saison précédente",
+    "SEASON_NEXT": "Saison suivante",
+    "EMPTY_NO_SEASON_RACES": "Aucune course du club pour la saison {{season}}.",
     "ADD_MODAL_TITLE": "Ajouter à mes objectifs",
     "ADD_FIELD_PRIORITY": "Priorité",
     "ADD_FIELD_TARGET_TIME": "Temps cible",
@@ -925,6 +951,7 @@
     "DAYS_AHEAD": "{{n}}j",
     "EMPTY_RACE_GOALS": "Aucun objectif de course pour cet athlète.",
     "TAB_PLANS": "PLANS",
+    "TAB_CONTEXT": "CONTEXTE",
     "PLANS_TITLE": "PLANS D'ENTRAÎNEMENT",
     "PLANS_WEEK_OF": "Semaine {{current}} sur {{total}}",
     "PLANS_ADHERENCE": "adhérence",
@@ -1125,7 +1152,11 @@
     "CLASSIFY_RACE_NO_CANDIDATES": "Aucune course ce jour. La puce ne réapparaîtra plus.",
     "CLASSIFY_RACE_BTN_NONE": "Sans rapport",
     "CLASSIFY_RACE_BTN_WARMUP": "Échauffement",
-    "CLASSIFY_RACE_BTN_RACE": "Course"
+    "CLASSIFY_RACE_BTN_RACE": "Course",
+    "DOT_LINK_LABEL": "Action requise : lier à une séance planifiée",
+    "DOT_RACE_LABEL": "Action requise : classer ce jour de course",
+    "ACTION_PANEL_LINK_TITLE": "Est-ce une séance planifiée ?",
+    "ACTION_PANEL_RACE_TITLE": "Jour de course — comment l'enregistrer ?"
   },
   "SESSION_ANALYSIS": {
     "BREADCRUMB_TRAINING": "Entraînement",
@@ -1142,6 +1173,7 @@
     "STAT_DURATION": "Durée",
     "STAT_MOVING_TIME": "Temps en mouvement",
     "STAT_AVG_POWER": "Puissance moy.",
+    "STAT_NORMALIZED_POWER": "NP",
     "STAT_AVG_SPEED": "Vitesse moy.",
     "STAT_AVG_HR": "FC moy.",
     "STAT_AVG_CADENCE": "Cadence moy.",
@@ -1185,7 +1217,7 @@
     "DECOUPLING_MODERATE": "Derive cardiaque moderee",
     "DECOUPLING_HIGH": "Derive cardiaque significative",
     "DECOUPLING_SEGMENT": "Segment",
-    "DECOUPLING_AVG_POWER": "Puis. moy.",
+    "DECOUPLING_AVG_POWER": "NP",
     "DECOUPLING_AVG_SPEED": "Vitesse moy.",
     "DECOUPLING_AVG_PACE": "Allure moy.",
     "DECOUPLING_AVG_HR": "FC moy.",
@@ -1646,7 +1678,8 @@
     "COUNTDOWN_WEEKS": "semaines",
     "COUNTDOWN_PAST": "passé",
     "SECTION_COUNTDOWN": "COMPTE À REBOURS",
-    "SECTION_DETAILS": "DÉTAILS"
+    "SECTION_DETAILS": "DÉTAILS",
+    "VIEW_SESSION": "Voir la séance"
   },
   "RACES": {
     "PAGE_TITLE": "Courses",

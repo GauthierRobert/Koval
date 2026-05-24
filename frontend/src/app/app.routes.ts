@@ -31,6 +31,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'context',
+    loadComponent: () =>
+      import('./components/pages/context-page/context-page.component').then(
+        (m) => m.ContextPageComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'trainings',
     loadComponent: () =>
       import('./components/pages/workout-selection/workout-selection.component').then(

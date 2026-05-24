@@ -21,6 +21,7 @@ export interface RaceGoal {
   createdAt?: string;
   raceId?: string;
   race?: Race; // full race data embedded by backend; race.scheduledDate is the goal's date
+  linkedSessionId?: string; // id of the completed session classified as this race's effort, if any
 }
 
 /** A goal's date is sourced from its linked race's scheduledDate. */

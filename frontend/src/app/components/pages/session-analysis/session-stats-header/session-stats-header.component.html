@@ -180,6 +180,12 @@
       <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_AVG_POWER' | translate }}</span>
       <span class="stat-value">{{ session.avgPower }}<span class="stat-unit">W</span></span>
     </div>
+    @if (session.normalizedPower; as np) {
+      <div data-testid="stat-card" class="stat-cell">
+        <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_NORMALIZED_POWER' | translate }}</span>
+        <span class="stat-value">{{ np | number: '1.0-0' }}<span class="stat-unit">W</span></span>
+      </div>
+    }
   } @else {
     <div class="stat-cell">
       <span class="stat-label">{{ 'SESSION_ANALYSIS.STAT_AVG_SPEED' | translate }}</span>

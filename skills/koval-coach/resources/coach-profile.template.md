@@ -1,6 +1,6 @@
 ---
 name: koval-coach-profile
-description: Personalised coaching rules for <Coach Name>. Loaded automatically by every workflow under the koval-coach skill (onboarding, weekly-review, athlete-deepdive, create-workout, assign-workout, build-plan, club-sessions, publish-club-gazette) so generated workouts and plans match this coach's philosophy, volume targets, intensity distribution, recovery rules and voice. Re-run onboarding to update.
+description: Personalised coaching rules for <Coach Name>. Loaded automatically by every workflow under the koval-coach skill (onboarding, weekly-review, athlete-deepdive, create-workout, assign-workout, build-plan, club-sessions) so generated workouts and plans match this coach's philosophy, volume targets, intensity distribution, recovery rules and voice. Re-run onboarding to update.
 ---
 
 # Coach Profile — <Coach Name>

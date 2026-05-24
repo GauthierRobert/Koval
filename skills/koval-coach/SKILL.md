@@ -1,6 +1,6 @@
 ---
 name: koval-coach
-description: Use whenever a COACH on the Koval Training Planner asks Claude for a coaching task — onboarding their coaching style, reviewing their athlete squad, deep-diving a single athlete, designing or assigning workouts to athletes, building plans for an athlete, running club sessions, or publishing a club gazette. Triggers include "set up my coaching profile", "save my coaching philosophy", "review my athletes", "weekly squad review", "is anyone overreaching", "deep-dive on Alice", "create a workout for Bob", "assign this session to my Tuesday group", "build a plan for X", "publish the club gazette", "compile this week's newsletter". Reads sub-playbooks from resources/ to pick the right workflow and the canonical coach-profile.md schema from resources/coach-profile.template.md. Refuses if the caller is not a COACH.
+description: Use whenever a COACH on the Koval Training Planner asks Claude for a coaching task — onboarding their coaching style, reviewing their athlete squad, deep-diving a single athlete, designing or assigning workouts to athletes, building plans for an athlete, or running club sessions. Triggers include "set up my coaching profile", "save my coaching philosophy", "review my athletes", "weekly squad review", "is anyone overreaching", "deep-dive on Alice", "create a workout for Bob", "assign this session to my Tuesday group", "build a plan for X", "set up our Tuesday group ride". Reads sub-playbooks from resources/ to pick the right workflow and the canonical coach-profile.md schema from resources/coach-profile.template.md. Refuses if the caller is not a COACH.
 ---
 
 # Koval — Coach
@@ -9,7 +9,7 @@ End-to-end playbook for everything a coach asks the Koval Training Planner conne
 
 ## Role gate
 
-Call `getMyProfile`. If `role != "COACH"`, refuse: *"That's a coaching task — your account is set as ATHLETE. Use the `koval-athlete` skill, or switch your role in your profile if you also coach."* Otherwise continue.
+Call `getAthleteContext` (no athleteId). If `subject.role != "COACH"`, refuse: *"That's a coaching task — your account is set as ATHLETE. Use the `koval-athlete` skill, or switch your role in your profile if you also coach."* Otherwise continue. (For a coach this also returns your stored `coachPhilosophy`.)
 
 ## Workflow router
 
@@ -24,7 +24,6 @@ Pick **one** workflow from the user's request, then **read the matching file in 
 | Assign / schedule a workout | "assign this to Alice for Tuesday", "schedule X for the whole group", "send this workout to my club" | `resources/assign-workout.md` |
 | Multi-week plan for one athlete | "build Alice a 6-week base block", "make a training plan for Bob" | `resources/build-plan.md` |
 | Club / group session admin | "create a club session", "set up our Tuesday group ride", "make this a recurring session" | `resources/club-sessions.md` |
-| Publish the club gazette | "publish the gazette", "compile this week's newsletter", "release edition N" | `resources/publish-club-gazette.md` |
 
 If the request maps to several workflows (e.g. "review my athletes and then build Alice a plan") run them sequentially.
 
@@ -48,29 +47,33 @@ Eight pre-defined endurance training methodologies the coach can opt into during
 
 The connector exposes ~70 tools. The ones every coach workflow uses:
 
-- **Coach roster**: `listAthletes`, `getAthleteProfile`, `getAthleteSchedule`, `getAthleteRecentSessions`, `getAthletePmc`, `getAthletePowerCurve`
-- **Squad context**: `getMyProfile` (your own role + profile)
+- **Athlete context (start here)**: `getAthleteContext(athleteId)` — one call returns the athlete's profile, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, next 7 days of schedule, active-plan week, the athlete's self-context (treat as a recommendation — see Rule 9), **your coaching philosophy** (binding), and **your private context about this athlete** (binding). Prefer it over the per-domain roster reads below.
+- **Coach roster**: `listAthletes`, `getAthleteSchedule` (arbitrary range), `getAthletePmc`, `getAthletePowerCurve` (range-based drill-downs)
+- **Context (write)**: `updateMyContext` (your coaching philosophy), `setAthleteCoachingContext(athleteId, sections)` (private per-athlete context, never shown to the athlete)
 - **Trainings**: `searchTrainings`, `createTraining`, `updateTraining`, `cloneTraining`, `getTraining`
 - **Assigning**: `assignTraining(trainingId, athleteId, date)`, `scheduleTraining`, `rescheduleWorkout`, `unassignWorkout`
-- **Plans**: `createPlan`, `addDayToPlan`, `removeDayFromPlan`, `activatePlan`, `pausePlan`, `clonePlan`, `getPlanProgress`, `getPlanAnalytics`
+- **Plans**: `createPlan`, `addDayToPlan`, `removeDayFromPlan`, `setPlanStatus` (status='ACTIVE'/'PAUSED'), `clonePlan`, `getPlanProgress`, `getPlanAnalytics`
 - **Zones**: `listZoneSystems`, `getDefaultZoneSystem`, `createZoneSystem`
 - **Groups**: list and assign training groups (coach Group + ClubGroup)
-- **Club**: `getClub`, `listClubMembers`, `createClubSession`, `createRecurringSession`, `listClubSessions`, `listClubTests`, `createClubTestFromPreset`, `applyTestReferences`, `postClubAnnouncement`, `getEngagementInsights`, `getClubFeed`
-- **Gazette**: `listOpenGazetteDrafts`, `getGazettePayload`, `previewGazetteAutoSections`, `publishGazetteWithPdf`, `discardGazetteDraft`
-- **Renderers** (markdown — paste verbatim): `renderWeekSchedule`, `renderPmcReport`, `renderPowerCurveReport`, `renderSessionSummary`, `renderVolumeReport`, `renderFriReport`
+- **Club**: `getClub`, `listClubMembers`, `createClubSession`, `createRecurringSession`, `listClubSessions`, `listClubTests`, `createClubTestFromPreset`, `applyTestReferences`
 
-All output stays in markdown — unicode bar charts / sparklines / tables. No images required.
+The context, analytics and schedule tools (`getAthleteContext`, `getAthletePmc`, `getAthletePowerCurve`, `getAthleteSchedule`, `getVolume`) return JSON. Format the numbers yourself into compact markdown — small tables, plus unicode sparklines (`▁▂▃▄▅▆▇█`) / bar rows (`█▉▊▋▌▍▎▏`) when a trend or comparison helps. No images required.
 
 ## Cross-cutting rules
 
 1. **Profile-first.** Every workflow reads `coach-profile.md` before deciding session structure / volume / voice / language. Defaults if absent — never block.
-2. **Markdown only.** Use `render*` tools wherever they exist; paste verbatim, add at most one prose verdict.
-3. **One write per turn.** `createTraining` / `assignTraining` / `createPlan` / `publishGazetteWithPdf` are each called at most once per response. For multi-athlete assignments, iterate one athlete per turn (`✓ [n/total] Alice — Tue 14 May`).
+2. **Format the data yourself.** Data tools return JSON — render it into compact markdown (small tables, unicode sparklines/bars), add at most one prose verdict. Keep it tight; never dump raw JSON.
+3. **One write per turn.** `createTraining` / `assignTraining` / `createPlan` are each called at most once per response. For multi-athlete assignments, iterate one athlete per turn (`✓ [n/total] Alice — Tue 14 May`).
 4. **Auth context.** `coachId` is resolved server-side from the JWT, never pass it. `athleteId` is required for athlete-targeted writes.
 5. **Per-athlete personalization.** Trainings stay coach-templates — written in **% of FTP / threshold pace / CSS**, never absolute watts/paces. Athlete-specific values are resolved server-side at assign / execution time.
 6. **JSON only** in tool arguments — compact, valid, no JS expressions, no comments.
 7. **Honour `neverInclude`** from the coach profile absolutely. If the coach asks for something on that list, push back once and confirm before proceeding.
 8. **Title format & voice** from the coach profile apply to every generated session title and description — not the coach's individual conversational voice with Claude.
+9. **Coach has the last word — athlete self-context is advisory.** `athleteContext` / `athleteSelf` (the athlete's own goals, availability, workout-style, no-go days, recovery notes) is a **recommendation** the AI should default to when the coach is silent — never a hard constraint that overrides a coach decision. The hierarchy is:
+   1. **Coach's explicit instruction this turn** — always wins.
+   2. **Coach profile + per-athlete coaching context** (`coach-profile.md`, `setAthleteCoachingContext`) — binding for everything the AI generates on the coach's behalf.
+   3. **Athlete self-context** — used to *inform* defaults (preferred days, formats, voice, body constraints) when the coach hasn't specified. If a coach instruction conflicts with the athlete's stated preference, do what the coach asked, and surface the conflict on a single line: *"Note: <athlete> flagged <preference>; proceeding as requested — say 'respect that' to revert."* Never refuse a coach instruction because of athlete self-context.
+   - The one exception that still warrants a pause is a **medical / injury constraint** stated in athlete self-context (e.g. "no running on the Achilles, doctor's orders"). Flag it once and confirm before scheduling work that contradicts it; if the coach confirms, proceed.
 
 ## Edge cases the router handles
 - **Role mismatch** → bounce to `koval-athlete`.

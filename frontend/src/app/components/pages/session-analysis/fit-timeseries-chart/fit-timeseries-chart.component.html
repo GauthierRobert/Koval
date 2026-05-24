@@ -49,14 +49,17 @@
               </ul>
               <p class="info-rule">
                 <span class="info-swatch info-swatch-bad"></span>
-                When HR sits above output, the gap fills red — <em>cardiac drift</em> (fatigue, heat, dehydration).
+                When HR sits above output, the gap fills red — <em>cardiac drift</em> (fatigue,
+                heat, dehydration).
               </p>
               <p class="info-rule">
                 <span class="info-swatch info-swatch-good"></span>
-                When output sits above HR, the gap fills green — efficiency rising (warmup, recovery).
+                When output sits above HR, the gap fills green — efficiency rising (warmup,
+                recovery).
               </p>
               <p class="info-rule-of-thumb">
-                Rule of thumb: drift &lt;&nbsp;5% = strong aerobic durability, 5–10% = moderate, &gt;&nbsp;10% = significant fade.
+                Rule of thumb: drift &lt;&nbsp;5% = strong aerobic durability, 5–10% = moderate,
+                &gt;&nbsp;10% = significant fade.
               </p>
             </span>
           </button>
@@ -71,6 +74,16 @@
     </div>
   }
   <div class="charts-stack" #stack (mouseleave)="onMouseLeave()">
+    @if (isZoomed) {
+      <button
+        type="button"
+        class="zoom-reset"
+        (click)="resetZoom()"
+        title="Reset zoom (Ctrl/⌘ + scroll or pinch to zoom)"
+      >
+        Reset zoom
+      </button>
+    }
     @if (showPrimary) {
       <canvas
         #primaryCanvas
@@ -78,8 +91,8 @@
         (mousemove)="onHover($event)"
         (mousedown)="onMouseDown($event)"
         (touchstart)="onTouchStart($event)"
-        (touchend)="onTouchEnd()"
-        (touchcancel)="onTouchEnd()"
+        (touchend)="onTouchEnd($event)"
+        (touchcancel)="onTouchEnd($event)"
       ></canvas>
     }
     @if (showSpeedPanel) {
@@ -89,8 +102,8 @@
         (mousemove)="onHover($event)"
         (mousedown)="onMouseDown($event)"
         (touchstart)="onTouchStart($event)"
-        (touchend)="onTouchEnd()"
-        (touchcancel)="onTouchEnd()"
+        (touchend)="onTouchEnd($event)"
+        (touchcancel)="onTouchEnd($event)"
       ></canvas>
     }
     @if (showHR) {
@@ -100,8 +113,8 @@
         (mousemove)="onHover($event)"
         (mousedown)="onMouseDown($event)"
         (touchstart)="onTouchStart($event)"
-        (touchend)="onTouchEnd()"
-        (touchcancel)="onTouchEnd()"
+        (touchend)="onTouchEnd($event)"
+        (touchcancel)="onTouchEnd($event)"
       ></canvas>
     }
     @if (showCadence) {
@@ -111,8 +124,8 @@
         (mousemove)="onHover($event)"
         (mousedown)="onMouseDown($event)"
         (touchstart)="onTouchStart($event)"
-        (touchend)="onTouchEnd()"
-        (touchcancel)="onTouchEnd()"
+        (touchend)="onTouchEnd($event)"
+        (touchcancel)="onTouchEnd($event)"
       ></canvas>
     }
     @if (_hasDrift && showDrift) {
@@ -122,19 +135,19 @@
         (mousemove)="onHover($event)"
         (mousedown)="onMouseDown($event)"
         (touchstart)="onTouchStart($event)"
-        (touchend)="onTouchEnd()"
-        (touchcancel)="onTouchEnd()"
+        (touchend)="onTouchEnd($event)"
+        (touchcancel)="onTouchEnd($event)"
       ></canvas>
     }
-    @if (_hasElevation) {
+    @if (_hasElevation && showElevation) {
       <canvas
         #elevCanvas
         class="mc elev-h"
         (mousemove)="onHover($event)"
         (mousedown)="onMouseDown($event)"
         (touchstart)="onTouchStart($event)"
-        (touchend)="onTouchEnd()"
-        (touchcancel)="onTouchEnd()"
+        (touchend)="onTouchEnd($event)"
+        (touchcancel)="onTouchEnd($event)"
       ></canvas>
     }
     @if (enableBrush && selectionStartIdx !== null && selectionWidthPx > 0) {

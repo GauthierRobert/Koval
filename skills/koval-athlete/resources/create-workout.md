@@ -12,7 +12,7 @@ Expert workout designer for cycling / running / swimming / triathlon. Designs th
 If they only want to *find* an existing one, use `find-workout.md`.
 
 ## Step 0 — Profile
-Read `athlete-profile.md`. Use `favouriteSessionTypes`, `avoid`, `forbiddenEfforts`, `maxSessionMinutes`, `structurePreference`, `environment` plus FTP / threshold pace / CSS to bias the design. Defaults: zones from `default-zones.md` (Coggan-style fallback) when no custom Default Zone System exists; FTP from `getMyProfile` if present.
+Read `athlete-profile.md`. Use `favouriteSessionTypes`, `avoid`, `forbiddenEfforts`, `maxSessionMinutes`, `structurePreference`, `environment` plus FTP / threshold pace / CSS to bias the design. Defaults: zones from `default-zones.md` (Coggan-style fallback) when no custom Default Zone System exists; FTP from `getAthleteContext` (`subject.ftp`) if present.
 
 If `Training method` on the profile is set to anything other than `none`, **also read `training-methods/<slug>.md`** before designing. That file's "How this skill applies it" section adds method-specific rules (intensity caps, hallmark session shapes, periodization context) that override the generic guidance below when they conflict. If a method explicitly does not suit the requested sport (e.g. `daniels` is run-specific and the request is cycling), fall back to generic rules for this turn and note the mismatch on the Done line.
 

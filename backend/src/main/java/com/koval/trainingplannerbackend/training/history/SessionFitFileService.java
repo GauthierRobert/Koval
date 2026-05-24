@@ -100,10 +100,20 @@ public class SessionFitFileService {
 
     private void refreshNormalizedSpeedAndMetrics(CompletedSession session) {
         SportType sport = SportType.fromString(session.getSportType());
+        if (sport == SportType.CYCLING || sport == SportType.BRICK) {
+            normalizedSpeedService.computeNormalizedPowerFromFit(session, sport)
+                    .ifPresent(session::setNormalizedPower);
+        }
         if (sport != SportType.CYCLING) {
             normalizedSpeedService.computeFromFit(session, sport)
                     .ifPresent(session::setNormalizedSpeed);
         }
+        // Force IF/TSS recompute against the freshly-derived NP/NGP/NSS — the
+        // previously persisted values were based on raw averages and would
+        // otherwise survive the FIT upload.
+        session.setTss(null);
+        session.setIntensityFactor(null);
+        session.setTssFromRpe(null);
         userRepository.findById(session.getUserId())
                 .ifPresent(user -> analyticsService.computeAndAttachMetrics(session, user));
     }

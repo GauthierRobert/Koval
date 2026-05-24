@@ -5,13 +5,17 @@ import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundExcept
 import com.koval.trainingplannerbackend.config.exceptions.ValidationException;
 import com.koval.trainingplannerbackend.race.Race;
 import com.koval.trainingplannerbackend.race.RaceService;
+import com.koval.trainingplannerbackend.training.history.CompletedSession;
+import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -20,15 +24,19 @@ public class RaceGoalService {
 
     private final RaceGoalRepository repository;
     private final RaceService raceService;
+    private final CompletedSessionRepository sessionRepository;
 
-    public RaceGoalService(RaceGoalRepository repository, RaceService raceService) {
+    public RaceGoalService(RaceGoalRepository repository, RaceService raceService,
+                           CompletedSessionRepository sessionRepository) {
         this.repository = repository;
         this.raceService = raceService;
+        this.sessionRepository = sessionRepository;
     }
 
     public List<RaceGoalResponse> getGoalsForAthlete(String athleteId) {
+        Map<String, String> sessionByRace = raceEffortSessionsByRaceId(athleteId);
         return repository.findByAthleteId(athleteId).stream()
-                .map(this::toResponse)
+                .map(goal -> toResponse(goal, sessionByRace))
                 .sorted(Comparator.comparing(
                         (RaceGoalResponse r) -> r.raceDate() == null ? "9999-99-99" : r.raceDate()))
                 .toList();
@@ -74,7 +82,7 @@ public class RaceGoalService {
         if (!goal.getAthleteId().equals(athleteId)) {
             throw new ForbiddenOperationException("Not authorized");
         }
-        return toResponse(goal);
+        return toResponse(goal, raceEffortSessionsByRaceId(athleteId));
     }
 
     @CacheEvict(value = "athleteGoals", key = "#athleteId")
@@ -116,13 +124,29 @@ public class RaceGoalService {
         }
     }
 
-    private RaceGoalResponse toResponse(RaceGoal goal) {
+    private RaceGoalResponse toResponse(RaceGoal goal, Map<String, String> sessionByRace) {
         Race race = null;
+        String linkedSessionId = null;
         if (goal.getRaceId() != null) {
             try {
                 race = raceService.getRaceById(goal.getRaceId());
             } catch (NoSuchElementException ignored) {}
+            linkedSessionId = sessionByRace.get(goal.getRaceId());
         }
-        return RaceGoalResponse.from(goal, race);
+        return RaceGoalResponse.from(goal, race, linkedSessionId);
+    }
+
+    /**
+     * Maps each race the athlete classified a session against (raceRole=RACE) to that session's id.
+     * When a race day spans multiple race-effort sessions (e.g. a triathlon chain), the earliest wins.
+     */
+    private Map<String, String> raceEffortSessionsByRaceId(String athleteId) {
+        Map<String, String> byRace = new HashMap<>();
+        sessionRepository.findRaceEffortsByUserId(athleteId).stream()
+                .filter(s -> s.getRaceId() != null)
+                .sorted(Comparator.comparing(CompletedSession::getCompletedAt,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .forEach(s -> byRace.putIfAbsent(s.getRaceId(), s.getId()));
+        return byRace;
     }
 }

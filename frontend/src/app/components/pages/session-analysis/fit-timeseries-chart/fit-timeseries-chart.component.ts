@@ -10,6 +10,7 @@ import {
   NgZone,
   OnChanges,
   OnDestroy,
+  SimpleChanges,
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -67,6 +68,9 @@ export class FitTimeseriesChartComponent
   @Input() showBlocks = false;
   @Input() showSpeed = true;
   @Input() showDrift = true;
+  @Input() showElevation = true;
+  /** When false, the cycling speed sub-chart is shown only as a fallback when no power is present. */
+  @Input() showSpeedWithPower = true;
   /** Enable mouse drag-to-select range stats (desktop only). Off by default. */
   @Input() enableBrush = false;
 
@@ -108,6 +112,18 @@ export class FitTimeseriesChartComponent
     }
   };
 
+  // ── Horizontal zoom (shared across every stacked panel) ───────────────
+  // Visible time window in elapsed seconds from session start. null = full range.
+  // Ctrl/⌘ + wheel zooms on desktop; two-finger pinch zooms on touch.
+  viewStartSec: number | null = null;
+  viewEndSec: number | null = null;
+  private readonly wheelListener = (e: WheelEvent) => this.handleWheel(e);
+  private pinch: {
+    startDist: number;
+    startSpanSec: number;
+    anchorSec: number;
+  } | null = null;
+
   _hasElevation = false;
   _hasPower = false;
   _hasDrift = false;
@@ -137,7 +153,12 @@ export class FitTimeseriesChartComponent
   }
   /** Show a dedicated speed sub-chart below the primary panel — cycling only. */
   get showSpeedPanel(): boolean {
-    return this.isCycling && this.showSpeed && this._hasSpeed;
+    return (
+      this.isCycling &&
+      this.showSpeed &&
+      this._hasSpeed &&
+      (this.showSpeedWithPower || !this._hasPower)
+    );
   }
   _hasSpeed = false;
   _hasCadence = false;
@@ -159,6 +180,13 @@ export class FitTimeseriesChartComponent
       window.addEventListener('mouseup', this.windowMouseUpListener);
       window.addEventListener('keydown', this.keyDownListener);
     }
+    // Wheel zoom must be a non-passive listener so we can preventDefault the
+    // browser's ctrl+wheel page zoom / scroll. Register outside Angular.
+    this.zone.runOutsideAngular(() =>
+      this.stackRef?.nativeElement.addEventListener('wheel', this.wheelListener, {
+        passive: false,
+      }),
+    );
     this.drawAll();
     // Re-draw after the first paint so canvases pick up their flex-resolved size.
     requestAnimationFrame(() => this.drawAll());
@@ -189,6 +217,7 @@ export class FitTimeseriesChartComponent
   ngOnDestroy(): void {
     this.resizeObserver?.disconnect();
     this.unregisterTouchMoveListeners();
+    this.stackRef?.nativeElement.removeEventListener('wheel', this.wheelListener);
     if (this.ttShiftRaf !== null) cancelAnimationFrame(this.ttShiftRaf);
     if (this.enableBrush && this.isDesktop) {
       window.removeEventListener('mouseup', this.windowMouseUpListener);
@@ -196,7 +225,12 @@ export class FitTimeseriesChartComponent
     }
   }
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    // New session loaded: drop any zoom window so the new ride shows in full.
+    if (changes['records']) {
+      this.viewStartSec = null;
+      this.viewEndSec = null;
+    }
     this.updateHasElevation();
     this.updateHasPower();
     this.updateHasSpeed();
@@ -330,13 +364,160 @@ export class FitTimeseriesChartComponent
     const { mL, mR } = marginsForWidth(W);
     const cW = W - mL - mR;
     const t0 = this.records[0].timestamp;
-    const totalSec = this.records[this.records.length - 1].timestamp - t0 || this.records.length;
+    const fullSec = this.records[this.records.length - 1].timestamp - t0 || this.records.length;
+    const vStart = this.viewStartSec ?? 0;
+    const vEnd = this.viewEndSec ?? fullSec;
+    const span = vEnd - vStart || fullSec;
     const a = Math.min(this.selectionStartIdx, this.selectionEndIdx);
     const b = Math.max(this.selectionStartIdx, this.selectionEndIdx);
-    const xA = mL + ((this.records[a].timestamp - t0) / totalSec) * cW;
-    const xB = mL + ((this.records[b].timestamp - t0) / totalSec) * cW;
+    const xOfT = (sec: number) => mL + ((sec - vStart) / span) * cW;
+    // Clamp to the visible plot so a partly off-screen selection doesn't bleed
+    // into the axis margins while zoomed.
+    const left = mL,
+      right = mL + cW;
+    const xA = Math.max(left, Math.min(right, xOfT(this.records[a].timestamp - t0)));
+    const xB = Math.max(left, Math.min(right, xOfT(this.records[b].timestamp - t0)));
     this.selectionLeftPx = xA;
-    this.selectionWidthPx = Math.max(1, xB - xA);
+    this.selectionWidthPx = Math.max(0, xB - xA);
+  }
+
+  // ── Horizontal zoom (Ctrl/⌘ + wheel · two-finger pinch) ───────────────
+  get isZoomed(): boolean {
+    return this.viewStartSec !== null || this.viewEndSec !== null;
+  }
+
+  private fullDurationSec(): number {
+    const n = this.records.length;
+    if (n < 2) return 0;
+    return this.records[n - 1].timestamp - this.records[0].timestamp || n;
+  }
+
+  /** Smallest window we allow, so the view always keeps a handful of samples. */
+  private minSpanSec(full: number): number {
+    return Math.min(full, Math.max(5, full / 2000));
+  }
+
+  /** Apply a [start, end] window (elapsed seconds), clamped to the session.
+   *  Snaps back to the full range (null/null) once the window spans the whole ride. */
+  private applyView(startSec: number, endSec: number): void {
+    const full = this.fullDurationSec();
+    if (full <= 0) return;
+    const span = Math.min(full, Math.max(this.minSpanSec(full), endSec - startSec));
+    const start = Math.max(0, Math.min(startSec, full - span));
+    const end = start + span;
+    if (start <= 0.5 && end >= full - 0.5) {
+      this.viewStartSec = null;
+      this.viewEndSec = null;
+    } else {
+      this.viewStartSec = start;
+      this.viewEndSec = end;
+    }
+    this.drawAll();
+    this.recomputeSelectionRect();
+  }
+
+  resetZoom(): void {
+    if (!this.isZoomed) return;
+    this.viewStartSec = null;
+    this.viewEndSec = null;
+    this.drawAll();
+    this.recomputeSelectionRect();
+    this.cdr.detectChanges();
+  }
+
+  /** Plot geometry in stack-local CSS pixels. Canvases are full-width children
+   *  of the stack, so its width matches every canvas. */
+  private plotGeometry(clientX?: number): { mL: number; cW: number; cursorX: number } | null {
+    const el = this.stackRef?.nativeElement;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    const { mL, mR } = marginsForWidth(rect.width);
+    const cW = rect.width - mL - mR;
+    const cursorX = clientX != null ? clientX - rect.left : mL + cW / 2;
+    return { mL, cW, cursorX };
+  }
+
+  private handleWheel(e: WheelEvent): void {
+    if (this.records.length < 2) return;
+    const full = this.fullDurationSec();
+    if (full <= 0) return;
+    const zoomGesture = e.ctrlKey || e.metaKey;
+    const panGesture = !zoomGesture && (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY));
+    if (!zoomGesture && !panGesture) return;
+    e.preventDefault();
+
+    const geom = this.plotGeometry(e.clientX);
+    if (!geom || geom.cW <= 0) return;
+    const { mL, cW } = geom;
+    const vStart = this.viewStartSec ?? 0;
+    const vEnd = this.viewEndSec ?? full;
+    const span = vEnd - vStart;
+
+    if (zoomGesture) {
+      const fx = Math.max(0, Math.min(1, (geom.cursorX - mL) / cW));
+      const anchorSec = vStart + fx * span;
+      const factor = e.deltaY < 0 ? 0.82 : 1.22;
+      const newSpan = Math.max(this.minSpanSec(full), Math.min(full, span * factor));
+      const newStart = anchorSec - fx * newSpan;
+      this.applyView(newStart, newStart + newSpan);
+    } else {
+      const delta = e.shiftKey ? e.deltaY || e.deltaX : e.deltaX;
+      const shift = (delta / cW) * span;
+      this.applyView(vStart + shift, vEnd + shift);
+    }
+    this.zone.run(() => this.cdr.detectChanges());
+  }
+
+  private touchDist(a: Touch, b: Touch): number {
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  }
+
+  private beginPinch(event: TouchEvent): void {
+    const t1 = event.touches[0];
+    const t2 = event.touches[1];
+    if (!t1 || !t2 || this.records.length < 2) return;
+    const full = this.fullDurationSec();
+    const geom = this.plotGeometry();
+    if (!geom || full <= 0 || geom.cW <= 0) return;
+    const rect = this.stackRef.nativeElement.getBoundingClientRect();
+    const midX = (t1.clientX + t2.clientX) / 2 - rect.left;
+    const vStart = this.viewStartSec ?? 0;
+    const vEnd = this.viewEndSec ?? full;
+    const span = vEnd - vStart;
+    const fx = Math.max(0, Math.min(1, (midX - geom.mL) / geom.cW));
+    this.pinch = {
+      startDist: this.touchDist(t1, t2),
+      startSpanSec: span,
+      anchorSec: vStart + fx * span,
+    };
+    this.onMouseLeave();
+  }
+
+  private handlePinchMove(event: TouchEvent): void {
+    if (!this.pinch) {
+      this.beginPinch(event);
+      return;
+    }
+    const t1 = event.touches[0];
+    const t2 = event.touches[1];
+    if (!t1 || !t2) return;
+    if (event.cancelable) event.preventDefault();
+    const full = this.fullDurationSec();
+    const geom = this.plotGeometry();
+    if (!geom || full <= 0 || geom.cW <= 0 || this.pinch.startDist <= 0) return;
+    const rect = this.stackRef.nativeElement.getBoundingClientRect();
+    const midX = (t1.clientX + t2.clientX) / 2 - rect.left;
+    const scale = this.touchDist(t1, t2) / this.pinch.startDist;
+    const newSpan = Math.max(
+      this.minSpanSec(full),
+      Math.min(full, this.pinch.startSpanSec / (scale || 1)),
+    );
+    const fx = Math.max(0, Math.min(1, (midX - geom.mL) / geom.cW));
+    const newStart = this.pinch.anchorSec - fx * newSpan;
+    this.zone.run(() => {
+      this.applyView(newStart, newStart + newSpan);
+      this.cdr.detectChanges();
+    });
   }
 
   private isTouchHover = false;
@@ -344,6 +525,10 @@ export class FitTimeseriesChartComponent
   private readonly touchMoveListener = (e: TouchEvent) => this.handleTouchMove(e);
 
   onTouchStart(event: TouchEvent): void {
+    if (event.touches.length >= 2) {
+      this.beginPinch(event);
+      return;
+    }
     if (!this.showTooltip) return;
     const touch = event.touches[0];
     if (!touch) return;
@@ -353,13 +538,20 @@ export class FitTimeseriesChartComponent
     this.computeHoverAt(canvas, touch.clientX, touch.clientY);
   }
 
-  onTouchEnd(): void {
+  onTouchEnd(event?: TouchEvent): void {
+    // End the pinch once fewer than two fingers remain on the surface.
+    if (!event || event.touches.length < 2) this.pinch = null;
     this.gesture.end();
     this.isTouchHover = false;
     this.onMouseLeave();
   }
 
   private handleTouchMove(event: TouchEvent): void {
+    if (event.touches.length >= 2) {
+      this.handlePinchMove(event);
+      return;
+    }
+    if (this.pinch) return;
     const touch = event.touches[0];
     const canvas = this.gesture.activeCanvas;
     if (!touch || !canvas) return;
@@ -416,11 +608,14 @@ export class FitTimeseriesChartComponent
 
     const n = this.records.length;
     const t0 = this.records[0].timestamp;
-    const totalSec = this.records[n - 1].timestamp - t0 || n;
+    const fullSec = this.records[n - 1].timestamp - t0 || n;
+    const vStart = this.viewStartSec ?? 0;
+    const vEnd = this.viewEndSec ?? fullSec;
+    const span = vEnd - vStart || fullSec;
     const { mL, mR } = marginsForWidth(cssW);
     const cW = cssW - mL - mR;
 
-    const targetT = t0 + ((x - mL) / cW) * totalSec;
+    const targetT = t0 + vStart + ((x - mL) / cW) * span;
     let lo = 0,
       hi = n - 1;
     while (lo < hi) {
@@ -441,7 +636,7 @@ export class FitTimeseriesChartComponent
     // the power curve/block at the hovered sample.
     const stackRect = this.stackRef.nativeElement.getBoundingClientRect();
     const stackW = stackRect.width;
-    const sampleX = mL + ((this.records[idx].timestamp - t0) / totalSec) * cW;
+    const sampleX = mL + ((this.records[idx].timestamp - t0 - vStart) / span) * cW;
     const lineXInStack = rect.left - stackRect.left + sampleX;
     // The .tt element uses transform: translate(-50%, -100%), so ttX/ttY mark the
     // anchor point (bottom-center of the tooltip). Clamp X to keep it on-screen.
@@ -561,10 +756,12 @@ export class FitTimeseriesChartComponent
         showHR: this.showHR,
         showCadence: this.showCadence,
         showDrift: this._hasDrift && this.showDrift,
-        hasElevation: this._hasElevation,
+        hasElevation: this._hasElevation && this.showElevation,
         driftCurves: this._driftCurves,
         hoverIdx: this.hoverIdx,
         theme: this.theme,
+        viewStartSec: this.viewStartSec,
+        viewEndSec: this.viewEndSec,
       },
     );
     this._primaryMin = result.primaryMin;
@@ -586,7 +783,7 @@ export class FitTimeseriesChartComponent
       showPrimary: this.showPrimary,
       showHR: this.showHR,
       showCadence: this.showCadence,
-      hasElevation: this._hasElevation,
+      hasElevation: this._hasElevation && this.showElevation,
       showDrift: this._hasDrift && this.showDrift,
       driftCurves: this._driftCurves,
       accentHex: this.theme.accentHex,

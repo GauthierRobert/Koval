@@ -12,7 +12,7 @@ Capture the athlete's threshold value and create a personalised zone system for 
 
 ## Workflow
 
-1. **Current state** — `getMyProfile` → check `ftp`, `functionalThresholdPace`, `criticalSwimSpeed`.
+1. **Current state** — `getAthleteContext` → check `subject.ftp`, `subject.functionalThresholdPace`, `subject.criticalSwimSpeed`.
 2. **Determine sport** from the request:
    - Power → CYCLING (FTP in watts)
    - Pace → RUNNING (threshold pace, sec/km)
@@ -23,10 +23,10 @@ Capture the athlete's threshold value and create a personalised zone system for 
    - Ramp test peak power → FTP ≈ `0.75 × peakPower`.
    - 20-min test best power → FTP ≈ `0.95 × P20`.
    - Running threshold ≈ 5k race pace − 5 sec/km (rough), or 10k race pace.
-4. **Persist**:
-   - Cycling: `updateFtp(ftp)`
-   - Running: `updateThresholdPace(secondsPerKm)` — e.g. 4:10/km = 250
-   - Swimming: `updateSwimCss(secondsPer100m)` — e.g. 1:35/100m = 95
+4. **Persist** — one `updateProfile` call, passing only the field for the relevant sport (leave the others null):
+   - Cycling: `updateProfile(ftp=<watts>)`
+   - Running: `updateProfile(thresholdPaceSecPerKm=<sec>)` — e.g. 4:10/km = 250
+   - Swimming: `updateProfile(swimCssSecPer100m=<sec>)` — e.g. 1:35/100m = 95
 5. **Existing default zone system?** — `getDefaultZoneSystem(sportType)`.
    - If one exists: *"You already have a default zone system. Replace or keep?"*
    - If none, proceed.

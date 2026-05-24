@@ -9,7 +9,7 @@ End-to-end playbook for everything an athlete asks the Koval Training Planner co
 
 ## Role gate
 
-Call `getMyProfile`. If `role == "COACH"`, hand off: *"That's a coaching task — use the `koval-coach` skill."* Otherwise continue.
+Call `getAthleteContext` (no athleteId). If `subject.role == "COACH"`, hand off: *"That's a coaching task — use the `koval-coach` skill."* Otherwise continue.
 
 ## Workflow router
 
@@ -53,25 +53,25 @@ Eight pre-defined endurance training methodologies the athlete can opt into duri
 
 ## Tool surface (Koval MCP)
 
-The connector exposes ~70 tools. The ones every athlete workflow uses:
+The connector exposes ~60 tools. The ones every athlete workflow uses:
 
-- **Profile**: `getMyProfile`, `updateFtp`, `updateThresholdPace`, `updateSwimCss`, `updateWeight`
+- **Context (start here)**: `getAthleteContext` — one call returns your profile + reference values, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, the next 7 days of scheduled workouts, the active plan's current week, and your stored self-context. Prefer it over the per-domain reads below.
+- **Profile**: `updateProfile` (FTP, weight, threshold pace, swim CSS — pass only the fields you're changing), `updateMyContext` (save your self-context as section title → markdown)
 - **Zones**: `listZoneSystems`, `getDefaultZoneSystem`, `createZoneSystem`, `deleteZoneSystem`
-- **Goals & races**: `listGoals`, `getGoal`, `createGoal`, `searchRaces`, `getRace`, `linkRaceToGoal`
+- **Goals & races**: `getGoal`, `createGoal`, `searchRaces`, `getRace`, `linkRaceToGoal` (the goal list is in `getAthleteContext`)
 - **Trainings**: `searchTrainings`, `createTraining`, `getTraining`, `updateTraining`, `cloneTraining`
-- **Schedule**: `scheduleTraining`, `getMySchedule`, `getScheduledWorkoutDetail`, `rescheduleWorkout`, `unassignWorkout`, `markCompleted`, `markSkipped`
-- **Sessions / history**: `getRecentSessions`, `getSessionDetail`, `getSessionBlocks`, `getSessionPowerCurve`, `linkSessionToScheduled`
-- **Analytics**: `getPmcData`, `getAthletePmc`, `getPersonalRecords`, `getBestPowerCurve`, `getCurrentWeekSummary`, `getVolume`
-- **Plans**: `listPlans`, `getPlan`, `createPlan`, `addDayToPlan`, `activatePlan`, `pausePlan`
-- **Renderers** (markdown — paste verbatim): `renderSessionSummary`, `renderPmcReport`, `renderPowerCurveReport`, `renderWeekSchedule`, `renderVolumeReport`, `renderFriReport`
+- **Schedule**: `scheduleTraining`, `getMySchedule` (arbitrary date range), `getScheduledWorkoutDetail`, `rescheduleWorkout`, `unassignWorkout`, `markCompleted`, `markSkipped`
+- **Sessions / history**: `getSessions` (mode='recent' or 'range'), `getSessionDetail`, `getSessionBlocks`, `getSessionPowerCurve`, `linkSessionToScheduled`
+- **Analytics**: `getPmcData`, `getPersonalRecords`, `getBestPowerCurve`, `getVolume`
+- **Plans**: `listPlans`, `getPlan`, `createPlan`, `addDayToPlan`, `setPlanStatus` (status='ACTIVE' with a start date to schedule, 'PAUSED' to pause, 'ACTIVE' with no date to resume)
 
-All output stays in markdown — unicode bar charts / sparklines / tables. No images required.
+These tools return JSON — you turn the numbers into output. Build compact markdown yourself: small tables, plus unicode sparklines (`▁▂▃▄▅▆▇█`) or bar rows (`█▉▊▋▌▍▎▏`) when a trend or comparison helps. No images required.
 
 ## Cross-cutting rules
 
 1. **Profile-first.** Every workflow reads `athlete-profile.md` before deciding volume / intensity / voice / language. If absent, the skill notes the gap once and uses defaults — it does not block.
-2. **Markdown only.** Use the `render*` tools whenever they exist; paste the output verbatim and add at most one prose verdict.
-3. **Idempotent persistence.** Calls like `updateFtp`, `createGoal`, `createTraining`, `scheduleTraining` are safe to retry but should only be issued **once per turn**. Never bulk-create — one workout per response, then continue on the next turn.
+2. **Format the data yourself.** Data tools return JSON — render it into compact markdown (small tables, unicode sparklines/bars) and add at most one prose verdict. Keep it tight; never dump raw JSON at the user.
+3. **Idempotent persistence.** Calls like `updateProfile`, `createGoal`, `createTraining`, `scheduleTraining` are safe to retry but should only be issued **once per turn**. Never bulk-create — one workout per response, then continue on the next turn.
 4. **Auth context.** `userId` is resolved server-side from the JWT, never pass it. Same for `coachId` / `createdBy`.
 5. **JSON only** in tool arguments — compact, valid, no JS expressions, no comments.
 6. **Honour `forbiddenEfforts` and `neverInclude`** from the profile absolutely, silently — redesign rather than negotiate.

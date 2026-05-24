@@ -1,6 +1,6 @@
 # Koval Skills
 
-End-user skills for the **Koval Training Planner AI** MCP connector. Drop these into Claude Desktop or Claude.ai alongside the connector and Claude will route every training-related request to the right internal workflow — analyse a session, plan a week, prep a race, design a workout, review your athletes, publish the club gazette, and more.
+End-user skills for the **Koval Training Planner AI** MCP connector. Drop these into Claude Desktop or Claude.ai alongside the connector and Claude will route every training-related request to the right internal workflow — analyse a session, plan a week, prep a race, design a workout, review your athletes, run club sessions, and more.
 
 ## What is this?
 
@@ -11,7 +11,7 @@ There are exactly **two skills**, scoped by role:
 | Skill            | Audience | Workflows in `resources/` |
 |------------------|----------|---------------------------|
 | `koval-athlete`  | Athletes | onboarding · zone-setup · analyze-last-ride · form-check · power-curve-report · find-workout · create-workout · plan-my-week · prep-race |
-| `koval-coach`    | Coaches  | onboarding · weekly-review · athlete-deepdive · create-workout · assign-workout · build-plan · club-sessions · publish-club-gazette |
+| `koval-coach`    | Coaches  | onboarding · weekly-review · athlete-deepdive · create-workout · assign-workout · build-plan · club-sessions |
 
 Each skill's `SKILL.md` is the **router** — it carries the broad description that triggers Claude to load the skill, gates by role (`ATHLETE` vs `COACH`), and points to the per-workflow playbook in `resources/`. All output is **markdown only** (unicode bar charts, sparklines, tables) — no image rendering required.
 
@@ -42,8 +42,7 @@ koval-coach/
     ├── create-workout.md
     ├── assign-workout.md
     ├── build-plan.md
-    ├── club-sessions.md
-    └── publish-club-gazette.md
+    └── club-sessions.md
 ```
 
 This is the format Claude Desktop and Claude.ai's Skill upload UI expect. Each skill is distributed as a `.zip` archive containing the skill directory at its root — the build script below produces them.
@@ -94,7 +93,6 @@ Athletes only need `koval-athlete`. Coaches can install both if they also train 
 - "assign this to Alice for Tuesday", "schedule X for the whole group"
 - "build Alice a 6-week base block"
 - "create a club session for Sunday", "make this a recurring session"
-- "publish the gazette", "compile this week's newsletter"
 
 ## Profiles & onboarding
 
@@ -108,5 +106,5 @@ Run onboarding once when you first connect — re-run any time your training rea
 ## Notes
 
 - Skills work best when your **profile** is complete (FTP, weight, threshold pace, CSS) — otherwise TSS/IF estimates fall back to defaults.
-- The `render*` tools (`renderPowerCurveReport`, `renderPmcReport`, `renderVolumeReport`, `renderWeekSchedule`, `renderSessionSummary`, `renderFriReport`) return ready-to-paste markdown — your client doesn't need any special rendering.
+- Analytics tools (`getPmcData`, `getBestPowerCurve`, `getVolume`, `getSessionDetail`, `getMySchedule`, etc.) return JSON; the skills format it into compact markdown tables and unicode sparklines/bar charts — no image rendering required.
 - Coach workflows check the `COACH` role and require an existing coach-athlete relationship in the app. Athlete workflows refuse if your account is `COACH` (run `koval-coach` instead).

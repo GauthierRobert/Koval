@@ -143,6 +143,19 @@ $btn-inner-light: var(--shadow-inner-light);
   }
 }
 
+.btn-ghost-neutral {
+  @extend %btn-base;
+  background: var(--overlay-5);
+  color: var(--text-muted);
+  border-color: var(--border-color);
+
+  &:hover:not(:disabled) {
+    background: var(--surface-hover);
+    color: var(--text-color);
+    border-color: var(--border-color-strong);
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // SEMANTIC BUTTONS (success, danger, info)
 // ═══════════════════════════════════════════════════════════════
@@ -396,6 +409,7 @@ $btn-inner-light: var(--shadow-inner-light);
   .btn-danger,
   .btn-ghost,
   .btn-ghost-danger,
+  .btn-ghost-neutral,
   .btn-approve,
   .btn-reject,
   .premium-button {

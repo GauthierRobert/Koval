@@ -334,12 +334,40 @@
                     "
                     (click)="onSelect(row.session)"
                   >
+                    @let action = pendingActionFor(row.session);
                     <span class="sport-rail" aria-hidden="true"></span>
                     <div class="item-sport">
                       <app-sport-icon [sport]="row.session.sportType" [size]="16" />
+                      @if (action) {
+                        <span
+                          class="action-dot"
+                          [class.race]="action === 'race'"
+                          [class.link]="action === 'link'"
+                          role="status"
+                          [attr.aria-label]="
+                            (action === 'race'
+                              ? 'WORKOUT_HISTORY.DOT_RACE_LABEL'
+                              : 'WORKOUT_HISTORY.DOT_LINK_LABEL'
+                            ) | translate
+                          "
+                          [title]="
+                            (action === 'race'
+                              ? 'WORKOUT_HISTORY.DOT_RACE_LABEL'
+                              : 'WORKOUT_HISTORY.DOT_LINK_LABEL'
+                            ) | translate
+                          "
+                        ></span>
+                      }
                     </div>
                     <div class="item-info">
-                      <span class="item-title">{{ row.session.title }}</span>
+                      <div class="group-title-row">
+                        @if (row.session.raceRole === 'RACE') {
+                          <span class="group-kind-tag race">{{
+                            'WORKOUT_HISTORY.GROUP_TAG_RACE' | translate
+                          }}</span>
+                        }
+                        <span class="item-title">{{ row.session.title }}</span>
+                      </div>
                       <div class="item-meta">
                         <span class="meta-date">{{ formatShortDate(row.session.date) }}</span>
                         <span class="meta-dot" aria-hidden="true">·</span>
@@ -351,42 +379,6 @@
                           <span class="meta-tss">{{ tss }} TSS</span>
                         }
                       </div>
-                      @if (hasUnclassifiedRaceDay(row.session)) {
-                        <div class="race-day-chip">
-                          <span class="race-day-text">{{
-                            'WORKOUT_HISTORY.RACE_DAY_HINT' | translate
-                          }}</span>
-                          <button
-                            type="button"
-                            class="race-day-action"
-                            (click)="openClassifyRaceModal(row.session, $event)"
-                          >
-                            {{ 'WORKOUT_HISTORY.RACE_DAY_CLASSIFY' | translate }}
-                          </button>
-                        </div>
-                      } @else if (hasPendingSuggestion(row.session)) {
-                        <div class="suggestion-chip">
-                          <span class="suggestion-text">{{
-                            'WORKOUT_HISTORY.SUGGESTION_HINT' | translate
-                          }}</span>
-                          <button
-                            type="button"
-                            class="suggestion-action"
-                            (click)="openLinkScheduleModal(row.session, $event)"
-                          >
-                            {{ 'WORKOUT_HISTORY.SUGGESTION_REVIEW' | translate }}
-                          </button>
-                          <button
-                            type="button"
-                            class="suggestion-dismiss"
-                            (click)="dismissSuggestion(row.session, $event)"
-                            [title]="'WORKOUT_HISTORY.SUGGESTION_DISMISS' | translate"
-                            [attr.aria-label]="'WORKOUT_HISTORY.SUGGESTION_DISMISS' | translate"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      }
                     </div>
                     <div class="item-actions">
                       <button
@@ -510,6 +502,7 @@
       <app-session-analysis
         [session]="session"
         [linkedSessions]="(linkedSessions$ | async) ?? []"
+        [pendingAction]="pendingActionFor(session)"
         (navTo)="onSelectById($event)"
         (linkClicked)="onAnalysisLinkClicked($event)"
         (downloadClicked)="onAnalysisDownloadClicked($event)"
@@ -670,11 +663,4 @@
   (closed)="closeLinkScheduleModal()"
   (linked)="onScheduleLinked($event)"
   (unplanned)="onMarkedUnplanned()"
-/>
-
-<app-classify-race-modal
-  [open]="classifyRaceModalOpen"
-  [session]="classifyRaceSession"
-  (closed)="closeClassifyRaceModal()"
-  (classified)="onRaceClassified()"
 />

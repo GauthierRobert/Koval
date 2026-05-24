@@ -6,15 +6,17 @@ import {
   ElementRef,
   EventEmitter,
   Input,
+  OnChanges,
   OnDestroy,
   Output,
+  SimpleChanges,
   TemplateRef,
   ViewChild,
   contentChild,
   inject,
 } from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {SportIconComponent} from '../sport-icon/sport-icon.component';
+import { CommonModule } from '@angular/common';
+import { SportIconComponent } from '../sport-icon/sport-icon.component';
 import {
   AxisTick,
   buildGridLines,
@@ -34,7 +36,12 @@ import {
   TimelineMarker,
 } from './goal-timeline.utils';
 
-export type {TimelineItem, TimelineMarker, TimelineSport, TimelinePriority} from './goal-timeline.utils';
+export type {
+  TimelineItem,
+  TimelineMarker,
+  TimelineSport,
+  TimelinePriority,
+} from './goal-timeline.utils';
 
 interface LaneDef {
   key: LaneKey;
@@ -52,24 +59,30 @@ const WHEEL_SENSITIVITY = 0.0015;
   styleUrl: './goal-timeline.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDestroy {
-  @Input({required: true}) items: TimelineItem<T>[] = [];
+export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnChanges, OnDestroy {
+  @Input({ required: true }) items: TimelineItem<T>[] = [];
   @Input() panelTitle = 'Roadmap';
   @Input() showHeader = true;
   @Input() showLegend = true;
   @Input() emptyLaneLabel = 'Aucun objectif sur cette voie';
 
+  /** Pin the visible window to a fixed range (e.g. a season). Both bounds must be set. */
+  @Input() fixedStart?: Date | null;
+  @Input() fixedEnd?: Date | null;
+  /** When true, pan/zoom/pinch are disabled and the window stays pinned to the fixed range. */
+  @Input() lockWindow = false;
+
   @Output() itemClick = new EventEmitter<TimelineItem<T>>();
 
-  cardFooterTpl = contentChild<TemplateRef<{$implicit: TimelineItem<T>}>>('cardFooter');
+  cardFooterTpl = contentChild<TemplateRef<{ $implicit: TimelineItem<T> }>>('cardFooter');
 
-  @ViewChild('trackRef', {read: ElementRef}) trackRef?: ElementRef<HTMLElement>;
-  @ViewChild('canvasRef', {read: ElementRef}) canvasRef?: ElementRef<HTMLElement>;
+  @ViewChild('trackRef', { read: ElementRef }) trackRef?: ElementRef<HTMLElement>;
+  @ViewChild('canvasRef', { read: ElementRef }) canvasRef?: ElementRef<HTMLElement>;
 
   readonly lanes: LaneDef[] = [
-    {key: 'run', label: 'RUN', icon: 'RUNNING'},
-    {key: 'tri', label: 'TRI', icon: 'BRICK'},
-    {key: 'bike', label: 'BIKE', icon: 'CYCLING'},
+    { key: 'run', label: 'RUN', icon: 'RUNNING' },
+    { key: 'tri', label: 'TRI', icon: 'BRICK' },
+    { key: 'bike', label: 'BIKE', icon: 'CYCLING' },
   ];
 
   private windowStart: Date;
@@ -99,7 +112,7 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
     crossedThreshold: boolean;
   } | null = null;
 
-  private activePointers = new Map<number, {x: number; y: number}>();
+  private activePointers = new Map<number, { x: number; y: number }>();
   private pinch: {
     startDist: number;
     startMidpointFrac: number;
@@ -124,11 +137,15 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
   }
 
   get windowStartLabel(): string {
-    return this.spanMs >= 150 * DAY_MS ? monthLong(this.windowStart) : formatDayMonthYear(this.windowStart);
+    return this.spanMs >= 150 * DAY_MS
+      ? monthLong(this.windowStart)
+      : formatDayMonthYear(this.windowStart);
   }
 
   get windowEndLabel(): string {
-    return this.spanMs >= 150 * DAY_MS ? monthLong(this.windowEndDate) : formatDayMonthYear(this.windowEndDate);
+    return this.spanMs >= 150 * DAY_MS
+      ? monthLong(this.windowEndDate)
+      : formatDayMonthYear(this.windowEndDate);
   }
 
   get todayX(): number {
@@ -152,11 +169,25 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
     this.itemClick.emit(marker);
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['fixedStart'] || changes['fixedEnd']) {
+      this.applyFixedWindow();
+    }
+  }
+
+  private applyFixedWindow(): void {
+    if (this.fixedStart && this.fixedEnd) {
+      this.windowStart = new Date(this.fixedStart);
+      this.windowEndDate = new Date(this.fixedEnd);
+      this.cdr.markForCheck();
+    }
+  }
+
   ngAfterViewInit(): void {
     const canvasEl = this.canvasRef?.nativeElement;
     const trackEl = this.trackRef?.nativeElement;
     if (canvasEl) {
-      canvasEl.addEventListener('wheel', this.wheelHandler, {passive: false});
+      canvasEl.addEventListener('wheel', this.wheelHandler, { passive: false });
     }
     if (typeof ResizeObserver !== 'undefined' && trackEl) {
       this.resizeObserver = new ResizeObserver((entries) => {
@@ -181,7 +212,37 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
     return ((cardMaxPx + buffer) / Math.max(this.trackWidthPx, 1)) * 100;
   }
 
+  private get effectiveMaxSpan(): number {
+    if (this.fixedStart && this.fixedEnd) {
+      const seasonSpan = this.fixedEnd.getTime() - this.fixedStart.getTime();
+      return Math.max(MIN_SPAN_MS, Math.min(MAX_SPAN_MS, seasonSpan));
+    }
+    return MAX_SPAN_MS;
+  }
+
+  private clampSpan(span: number): number {
+    return Math.max(MIN_SPAN_MS, Math.min(this.effectiveMaxSpan, span));
+  }
+
+  private clampStart(startMs: number, spanMs: number): number {
+    if (this.fixedStart && this.fixedEnd) {
+      const lo = this.fixedStart.getTime();
+      const hi = this.fixedEnd.getTime() - spanMs;
+      if (hi <= lo) return lo;
+      return Math.max(lo, Math.min(hi, startMs));
+    }
+    return startMs;
+  }
+
+  private applyWindow(startMs: number, spanMs: number): void {
+    const newSpan = this.clampSpan(spanMs);
+    const newStart = this.clampStart(startMs, newSpan);
+    this.windowStart = new Date(newStart);
+    this.windowEndDate = new Date(newStart + newSpan);
+  }
+
   private onWheel(e: WheelEvent): void {
+    if (this.lockWindow) return;
     e.preventDefault();
 
     const trackEl = this.trackRef?.nativeElement;
@@ -195,19 +256,18 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
 
     // Exponential zoom keeps trackpad pinches subtle and wheel ticks crisp.
     const factor = Math.exp(e.deltaY * WHEEL_SENSITIVITY);
-    const newSpan = Math.max(MIN_SPAN_MS, Math.min(MAX_SPAN_MS, oldSpan * factor));
+    const newSpan = this.clampSpan(oldSpan * factor);
     if (newSpan === oldSpan) return;
 
-    const newStartMs = anchorMs - frac * newSpan;
-    this.windowStart = new Date(newStartMs);
-    this.windowEndDate = new Date(newStartMs + newSpan);
+    this.applyWindow(anchorMs - frac * newSpan, newSpan);
     this.cdr.markForCheck();
   }
 
   onPointerDown(e: PointerEvent): void {
+    if (this.lockWindow) return;
     const target = e.target as Element | null;
     if (target?.closest('.rm-marker')) return;
-    this.activePointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+    this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
     if (this.activePointers.size === 1) {
       const trackEl = this.trackRef?.nativeElement;
@@ -233,7 +293,7 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
 
   onPointerMove(e: PointerEvent): void {
     if (!this.activePointers.has(e.pointerId)) return;
-    this.activePointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+    this.activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
     if (this.pinch && this.activePointers.size === 2) {
       this.applyPinch(e);
@@ -250,8 +310,7 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
       if (this.drag.crossedThreshold) {
         const ratio = dx / this.drag.startTrackWidthPx;
         const newStartMs = this.drag.startWindowStartMs - ratio * this.drag.spanMsAtStart;
-        this.windowStart = new Date(newStartMs);
-        this.windowEndDate = new Date(newStartMs + this.drag.spanMsAtStart);
+        this.applyWindow(newStartMs, this.drag.spanMsAtStart);
         e.preventDefault();
         this.cdr.markForCheck();
       }
@@ -306,16 +365,11 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
     if (pts.length < 2) return;
     const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
     const ratio = Math.max(dist / this.pinch.startDist, 0.0001);
-    const effectiveSpan = Math.max(
-      MIN_SPAN_MS,
-      Math.min(MAX_SPAN_MS, this.pinch.startSpanMs / ratio),
-    );
+    const effectiveSpan = this.clampSpan(this.pinch.startSpanMs / ratio);
 
     const anchorMs =
       this.pinch.startWindowStartMs + this.pinch.startMidpointFrac * this.pinch.startSpanMs;
-    const newStartMs = anchorMs - this.pinch.startMidpointFrac * effectiveSpan;
-    this.windowStart = new Date(newStartMs);
-    this.windowEndDate = new Date(newStartMs + effectiveSpan);
+    this.applyWindow(anchorMs - this.pinch.startMidpointFrac * effectiveSpan, effectiveSpan);
     this.cdr.markForCheck();
     e.preventDefault();
   }
@@ -326,7 +380,7 @@ export class GoalTimelineComponent<T = unknown> implements AfterViewInit, OnDest
       ev.stopPropagation();
       ev.stopImmediatePropagation();
     };
-    document.addEventListener('click', swallow, {capture: true, once: true});
+    document.addEventListener('click', swallow, { capture: true, once: true });
     // Safety net: if no click fires (drag ended on empty space), remove the listener anyway.
     setTimeout(() => document.removeEventListener('click', swallow, true), 0);
   }

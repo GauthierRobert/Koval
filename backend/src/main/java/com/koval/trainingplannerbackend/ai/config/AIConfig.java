@@ -3,9 +3,9 @@ package com.koval.trainingplannerbackend.ai.config;
 import com.koval.trainingplannerbackend.ai.logger.PromptLogger;
 import com.koval.trainingplannerbackend.ai.toon.ToonToolCallbackProvider;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
-import org.springframework.ai.anthropic.api.AnthropicCacheOptions;
-import org.springframework.ai.anthropic.api.AnthropicCacheStrategy;
-import org.springframework.ai.anthropic.api.AnthropicCacheTtl;
+import org.springframework.ai.anthropic.AnthropicCacheOptions;
+import org.springframework.ai.anthropic.AnthropicCacheStrategy;
+import org.springframework.ai.anthropic.AnthropicCacheTtl;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.tool.ToolCallbackProvider;
@@ -74,29 +74,28 @@ public class AIConfig {
 
     // ── Options helpers ─────────────────────────────────────────────────
 
-    protected AnthropicChatOptions sonnetOptions() {
+    protected AnthropicChatOptions.Builder sonnetOptions() {
         return anthropicOptions(SONNET, 0.7, 2048);
     }
 
-    protected AnthropicChatOptions haikuOptions() {
+    protected AnthropicChatOptions.Builder haikuOptions() {
         return anthropicOptions(HAIKU, 0.7, 512);
     }
 
-    protected AnthropicChatOptions haikuActionOptions() {
+    protected AnthropicChatOptions.Builder haikuActionOptions() {
         return anthropicOptions(HAIKU, 0.3, 512);
     }
 
-    protected AnthropicChatOptions sonnetCachedActionOptions() {
+    protected AnthropicChatOptions.Builder sonnetCachedActionOptions() {
         return anthropicOptions(SONNET, 0.3, 2048);
     }
 
-    private AnthropicChatOptions anthropicOptions(String model, double temperature, int maxTokens) {
+    private AnthropicChatOptions.Builder anthropicOptions(String model, double temperature, int maxTokens) {
         return AnthropicChatOptions.builder()
                 .model(model)
                 .temperature(temperature)
                 .maxTokens(maxTokens)
-                .cacheOptions(cacheOptions())
-                .build();
+                .cacheOptions(cacheOptions());
     }
 
     protected AnthropicCacheOptions cacheOptions() {

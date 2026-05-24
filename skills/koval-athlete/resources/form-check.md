@@ -11,17 +11,23 @@ Pull the user's Performance Management Chart for the last ~90 days, render the C
 
 ## Workflow
 
-1. `getMyProfile` → confirm training history (CTL/ATL/TSB present). If all three are 0/null: *"I don't have enough training history to compute form yet — log a few sessions and try again."*
+1. `getAthleteContext` → confirm training history (`trainingLoad.ctl/atl/tsb` present). If all three are 0/null: *"I don't have enough training history to compute form yet — log a few sessions and try again."*
 2. Compute window: `to = today`, `from = today - 90 days`. Honour a user-specified window if given ("form last month" → previous calendar month).
-3. `renderPmcReport(from, to)` → markdown with the CTL/ATL/TSB sparkline + key-value table and the baked-in TSB band interpretation.
-4. Paste verbatim, then add **one** prose verdict in the profile's voice/language plus a single TSB-band suggestion (see below).
+3. `getPmcData(from, to)` → array of daily `{date, ctl, atl, tsb}` points. Build the report yourself: a unicode sparkline of CTL across the window plus a small table of the latest CTL (fitness) / ATL (fatigue) / TSB (form).
+4. Add **one** prose verdict in the profile's voice/language plus a single TSB-band suggestion (see below), keyed off the most recent TSB value.
 
 ## Output format
 
 ```
 <one-sentence verdict — "fresh and race-ready" / "productive build" / "deep in fatigue, recover">
 
-<renderPmcReport output verbatim>
+CTL  ▁▂▃▄▅▆▇█   (fitness over the window)
+
+| Metric | Value |
+|--------|-------|
+| CTL (fitness) | <latest> |
+| ATL (fatigue) | <latest> |
+| TSB (form)    | <latest> |
 
 <one actionable suggestion based on TSB>
 ```

@@ -29,6 +29,10 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
 
     Optional<CompletedSession> findByUserIdAndNolioActivityId(String userId, String nolioActivityId);
 
+    /** Sessions the athlete classified as the race effort itself, projected to the fields needed to map a race goal to its session. */
+    @Query(value = "{ 'userId': ?0, 'raceId': { $ne: null }, 'raceRole': 'RACE' }", fields = "{ '_id': 1, 'raceId': 1, 'completedAt': 1 }")
+    List<CompletedSession> findRaceEffortsByUserId(String userId);
+
     List<CompletedSession> findByUserIdOrderByCompletedAtDesc(String userId);
     Page<CompletedSession> findByUserIdOrderByCompletedAtDesc(String userId, Pageable pageable);
     List<CompletedSession> findByUserIdOrderByCompletedAtAsc(String userId);

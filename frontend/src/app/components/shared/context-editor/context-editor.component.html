@@ -1,0 +1,42 @@
+<div class="context-editor">
+  @for (title of displayTitles; track title) {
+    @let guidance = sectionGuidance[title];
+    <div class="form-group">
+      <label class="field-label" [attr.for]="'ctx-' + title">{{ title }}</label>
+      @if (!readonly && guidance?.hint) {
+        <p class="field-hint">{{ guidance.hint }}</p>
+      }
+      <textarea
+        class="field-textarea"
+        [id]="'ctx-' + title"
+        [(ngModel)]="model[title]"
+        [ngModelOptions]="{ standalone: true }"
+        [readonly]="readonly"
+        [disabled]="saving"
+        rows="4"
+        [placeholder]="
+          readonly ? '' : (guidance?.placeholder ?? ('CONTEXT.SECTION_PLACEHOLDER' | translate))
+        "
+      ></textarea>
+    </div>
+  }
+
+  @if (readonly) {
+    @if (!hasContent) {
+      <p class="context-empty">{{ 'CONTEXT.ATHLETE_EMPTY' | translate }}</p>
+    }
+  } @else {
+    <div class="context-actions">
+      <span class="context-updated">
+        @if (updatedAt) {
+          {{ 'CONTEXT.LAST_UPDATED' | translate }}: {{ updatedAt | date: 'medium' }}
+        } @else {
+          {{ 'CONTEXT.NEVER_SAVED' | translate }}
+        }
+      </span>
+      <button type="button" class="context-save-btn" [disabled]="saving" (click)="onSave()">
+        {{ (saving ? 'CONTEXT.SAVING' : 'CONTEXT.SAVE') | translate }}
+      </button>
+    </div>
+  }
+</div>

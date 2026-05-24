@@ -39,7 +39,7 @@ From the request + profile:
 
 Title format: `<focus> — <duration>w` (e.g. `"Base — 6w"`, `"Sweet Spot Build — 4w"`, `"Marathon Build — 12w"`).
 
-`targetFtp` defaults to the athlete's current FTP from `getMyProfile`. If they're aiming for a specific FTP at plan end, pass that value.
+`targetFtp` defaults to the athlete's current FTP from `getAthleteContext` (`subject.ftp`). If they're aiming for a specific FTP at plan end, pass that value.
 
 ## Step 3 — Fill the plan
 For each `(weekNumber, dayOfWeek)` slot in the structure:
@@ -50,14 +50,14 @@ For each `(weekNumber, dayOfWeek)` slot in the structure:
 To remove a slot later: `removeDayFromPlan(planId, weekNumber, dayOfWeek)`.
 
 ## Step 4 — Activate
-`activatePlan(planId)` so scheduled workouts materialise on the athlete's calendar from `startDate`.
+`setPlanStatus(planId, status='ACTIVE', startDate=<plan start Monday>)` so scheduled workouts materialise on the athlete's calendar from `startDate`.
 
-Pause anytime later with `pausePlan(planId)`; resume with `resumePlan(planId)`.
+Pause anytime later with `setPlanStatus(planId, status='PAUSED')`; resume with `setPlanStatus(planId, status='ACTIVE')` (no startDate = resume in place).
 
 ## Step 5 — Preview
 - `getPlanProgress(planId)` for status numbers.
 - `getPlanAnalytics(planId)` for projected weekly TSS / hours per week.
-- `renderWeekSchedule(weekStart=monday)` for the next 1-2 weeks — paste verbatim.
+- `getMySchedule(from=monday, to=sunday)` for the next 1-2 weeks — build a Mon-Sun grid for each.
 
 ## Output format
 
@@ -72,10 +72,10 @@ Pause anytime later with `pausePlan(planId)`; resume with `resumePlan(planId)`.
 - … (compact list to the deload)
 
 ### This week
-<renderWeekSchedule>
+<Mon-Sun week grid you build from getMySchedule>
 
 ### Next week
-<renderWeekSchedule>
+<Mon-Sun week grid you build from getMySchedule>
 
 Plan ID: <planId> — say "swap [day]" or "make [day] easier" to adjust.
 ```

@@ -1,6 +1,7 @@
 package com.koval.trainingplannerbackend.mcp;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
 import java.util.List;
@@ -20,21 +21,26 @@ public record McpTrainingInput(
         @JsonPropertyDescription("Workout title. Required.")
         String title,
 
+        @JsonProperty(required = false)
         @JsonPropertyDescription("Free-text description / goal of the workout.")
         String description,
 
+        @JsonProperty(required = false)
         @JsonPropertyDescription("Training type: VO2MAX, THRESHOLD, SWEET_SPOT, ENDURANCE, SPRINT, RECOVERY, MIXED, TEST.")
         String trainingType,
 
+        @JsonProperty(required = false)
         @JsonPropertyDescription("Estimated TSS for the whole workout. Optional — server will recompute if omitted.")
         Integer estimatedTss,
 
+        @JsonProperty(required = false)
         @JsonPropertyDescription("Zone system ID to use when resolving zoneTarget on blocks. Optional; defaults to the user's default for this sport.")
         String zoneSystemId,
 
         @JsonPropertyDescription("Ordered top-level workout elements (leaf blocks or sets).")
         List<McpWorkoutElementInput> blocks,
 
+        @JsonProperty(required = false)
         @JsonPropertyDescription("Coach-only: list of group IDs the training should be shared with.")
         List<String> groupIds
 ) {}

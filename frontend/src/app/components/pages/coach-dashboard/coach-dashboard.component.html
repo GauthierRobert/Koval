@@ -162,6 +162,19 @@
             >
               {{ 'COACH_DASHBOARD.TAB_PLANS' | translate }}
             </div>
+            <div
+              class="tab"
+              role="tab"
+              id="coach-tab-context"
+              data-testid="tab-context"
+              [attr.aria-selected]="activeTab === 'context'"
+              [class.active]="activeTab === 'context'"
+              (click)="activeTab = 'context'"
+              tabindex="0"
+              (keydown.enter)="activeTab = 'context'"
+            >
+              {{ 'COACH_DASHBOARD.TAB_CONTEXT' | translate }}
+            </div>
           </div>
         </div>
 
@@ -226,6 +239,10 @@
 
         @if (activeTab === 'plans') {
           <app-coach-plans-tab [athleteId]="selectedAthlete!.id" />
+        }
+
+        @if (activeTab === 'context') {
+          <app-coach-context-tab [athleteId]="selectedAthlete!.id" />
         }
       </div>
     } @else {

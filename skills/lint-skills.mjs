@@ -42,7 +42,6 @@ const TOOL_VERB_PREFIXES = [
 const ALLOWED_NON_TOOLS = new Set([
   'startDate',
   'startTime',
-  'getMyProfile', // confirmed valid — leave to canonical check
   'setSessionRpe', // confirmed valid — leave to canonical check
 ]);
 

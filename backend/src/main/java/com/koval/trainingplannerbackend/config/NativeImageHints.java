@@ -15,7 +15,6 @@ import com.koval.trainingplannerbackend.club.feed.ClubFeedBroadcastMessage;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
-import com.koval.trainingplannerbackend.mcp.McpAnalyticsTools;
 import com.koval.trainingplannerbackend.mcp.McpClubTools;
 import com.koval.trainingplannerbackend.mcp.McpCoachTools;
 import com.koval.trainingplannerbackend.mcp.McpGoalTools;
@@ -54,8 +53,7 @@ public class NativeImageHints {
                     ClubFeedBroadcastMessage.class,
                     AnalyticsService.PmcDataPoint.class,
                     CompletedSession.BlockSummary.class,
-                    PowerCurveService.VolumeEntry.class,
-                    PowerCurveService.FriResult.class
+                    PowerCurveService.VolumeEntry.class
             };
             for (Class<?> type : recordTypes) {
                 hints.reflection().registerType(type,
@@ -100,8 +98,7 @@ public class NativeImageHints {
                     McpGoalTools.class,
                     McpClubTools.class,
                     McpRaceTools.class,
-                    McpProfileTools.class,
-                    McpAnalyticsTools.class
+                    McpProfileTools.class
             };
 
             for (Class<?> toolService : toolServices) {

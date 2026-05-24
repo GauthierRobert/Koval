@@ -24,11 +24,9 @@ If `Training method` on the profile is set to anything other than `none`, **also
 If the chosen method doesn't suit the athlete's primary sport for this week (e.g. `daniels` + cycling-only week), fall back to generic rules and note the mismatch in the output.
 
 ## Step 1 — Gather context (parallel)
-- `getMyProfile` — sport focus, FTP/CSS, role
+- `getAthleteContext` — sport focus, FTP/CSS (`subject`), role (`subject.role`), upcoming A/B priority races or fitness goals (`goals`), and the active plan (`activePlan`) for load already on the books for the target week
 - `getPmcData(from=today-14d, to=today)` — current CTL/ATL/TSB to calibrate intensity
-- `listGoals` — upcoming A/B priority races or fitness goals
-- `getRecentSessions(limit=7)` — what they've actually done lately
-- `getCurrentWeekSummary` — load already on the books for the target week
+- `getSessions(mode='recent', limit=7)` — what they've actually done lately
 
 ## Step 2 — Decide volume + intensity
 
@@ -53,14 +51,14 @@ For each planned slot:
 - Honour `longSessionDay` for the longest session; respect `restDays`.
 
 ## Step 5 — Render
-- `renderWeekSchedule(weekStart=monday)` — paste the output.
+- `getMySchedule(from=monday, to=sunday)` → the scheduled workouts (title + status) for the week. Lay them out yourself as a Mon-Sun grid, marking each with ○ pending / ✔ completed / ✗ skipped.
 
 ## Output format
 
 ```
 Here's your week (TSB: <value>, focus: <focus>):
 
-<renderWeekSchedule output verbatim>
+<Mon-Sun week grid you build from getMySchedule>
 
 Highlights:
 - <Tuesday>: <session name + why>

@@ -100,8 +100,9 @@ public class AnalyticsService {
         return switch (sport) {
             case CYCLING -> {
                 int ftp = orZero(user.getFtp());
-                yield (ftp > 0 && session.getAvgPower() > 0)
-                        ? OptionalDouble.of(session.getAvgPower() / (double) ftp)
+                double power = effectivePower(session);
+                yield (ftp > 0 && power > 0)
+                        ? OptionalDouble.of(power / (double) ftp)
                         : OptionalDouble.empty();
             }
             case RUNNING -> {
@@ -120,8 +121,9 @@ public class AnalyticsService {
             }
             case BRICK -> {
                 int ftp = orZero(user.getFtp());
-                if (ftp > 0 && session.getAvgPower() > 0) {
-                    yield OptionalDouble.of(session.getAvgPower() / (double) ftp);
+                double power = effectivePower(session);
+                if (ftp > 0 && power > 0) {
+                    yield OptionalDouble.of(power / (double) ftp);
                 }
                 int ftPaceSec = orZero(user.getFunctionalThresholdPace());
                 double speed = effectivePaceSpeed(session);
@@ -130,6 +132,17 @@ public class AnalyticsService {
                         : OptionalDouble.empty();
             }
         };
+    }
+
+    /**
+     * Prefer Normalized Power (NP) when available — IF = NP / FTP is the
+     * Coggan definition. Falls back to elapsed-time average power only when
+     * no FIT-derived NP exists (e.g. manually-added sessions, legacy data).
+     */
+    private static double effectivePower(CompletedSession session) {
+        Double np = session.getNormalizedPower();
+        if (np != null && np > 0) return np;
+        return session.getAvgPower();
     }
 
     /**

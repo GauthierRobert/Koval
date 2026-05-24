@@ -19,6 +19,7 @@
     class="rm-canvas"
     #canvasRef
     [class.dragging]="isDragging"
+    [class.locked]="lockWindow"
     [style.--today-x]="todayX"
     (pointerdown)="onPointerDown($event)"
     (pointermove)="onPointerMove($event)"
