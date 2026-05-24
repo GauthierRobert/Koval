@@ -9,7 +9,7 @@ End-to-end playbook for everything a coach asks the Koval Training Planner conne
 
 ## Role gate
 
-Call `getMyProfile`. If `role != "COACH"`, refuse: *"That's a coaching task — your account is set as ATHLETE. Use the `koval-athlete` skill, or switch your role in your profile if you also coach."* Otherwise continue.
+Call `getAthleteContext` (no athleteId). If `subject.role != "COACH"`, refuse: *"That's a coaching task — your account is set as ATHLETE. Use the `koval-athlete` skill, or switch your role in your profile if you also coach."* Otherwise continue. (For a coach this also returns your stored `coachPhilosophy`.)
 
 ## Workflow router
 
@@ -48,8 +48,9 @@ Eight pre-defined endurance training methodologies the coach can opt into during
 
 The connector exposes ~70 tools. The ones every coach workflow uses:
 
-- **Coach roster**: `listAthletes`, `getAthleteProfile`, `getAthleteSchedule`, `getAthleteRecentSessions`, `getAthletePmc`, `getAthletePowerCurve`
-- **Squad context**: `getMyProfile` (your own role + profile)
+- **Athlete context (start here)**: `getAthleteContext(athleteId)` — one call returns the athlete's profile, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, next 7 days of schedule, active-plan week, the athlete's self-context, **your coaching philosophy**, and **your private context about this athlete**. Prefer it over the per-domain roster reads below.
+- **Coach roster**: `listAthletes`, `getAthleteSchedule` (arbitrary range), `getAthletePmc`, `getAthletePowerCurve` (range-based drill-downs)
+- **Context (write)**: `updateMyContext` (your coaching philosophy), `setAthleteCoachingContext(athleteId, sections)` (private per-athlete context, never shown to the athlete)
 - **Trainings**: `searchTrainings`, `createTraining`, `updateTraining`, `cloneTraining`, `getTraining`
 - **Assigning**: `assignTraining(trainingId, athleteId, date)`, `scheduleTraining`, `rescheduleWorkout`, `unassignWorkout`
 - **Plans**: `createPlan`, `addDayToPlan`, `removeDayFromPlan`, `setPlanStatus` (status='ACTIVE'/'PAUSED'), `clonePlan`, `getPlanProgress`, `getPlanAnalytics`
@@ -58,7 +59,7 @@ The connector exposes ~70 tools. The ones every coach workflow uses:
 - **Club**: `getClub`, `listClubMembers`, `createClubSession`, `createRecurringSession`, `listClubSessions`, `listClubTests`, `createClubTestFromPreset`, `applyTestReferences`, `postClubAnnouncement`, `getEngagementInsights`, `getClubFeed`
 - **Gazette**: `listOpenGazetteDrafts`, `getGazettePayload`, `previewGazetteAutoSections`, `publishGazetteWithPdf`, `discardGazetteDraft`
 
-The analytics and schedule tools (`getAthletePmc`, `getAthletePowerCurve`, `getAthleteSchedule`, `getAthleteRecentSessions`, `getVolume`) return JSON. Format the numbers yourself into compact markdown — small tables, plus unicode sparklines (`▁▂▃▄▅▆▇█`) / bar rows (`█▉▊▋▌▍▎▏`) when a trend or comparison helps. No images required.
+The context, analytics and schedule tools (`getAthleteContext`, `getAthletePmc`, `getAthletePowerCurve`, `getAthleteSchedule`, `getVolume`) return JSON. Format the numbers yourself into compact markdown — small tables, plus unicode sparklines (`▁▂▃▄▅▆▇█`) / bar rows (`█▉▊▋▌▍▎▏`) when a trend or comparison helps. No images required.
 
 ## Cross-cutting rules
 

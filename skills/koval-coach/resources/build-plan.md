@@ -12,8 +12,7 @@ Construct a `TrainingPlan` (weeks → days → trainings), activate it on an ath
 - Read `coach-profile.md` for periodization, weekly hours, max hard days, intensity distribution, signature templates, deload cadence, voice/language, neverInclude.
 - If `Training method` on `coach-profile.md` is set to anything other than `none`, **also read `training-methods/<slug>.md`** — its periodization style overrides the generic structure in Step 1 below.
 - Resolve the target athlete (see `assign-workout.md` step 2 for resolution rules). Refuse if not on the roster.
-- `getAthleteProfile(athleteId)` → FTP/threshold/CSS, current CTL/ATL/TSB, weight.
-- `listGoals` filtered to the athlete (if MCP exposes athlete goals, otherwise ask).
+- `getAthleteContext(athleteId)` → FTP/threshold/CSS (`subject`), current CTL/ATL/TSB (`trainingLoad`), weight (`subject.weightKg`), and the athlete's goals (`goals`).
 
 ## Step 1 — Decide structure
 From the request + profile + athlete state:

@@ -1,5 +1,17 @@
 [
   {
+    "name": "com.koval.trainingplannerbackend.context.AthleteContext",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.koval.trainingplannerbackend.context.CoachContext",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
     "name": "com.koval.trainingplannerbackend.ai.tools.scheduling.SchedulingToolService",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,

@@ -24,11 +24,9 @@ If `Training method` on the profile is set to anything other than `none`, **also
 If the chosen method doesn't suit the athlete's primary sport for this week (e.g. `daniels` + cycling-only week), fall back to generic rules and note the mismatch in the output.
 
 ## Step 1 — Gather context (parallel)
-- `getMyProfile` — sport focus, FTP/CSS, role
+- `getAthleteContext` — sport focus, FTP/CSS (`subject`), role (`subject.role`), upcoming A/B priority races or fitness goals (`goals`), and the active plan (`activePlan`) for load already on the books for the target week
 - `getPmcData(from=today-14d, to=today)` — current CTL/ATL/TSB to calibrate intensity
-- `listGoals` — upcoming A/B priority races or fitness goals
 - `getSessions(mode='recent', limit=7)` — what they've actually done lately
-- `getCurrentWeekSummary` — load already on the books for the target week
 
 ## Step 2 — Decide volume + intensity
 

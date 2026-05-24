@@ -6,15 +6,14 @@ Produce or update `athlete-profile.md` so every other koval-athlete workflow has
 - "set up my athlete profile", "onboard me", "I'm new here"
 - "tell Claude about my training", "configure my preferences"
 - First connect via the Koval MCP connector
-- Auto-detected when `getMyProfile` returns null FTP / threshold pace / CSS for the user's primary sport
+- Auto-detected when `getAthleteContext` returns null FTP / threshold pace / CSS for the user's primary sport
 - "update my training preferences" (re-run a single section)
 
 ## Step 0 — Role gate
 Already enforced by the parent skill. If somehow reached as a COACH, bounce to `koval-coach`.
 
-## Step 1 — Context (parallel)
-- `getMyProfile` → name, FTP, weight, threshold pace, CSS, CTL/ATL/TSB
-- `listGoals` → pre-fill any goals already set
+## Step 1 — Context (one call)
+- `getAthleteContext` → name, FTP, weight, threshold pace, CSS, CTL/ATL/TSB (`subject` + `trainingLoad`), upcoming `goals`, recent sessions, and any previously stored `athleteContext` (your self-context from a prior onboarding — pre-fill the interview from it). One call replaces the old profile/goals/schedule chain.
 - `listZoneSystems` → detect whether zones are configured
 
 ## Step 2 — Existing profile?
@@ -84,15 +83,14 @@ Ask in **grouped batches**, not one-by-one. Wait for the answer before the next 
 - Anything Claude should **never** do? ("no 5am sessions", "never Sundays", "no fasted rides")
 
 ## Step 5 — Persist to backend
-Where a field maps to a real model field, write it back:
-- FTP / weight / threshold pace / CSS → one `updateProfile(ftp?, weightKg?, thresholdPaceSecPerKm?, swimCssSecPer100m?)` call with the fields you captured
+Write everything back so it survives across sessions and clients:
+- **Free-form preferences → `updateMyContext(sections)`.** Pass a map of section title → markdown using the template headings (`Identity`, `Goals`, `Weekly availability`, `Workout style`, `Body, recovery & constraints`, `Targets & data`, `Voice & communication`). This is the backend source of truth for your self-context, surfaced to your coach and folded into every future `getAthleteContext` call. This replaces the old "lives only in the .md" limitation — the backend now stores athlete context.
+- FTP / weight / threshold pace / CSS → one `updateProfile(ftp?, weightKg?, thresholdPaceSecPerKm?, swimCssSecPer100m?)` call with the fields you captured.
 - A-priority goal with date → `createGoal(title, sport, priority, raceDate, raceId?, notes?)`. If found via `searchRaces`, also `linkRaceToGoal`.
 - No default zone system for the primary sport → `createZoneSystem(...)` with Coggan defaults, or hand to `zone-setup.md`.
 
-Everything else (available days, voice, never-include, sleep baseline…) lives **only** in `athlete-profile.md` — the MCP `User` model has no free-form preferences field.
-
 ## Step 6 — Compile + save
-Open `resources/athlete-profile.template.md`, copy the headings verbatim, fill every placeholder, and save as `athlete-profile.md` in the skills folder this skill lives in. Use `_(using defaults)_` for any group the athlete skipped so the file is always complete.
+Open `resources/athlete-profile.template.md`, copy the headings verbatim, fill every placeholder, and save as `athlete-profile.md` in the skills folder this skill lives in. Use `_(using defaults)_` for any group the athlete skipped so the file is always complete. The backend (`updateMyContext` from Step 5) is the source of truth; this `.md` is a local working copy for fast reference — keep the two in sync when you re-run a group.
 
 ## Step 7 — Show + confirm
 Render the resulting profile as a markdown card. Ask: *"Want to tweak anything? Tell me a section name (e.g. 'change Group 3') or say 'looks good' to lock it in."*

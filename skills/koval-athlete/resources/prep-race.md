@@ -24,7 +24,7 @@ Method choice never overrides `forbiddenEfforts`. If a method's signature sharpe
 ## Workflow
 
 ### Step 1 — Find the goal
-- `listGoals` → pick the closest A-priority goal in the future, OR ask which goal if there are multiple.
+- `getAthleteContext` → from `goals`, pick the closest A-priority goal in the future, OR ask which goal if there are multiple.
 - `getGoal(goalId)` for full detail.
 - If the goal has a `raceId` → `getRace(raceId)` for distance, terrain, profile.
 
