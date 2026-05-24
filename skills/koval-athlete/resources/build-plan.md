@@ -39,7 +39,7 @@ From the request + profile:
 
 Title format: `<focus> — <duration>w` (e.g. `"Base — 6w"`, `"Sweet Spot Build — 4w"`, `"Marathon Build — 12w"`).
 
-`targetFtp` defaults to the athlete's current FTP from `getMyProfile`. If they're aiming for a specific FTP at plan end, pass that value.
+`targetFtp` defaults to the athlete's current FTP from `getAthleteContext` (`subject.ftp`). If they're aiming for a specific FTP at plan end, pass that value.
 
 ## Step 3 — Fill the plan
 For each `(weekNumber, dayOfWeek)` slot in the structure:

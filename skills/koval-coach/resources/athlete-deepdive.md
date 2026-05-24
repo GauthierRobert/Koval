@@ -17,9 +17,8 @@ Also invoked automatically from `weekly-review.md` when the coach drills into a 
 ## Workflow
 
 In parallel:
-- `getAthleteProfile(athleteId)` — name, sport focus, FTP/threshold/CSS, weight, current CTL/ATL/TSB, role
+- `getAthleteContext(athleteId)` — name, sport focus, FTP/threshold/CSS, weight, role (`subject`), current CTL/ATL/TSB (`trainingLoad`), and the last ~14 days of sessions (`recentSessions`)
 - `getAthletePmc(athleteId, from=today-90d, to=today)` — 90-day form trend
-- `getAthleteRecentSessions(athleteId, limit=10)` — last 10 sessions
 - `getAthletePowerCurve(athleteId, from=today-90d, to=today)` — recent power curve (cycling)
 - `getAthleteSchedule(athleteId, from=today, to=today+14d)` — what's already booked
 - `getBestPowerCurve(athleteId)` — all-time PRs (cycling)
@@ -27,7 +26,7 @@ In parallel:
 Format the fetched data yourself — all of it is athlete-scoped from the `getAthlete*` calls above:
 - form trend → a CTL/ATL/TSB sparkline + latest-values table from `getAthletePmc`
 - power curve (cycling only) → a bar row / table from `getAthletePowerCurve` (vs all-time `getBestPowerCurve`)
-- most-recent session → a compact card from the newest entry in `getAthleteRecentSessions` (title, duration, avg power/HR, TSS, IF)
+- most-recent session → a compact card from the newest entry in `getAthleteContext(athleteId).recentSessions` (title, duration, avg power/HR, TSS, IF)
 
 ## Output format
 
@@ -41,7 +40,7 @@ Format the fetched data yourself — all of it is athlete-scoped from the `getAt
 <CTL/ATL/TSB sparkline + latest-values table from getAthletePmc>
 
 ### Last session
-<compact card from the newest getAthleteRecentSessions entry>
+<compact card from the newest getAthleteContext recentSessions entry>
 
 ### Power curve (last 90d, cycling)
 <table / bar rows from getAthletePowerCurve vs getBestPowerCurve>
@@ -71,6 +70,6 @@ The action bullets should reference the coach's profile thresholds. Examples:
 
 ## Edge cases
 - **Athlete has no recent sessions** → drop the "last session" and "power curve" sections, just show the profile + scheduled work.
-- **Cycling tools called on a runner** → skip the power curve; summarise duration / TSS / pace from `getAthleteRecentSessions` instead.
+- **Cycling tools called on a runner** → skip the power curve; summarise duration / TSS / pace from `getAthleteContext(athleteId).recentSessions` instead.
 - **Athlete profile is private to athlete (free-form prefs)** → you cannot read `athlete-profile.md` — work from MCP data only.
 - **Coach explicitly asks for a longer window** → adjust `from` to `today-180d` or whatever.

@@ -1,12 +1,11 @@
 # Workflow — Club / Group Sessions
 
-Create one-off and recurring club sessions, announce them, attach a training, and track who's coming.
+Create one-off and recurring club sessions, attach a training, and track who's coming.
 
 ## Triggers
 - "create a club session for Sunday"
 - "set up our Tuesday night group ride"
 - "make this a recurring session every Tuesday at 7pm"
-- "post an announcement about Saturday's ride"
 - "what's on this week for <club>"
 - "create our monthly FTP test for the club"
 - "see who joined Tuesday's session"
@@ -40,13 +39,9 @@ After creation, future occurrences are materialised automatically by the backend
 ## Manage attendance
 
 Members self-RSVP via `joinClubSession` / `leaveClubSession`. The coach can:
-- View the roster via `listClubSessions(clubId, from, to)` and the session detail (returned by `getClubFeed` or web).
+- View the roster via `listClubSessions(clubId, from, to)` (live session detail is in the web UI).
 - **Cancel** a session: `cancelSession(sessionId, reason)`.
 - **Delete** completely: `deleteSession(sessionId)`.
-
-## Announcements
-
-`postClubAnnouncement(clubId, title, body)` for plain text club-wide announcements. The body should be markdown in the coach's `language` and `descriptionStyle`. Goes to the club feed and notifies members.
 
 ## Club tests
 
@@ -56,12 +51,6 @@ Coaches running periodic testing for their club:
 - `startTestIteration(testId, scheduledDate)` — open an iteration for athletes to log results into.
 - `recordTestResult(iterationId, athleteId, value)` — store an athlete's result.
 - `applyTestReferences(iterationId)` — push the iteration's results as the athletes' new threshold reference (FTP / threshold pace / CSS).
-
-## Insights
-
-- `getClubFeed(clubId, limit)` — recent club activity (announcements, sessions, gazette events).
-- `getEngagementInsights(clubId, from, to)` — member activity / engagement summary.
-- `listClubGazetteEditions(clubId)` — past and current gazette editions.
 
 ## Output format
 
@@ -76,11 +65,6 @@ Created **<title>** for <weekday DD MMM HH:mm> · <duration>min.
 For a recurring series:
 ```
 Set up **<title>** every <weekday> at <HH:mm> until <until-date>.
-```
-
-For an announcement:
-```
-Posted to <club name>.
 ```
 
 ## Edge cases

@@ -12,7 +12,7 @@ Capture the athlete's threshold value and create a personalised zone system for 
 
 ## Workflow
 
-1. **Current state** — `getMyProfile` → check `ftp`, `functionalThresholdPace`, `criticalSwimSpeed`.
+1. **Current state** — `getAthleteContext` → check `subject.ftp`, `subject.functionalThresholdPace`, `subject.criticalSwimSpeed`.
 2. **Determine sport** from the request:
    - Power → CYCLING (FTP in watts)
    - Pace → RUNNING (threshold pace, sec/km)

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.List;
 
 /**
  * MCP tool adapter for race goal operations.
@@ -22,14 +21,6 @@ public class McpGoalTools {
 
     public McpGoalTools(RaceGoalService raceGoalService) {
         this.raceGoalService = raceGoalService;
-    }
-
-    @Tool(description = "List the user's race goals sorted by date. Goals have priority A (main target), B (important), or C (training race). The race date is sourced from the linked race entry.")
-    public List<GoalSummary> listGoals() {
-        String userId = SecurityUtils.getCurrentUserId();
-        return raceGoalService.getGoalsForAthlete(userId).stream()
-                .map(GoalSummary::from)
-                .toList();
     }
 
     @Tool(description = "Get a single race goal by id, including the linked race details if any.")

@@ -1,8 +1,6 @@
 package com.koval.trainingplannerbackend.mcp;
 
 import com.koval.trainingplannerbackend.auth.SecurityUtils;
-import com.koval.trainingplannerbackend.auth.User;
-import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.coach.CoachNote;
 import com.koval.trainingplannerbackend.coach.CoachNoteService;
 import com.koval.trainingplannerbackend.coach.CoachService;
@@ -13,14 +11,11 @@ import com.koval.trainingplannerbackend.config.Provenance;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService.PmcDataPoint;
-import com.koval.trainingplannerbackend.training.history.CompletedSession;
-import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -42,8 +37,6 @@ public class McpCoachTools {
     private final ScheduledWorkoutService scheduledWorkoutService;
     private final TrainingService trainingService;
     private final TrainingRepository trainingRepository;
-    private final UserService userService;
-    private final CompletedSessionRepository sessionRepository;
     private final AnalyticsService analyticsService;
     private final PowerCurveService powerCurveService;
     private final CoachNoteService coachNoteService;
@@ -52,8 +45,6 @@ public class McpCoachTools {
                          ScheduledWorkoutService scheduledWorkoutService,
                          TrainingService trainingService,
                          TrainingRepository trainingRepository,
-                         UserService userService,
-                         CompletedSessionRepository sessionRepository,
                          AnalyticsService analyticsService,
                          PowerCurveService powerCurveService,
                          CoachNoteService coachNoteService) {
@@ -61,8 +52,6 @@ public class McpCoachTools {
         this.scheduledWorkoutService = scheduledWorkoutService;
         this.trainingService = trainingService;
         this.trainingRepository = trainingRepository;
-        this.userService = userService;
-        this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
         this.powerCurveService = powerCurveService;
         this.coachNoteService = coachNoteService;
@@ -106,31 +95,6 @@ public class McpCoachTools {
         return workouts.stream()
                 .map(sw -> McpSchedulingTools.ScheduleSummary.from(
                         sw, titles.getOrDefault(sw.getTrainingId(), "Unknown")))
-                .toList();
-    }
-
-    @Tool(description = "Get a coached athlete's profile: name, FTP, weight, threshold pace, swim CSS, and current training load (CTL/ATL/TSB). Requires the current user to be the athlete's coach.")
-    public AthleteProfile getAthleteProfile(
-            @ToolParam(description = "Athlete user ID") String athleteId) {
-        SecurityUtils.requireCoach();
-        String coachId = SecurityUtils.getCurrentUserId();
-        verifyCoach(coachId, athleteId);
-        User u = userService.getUserById(athleteId);
-        return AthleteProfile.from(u);
-    }
-
-    @Tool(description = "Get a coached athlete's most recent completed sessions. Requires COACH relationship to the athlete.")
-    public List<McpHistoryTools.SessionSummary> getAthleteRecentSessions(
-            @ToolParam(description = "Athlete user ID") String athleteId,
-            @ToolParam(description = "Maximum number of sessions to return (default 10, max 50)") Integer limit) {
-        SecurityUtils.requireCoach();
-        String coachId = SecurityUtils.getCurrentUserId();
-        verifyCoach(coachId, athleteId);
-        int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 50) : 10;
-        return sessionRepository
-                .findByUserIdOrderByCompletedAtDesc(athleteId, PageRequest.of(0, effectiveLimit))
-                .stream()
-                .map(McpHistoryTools.SessionSummary::from)
                 .toList();
     }
 
@@ -184,18 +148,6 @@ public class McpCoachTools {
                     n.getBody(),
                     n.getCreatedAt() != null ? n.getCreatedAt().toString() : null,
                     n.getProvenance() != null ? n.getProvenance().source() : null);
-        }
-    }
-
-    public record AthleteProfile(String id, String displayName, Integer ftp, Integer weightKg,
-                                  Integer functionalThresholdPace, Integer criticalSwimSpeed,
-                                  Double ctl, Double atl, Double tsb) {
-        public static AthleteProfile from(User u) {
-            return new AthleteProfile(
-                    u.getId(), u.getDisplayName(),
-                    u.getFtp(), u.getWeightKg(),
-                    u.getFunctionalThresholdPace(), u.getCriticalSwimSpeed(),
-                    u.getCtl(), u.getAtl(), u.getTsb());
         }
     }
 

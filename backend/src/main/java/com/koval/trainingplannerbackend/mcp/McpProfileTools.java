@@ -19,13 +19,6 @@ public class McpProfileTools {
         this.userService = userService;
     }
 
-    @Tool(description = "Get the current user's profile. Returns name, role (ATHLETE or COACH), FTP (Functional Threshold Power in watts), weight, running paces, swim CSS, and training load metrics (CTL/ATL/TSB). Use this to understand the user's fitness level and capabilities before creating workouts.")
-    public UserProfile getMyProfile() {
-        String userId = SecurityUtils.getCurrentUserId();
-        User user = userService.getUserById(userId);
-        return UserProfile.from(user);
-    }
-
     @Tool(description = "Update the user's training reference values — FTP (watts), body weight (kg), running threshold pace (sec/km), and/or swim CSS (sec/100m). These drive TSS/IF and power-to-weight calculations. Pass only the fields to change; omit (null) the rest. At least one field is required.")
     public UserProfile updateProfile(
             @ToolParam(description = "FTP (Functional Threshold Power) in watts; typical 100-400. Null = unchanged.") Integer ftp,

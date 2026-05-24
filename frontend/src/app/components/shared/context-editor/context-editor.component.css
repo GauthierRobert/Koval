@@ -1,0 +1,92 @@
+.context-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md, 16px);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.field-textarea {
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10);
+  border-radius: 8px;
+  color: var(--text-color);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  padding: 10px 12px;
+  font-family: inherit;
+  transition: border-color 0.25s var(--ease-spring-gentle, ease);
+  resize: vertical;
+  min-height: 64px;
+}
+
+.field-textarea:focus {
+  outline: none;
+  border-color: var(--accent-subtle, var(--accent-color));
+}
+
+.field-textarea:read-only {
+  opacity: 0.85;
+  cursor: default;
+  background: var(--overlay-5);
+}
+
+.field-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.context-empty {
+  margin: 0;
+  color: var(--text-dim, var(--text-muted));
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.context-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md, 16px);
+  flex-wrap: wrap;
+}
+
+.context-updated {
+  font-size: 0.75rem;
+  color: var(--text-dim, var(--text-muted));
+}
+
+.context-save-btn {
+  background: var(--accent-color);
+  color: var(--on-accent, #fff);
+  border: none;
+  border-radius: 10px;
+  padding: 9px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s var(--ease-out-expo, ease),
+    opacity 0.2s ease;
+}
+
+.context-save-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.context-save-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

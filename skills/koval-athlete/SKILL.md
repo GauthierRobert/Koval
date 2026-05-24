@@ -9,7 +9,7 @@ End-to-end playbook for everything an athlete asks the Koval Training Planner co
 
 ## Role gate
 
-Call `getMyProfile`. If `role == "COACH"`, hand off: *"That's a coaching task — use the `koval-coach` skill."* Otherwise continue.
+Call `getAthleteContext` (no athleteId). If `subject.role == "COACH"`, hand off: *"That's a coaching task — use the `koval-coach` skill."* Otherwise continue.
 
 ## Workflow router
 
@@ -55,13 +55,14 @@ Eight pre-defined endurance training methodologies the athlete can opt into duri
 
 The connector exposes ~60 tools. The ones every athlete workflow uses:
 
-- **Profile**: `getMyProfile`, `updateProfile` (FTP, weight, threshold pace, swim CSS — pass only the fields you're changing)
+- **Context (start here)**: `getAthleteContext` — one call returns your profile + reference values, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, the next 7 days of scheduled workouts, the active plan's current week, and your stored self-context. Prefer it over the per-domain reads below.
+- **Profile**: `updateProfile` (FTP, weight, threshold pace, swim CSS — pass only the fields you're changing), `updateMyContext` (save your self-context as section title → markdown)
 - **Zones**: `listZoneSystems`, `getDefaultZoneSystem`, `createZoneSystem`, `deleteZoneSystem`
-- **Goals & races**: `listGoals`, `getGoal`, `createGoal`, `searchRaces`, `getRace`, `linkRaceToGoal`
+- **Goals & races**: `getGoal`, `createGoal`, `searchRaces`, `getRace`, `linkRaceToGoal` (the goal list is in `getAthleteContext`)
 - **Trainings**: `searchTrainings`, `createTraining`, `getTraining`, `updateTraining`, `cloneTraining`
-- **Schedule**: `scheduleTraining`, `getMySchedule`, `getScheduledWorkoutDetail`, `rescheduleWorkout`, `unassignWorkout`, `markCompleted`, `markSkipped`
+- **Schedule**: `scheduleTraining`, `getMySchedule` (arbitrary date range), `getScheduledWorkoutDetail`, `rescheduleWorkout`, `unassignWorkout`, `markCompleted`, `markSkipped`
 - **Sessions / history**: `getSessions` (mode='recent' or 'range'), `getSessionDetail`, `getSessionBlocks`, `getSessionPowerCurve`, `linkSessionToScheduled`
-- **Analytics**: `getPmcData`, `getAthletePmc`, `getPersonalRecords`, `getBestPowerCurve`, `getCurrentWeekSummary`, `getVolume`
+- **Analytics**: `getPmcData`, `getPersonalRecords`, `getBestPowerCurve`, `getVolume`
 - **Plans**: `listPlans`, `getPlan`, `createPlan`, `addDayToPlan`, `setPlanStatus` (status='ACTIVE' with a start date to schedule, 'PAUSED' to pause, 'ACTIVE' with no date to resume)
 
 These tools return JSON — you turn the numbers into output. Build compact markdown yourself: small tables, plus unicode sparklines (`▁▂▃▄▅▆▇█`) or bar rows (`█▉▊▋▌▍▎▏`) when a trend or comparison helps. No images required.

@@ -14,7 +14,7 @@ Produce or update `coach-profile.md` so every other koval-coach workflow generat
 Already enforced by the parent skill. If somehow reached as an ATHLETE, bounce to `koval-athlete`.
 
 ## Step 1 — Context (parallel)
-- `getMyProfile` → confirm COACH role, capture name, default sport, FTP/threshold, club membership
+- `getAthleteContext` → confirm COACH role (`subject.role`), capture name, default sport, FTP/threshold, and any previously stored coaching philosophy (`coachPhilosophy` — pre-fill the interview from it)
 - `listAthletes` → roster size (informs volume defaults)
 - `listZoneSystems` → existing zone systems already in use
 - `listPlans(limit=5)` → spot any plans the coach already authored, infer style hints from titles/structure
@@ -93,8 +93,11 @@ Ask in **grouped batches**, not one-by-one. Wait for the answer before the next 
 ## Step 4 — Confirm zone systems
 For each sport from Group 1, check `getDefaultZoneSystem(sport)`. If missing and the coach gave custom bounds in Group 5, `createZoneSystem(...)` to materialise them. Otherwise hand to `koval-athlete:zone-setup.md` for that sport.
 
-## Step 5 — Compile + save
-Open `resources/coach-profile.template.md`, copy headings verbatim, fill every placeholder. Save as `coach-profile.md` in this skill's folder. Use `_(using defaults)_` for any skipped group so the file is always complete.
+## Step 5 — Persist + save
+- **Persist your philosophy to the backend → `updateMyContext(sections)`.** As a coach, this writes your coaching philosophy (one document per coach), surfaced as `coachPhilosophy` in every `getAthleteContext` call so the AI coaches the way you do. Pass a map of section title → markdown using the template headings (`Coaching philosophy`, `Volume & week shape`, `Workout structure`, `Targets & zones`, `Recovery & monitoring`, `Voice & communication`).
+- Then open `resources/coach-profile.template.md`, copy headings verbatim, fill every placeholder, and save as `coach-profile.md` in this skill's folder as a local working copy. Use `_(using defaults)_` for any skipped group so the file is always complete. The backend is the source of truth; keep the `.md` in sync when you re-run a group.
+
+> Per-athlete context: to record private notes about how you'll coach a *specific* athlete, use `setAthleteCoachingContext(athleteId, sections)` (see `athlete-deepdive.md`). That context is visible only to you and is folded into `getAthleteContext(athleteId)`.
 
 ## Step 6 — Show + confirm
 Render the resulting profile as a markdown card. Ask: *"Want to tweak anything? Tell me a section name (e.g. 'change Group 4') or say 'looks good' to lock it in."*

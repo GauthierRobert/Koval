@@ -214,40 +214,6 @@ public class McpPlanTools {
         return PlanSummary.from(planService.clonePlan(planId, newTitle, newStartDate, userId));
     }
 
-    @Tool(description = "Get a summary of the current week of an ACTIVE plan: week number, label, target TSS, planned workouts and how many are completed so far.")
-    public CurrentWeekSummary getCurrentWeekSummary(
-            @ToolParam(description = "Plan ID") String planId) {
-        TrainingPlan plan = planService.getPlan(planId);
-        int currentWeek = computeCurrentWeek(plan.getStartDate());
-        PlanWeek week = plan.getWeeks().stream()
-                .filter(w -> w.getWeekNumber() == currentWeek)
-                .findFirst().orElse(null);
-        if (week == null) {
-            return new CurrentWeekSummary(planId, currentWeek, null, null, 0, 0);
-        }
-        var analytics = analyticsService.getAnalytics(planId);
-        int completed = (analytics == null || analytics.weeklyBreakdown() == null)
-                ? 0
-                : analytics.weeklyBreakdown().stream()
-                        .filter(w -> w.weekNumber() == currentWeek)
-                        .mapToInt(w -> w.workoutsCompleted())
-                        .findFirst()
-                        .orElse(0);
-        int planned = week.getDays().stream().mapToInt(d -> d.getTrainingIds().size()).sum();
-        return new CurrentWeekSummary(planId, currentWeek, week.getLabel(),
-                week.getTargetTss(), planned, completed);
-    }
-
-    private static int computeCurrentWeek(LocalDate startDate) {
-        if (startDate == null) return 0;
-        long daysSinceStart = LocalDate.now().toEpochDay() - startDate.toEpochDay();
-        if (daysSinceStart < 0) return 0;
-        return (int) (daysSinceStart / 7) + 1;
-    }
-
-    public record CurrentWeekSummary(String planId, int weekNumber, String label,
-                                      Integer targetTss, int plannedWorkouts, int completedWorkouts) {}
-
     public record PlanDetail(String id, String title, String description, String sport,
                               String status, String startDate, int durationWeeks,
                               Integer targetFtp, String goalRaceId, List<WeekDetail> weeks) {

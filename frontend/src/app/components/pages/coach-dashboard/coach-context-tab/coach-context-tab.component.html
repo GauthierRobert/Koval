@@ -1,0 +1,27 @@
+<div role="tabpanel" aria-labelledby="coach-tab-context" class="coach-context-tab">
+  @if (context$ | async; as ctx) {
+    <section class="context-block">
+      <h3 class="context-heading">{{ 'CONTEXT.ATHLETE_SELF_TITLE' | translate }}</h3>
+      <app-context-editor
+        [sections]="ctx.athleteSelf?.sections ?? null"
+        [sectionTitles]="athleteSections"
+        [updatedAt]="ctx.athleteSelf?.updatedAt ?? null"
+        [readonly]="true"
+      />
+    </section>
+
+    <section class="context-block">
+      <h3 class="context-heading">{{ 'CONTEXT.COACH_PRIVATE_TITLE' | translate }}</h3>
+      <p class="context-hint">{{ 'CONTEXT.COACH_PRIVATE_HINT' | translate }}</p>
+      <app-context-editor
+        [sections]="ctx.coachContext?.sections ?? null"
+        [sectionTitles]="coachAthleteSections"
+        [updatedAt]="ctx.coachContext?.updatedAt ?? null"
+        [saving]="(saving$ | async) ?? false"
+        (save)="onSaveCoachContext($event)"
+      />
+    </section>
+  } @else {
+    <div class="context-loading">{{ 'COMMON.LOADING' | translate }}</div>
+  }
+</div>
