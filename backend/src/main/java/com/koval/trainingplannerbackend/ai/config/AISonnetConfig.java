@@ -82,8 +82,7 @@ public class AISonnetConfig extends AIConfig {
                 .defaultOptions(AnthropicChatOptions.builder()
                         .model(SONNET)
                         .temperature(0.3)
-                        .maxTokens(2048)
-                        .build())
+                        .maxTokens(2048))
                 .defaultSystem(loadPrompt("race-completion"))
                 .build();
     }
