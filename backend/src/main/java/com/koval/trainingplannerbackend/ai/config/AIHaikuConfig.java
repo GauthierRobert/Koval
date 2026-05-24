@@ -126,8 +126,7 @@ public class AIHaikuConfig extends AIConfig {
                         .model(HAIKU)
                         .temperature(0.0)
                         .maxTokens(20)
-                        .cacheOptions(cacheOptions())
-                        .build())
+                        .cacheOptions(cacheOptions()))
                 .build();
     }
 
@@ -137,8 +136,7 @@ public class AIHaikuConfig extends AIConfig {
                 .defaultOptions(AnthropicChatOptions.builder()
                         .model(HAIKU)
                         .temperature(0.0)
-                        .maxTokens(512)
-                        .build())
+                        .maxTokens(512))
                 .defaultSystem(loadPrompt("planner"))
                 .build();
     }
