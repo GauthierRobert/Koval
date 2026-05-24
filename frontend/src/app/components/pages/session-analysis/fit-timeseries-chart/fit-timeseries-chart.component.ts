@@ -68,6 +68,9 @@ export class FitTimeseriesChartComponent
   @Input() showBlocks = false;
   @Input() showSpeed = true;
   @Input() showDrift = true;
+  @Input() showElevation = true;
+  /** When false, the cycling speed sub-chart is shown only as a fallback when no power is present. */
+  @Input() showSpeedWithPower = true;
   /** Enable mouse drag-to-select range stats (desktop only). Off by default. */
   @Input() enableBrush = false;
 
@@ -150,7 +153,12 @@ export class FitTimeseriesChartComponent
   }
   /** Show a dedicated speed sub-chart below the primary panel — cycling only. */
   get showSpeedPanel(): boolean {
-    return this.isCycling && this.showSpeed && this._hasSpeed;
+    return (
+      this.isCycling &&
+      this.showSpeed &&
+      this._hasSpeed &&
+      (this.showSpeedWithPower || !this._hasPower)
+    );
   }
   _hasSpeed = false;
   _hasCadence = false;
@@ -748,7 +756,7 @@ export class FitTimeseriesChartComponent
         showHR: this.showHR,
         showCadence: this.showCadence,
         showDrift: this._hasDrift && this.showDrift,
-        hasElevation: this._hasElevation,
+        hasElevation: this._hasElevation && this.showElevation,
         driftCurves: this._driftCurves,
         hoverIdx: this.hoverIdx,
         theme: this.theme,
@@ -775,7 +783,7 @@ export class FitTimeseriesChartComponent
       showPrimary: this.showPrimary,
       showHR: this.showHR,
       showCadence: this.showCadence,
-      hasElevation: this._hasElevation,
+      hasElevation: this._hasElevation && this.showElevation,
       showDrift: this._hasDrift && this.showDrift,
       driftCurves: this._driftCurves,
       accentHex: this.theme.accentHex,
