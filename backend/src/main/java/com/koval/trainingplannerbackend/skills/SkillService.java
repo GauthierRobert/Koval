@@ -31,6 +31,8 @@ public class SkillService {
 
     private static final String SKILL_ENTRY_PATTERN = "classpath:/skills/*/SKILL.md";
     private static final String SKILL_ASSETS_PATTERN = "classpath:/skills/%s/**";
+    private static final String SHARED_ASSETS_PATTERN = "classpath:/skills/_shared/**";
+    private static final String SHARED_DIR = "_shared";
     private static final String NAME_KEY = "name:";
     private static final String DESC_KEY = "description:";
 
@@ -54,7 +56,8 @@ public class SkillService {
                     "resources/find-workout.md",
                     "resources/create-workout.md",
                     "resources/plan-my-week.md",
-                    "resources/prep-race.md"
+                    "resources/prep-race.md",
+                    "resources/training-methods.md"
             },
             "koval-coach", new String[]{
                     "resources/coach-profile.template.md",
@@ -64,9 +67,26 @@ public class SkillService {
                     "resources/create-workout.md",
                     "resources/assign-workout.md",
                     "resources/build-plan.md",
-                    "resources/club-sessions.md"
+                    "resources/club-sessions.md",
+                    "resources/training-methods.md"
             }
     );
+
+    /** Assets stored once under skills/_shared/ and merged into every skill bundle at the
+     *  same relative path (mirrors skills/package-skills.mjs). Used as the native-image
+     *  fallback when wildcard scanning of _shared/ returns nothing. A skill's own file at
+     *  the same relative path takes precedence. Keep in sync with skills/_shared/ and
+     *  NativeImageHints. */
+    private static final String[] KNOWN_SHARED_ASSETS = {
+            "resources/training-methods/block-periodization.md",
+            "resources/training-methods/daniels.md",
+            "resources/training-methods/lydiard.md",
+            "resources/training-methods/maffetone.md",
+            "resources/training-methods/norwegian.md",
+            "resources/training-methods/polarized.md",
+            "resources/training-methods/pyramidal.md",
+            "resources/training-methods/sweet-spot.md"
+    };
 
     private final ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 
@@ -120,13 +140,14 @@ public class SkillService {
 
         // Wildcard scanning first (JVM). May fail in native image.
         try {
+            List<SharedAsset> sharedAssets = collectSharedAssetsByScan();
             Resource[] skillMds = resolver.getResources(SKILL_ENTRY_PATTERN);
             for (Resource md : skillMds) {
                 String skillName = extractSkillNameFromUri(md);
-                if (skillName == null) continue;
+                if (skillName == null || SHARED_DIR.equals(skillName)) continue;
                 try {
                     SkillSummary summary = buildSummary(skillName, md);
-                    List<SkillFile> files = collectSkillFilesByScan(skillName);
+                    List<SkillFile> files = mergeShared(skillName, collectSkillFilesByScan(skillName), sharedAssets);
                     summaries.add(summary);
                     filesBySkill.put(skillName, files);
                 } catch (IOException e) {
@@ -186,7 +207,46 @@ public class SkillService {
                 .map(rel -> new SkillFile(skillName + "/" + rel,
                         new ClassPathResource("skills/" + skillName + "/" + rel)))
                 .filter(sf -> sf.resource().exists());
-        return Stream.concat(entry, assets).toList();
+        Stream<SkillFile> shared = Arrays.stream(KNOWN_SHARED_ASSETS)
+                .map(rel -> new SkillFile(skillName + "/" + rel,
+                        new ClassPathResource("skills/" + SHARED_DIR + "/" + rel)))
+                .filter(sf -> sf.resource().exists());
+        return Stream.concat(entry, Stream.concat(assets, shared)).toList();
+    }
+
+    /** Scans skills/_shared/** and returns each asset keyed by its relative path
+     *  (e.g. {@code resources/training-methods/norwegian.md}) for merging into every skill. */
+    private List<SharedAsset> collectSharedAssetsByScan() throws IOException {
+        List<SharedAsset> out = new ArrayList<>();
+        Resource[] assets = resolver.getResources(SHARED_ASSETS_PATTERN);
+        String prefix = "/skills/" + SHARED_DIR + "/";
+        for (Resource asset : assets) {
+            if (!asset.isReadable()) continue;
+            String uri = asset.getURI().toString();
+            int idx = uri.indexOf(prefix);
+            if (idx < 0) continue;
+            String rel = uri.substring(idx + prefix.length());
+            if (rel.isEmpty() || rel.endsWith("/")) continue;
+            out.add(new SharedAsset(rel, asset));
+        }
+        return out;
+    }
+
+    /** Adds shared assets to a skill's own files at {@code <skillName>/<rel>}. A file the
+     *  skill already ships at the same relative path wins (matches package-skills.mjs). */
+    private List<SkillFile> mergeShared(String skillName, List<SkillFile> skillFiles, List<SharedAsset> shared) {
+        List<SkillFile> out = new ArrayList<>(skillFiles);
+        for (SharedAsset asset : shared) {
+            String entryName = skillName + "/" + asset.rel();
+            boolean overridden = skillFiles.stream().anyMatch(f -> f.entryName().equals(entryName));
+            if (overridden) {
+                log.warn("Skill {} ships {} locally, overriding _shared copy", skillName, asset.rel());
+                continue;
+            }
+            out.add(new SkillFile(entryName, asset.resource()));
+        }
+        out.sort(Comparator.comparing(SkillFile::entryName));
+        return out;
     }
 
     private String extractSkillNameFromUri(Resource skillMd) {
@@ -241,4 +301,6 @@ public class SkillService {
     }
 
     private record SkillFile(String entryName, Resource resource) {}
+
+    private record SharedAsset(String rel, Resource resource) {}
 }

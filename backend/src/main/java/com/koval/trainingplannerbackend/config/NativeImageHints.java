@@ -157,6 +157,7 @@ public class NativeImageHints {
                     "skills/koval-athlete/resources/create-workout.md",
                     "skills/koval-athlete/resources/plan-my-week.md",
                     "skills/koval-athlete/resources/prep-race.md",
+                    "skills/koval-athlete/resources/training-methods.md",
                     "skills/koval-coach/SKILL.md",
                     "skills/koval-coach/resources/coach-profile.template.md",
                     "skills/koval-coach/resources/onboarding.md",
@@ -166,7 +167,17 @@ public class NativeImageHints {
                     "skills/koval-coach/resources/assign-workout.md",
                     "skills/koval-coach/resources/build-plan.md",
                     "skills/koval-coach/resources/club-sessions.md",
-                    "skills/koval-coach/resources/publish-club-gazette.md"
+                    "skills/koval-coach/resources/publish-club-gazette.md",
+                    "skills/koval-coach/resources/training-methods.md",
+                    // Shared assets merged into every skill bundle (see SkillService.KNOWN_SHARED_ASSETS)
+                    "skills/_shared/resources/training-methods/block-periodization.md",
+                    "skills/_shared/resources/training-methods/daniels.md",
+                    "skills/_shared/resources/training-methods/lydiard.md",
+                    "skills/_shared/resources/training-methods/maffetone.md",
+                    "skills/_shared/resources/training-methods/norwegian.md",
+                    "skills/_shared/resources/training-methods/polarized.md",
+                    "skills/_shared/resources/training-methods/pyramidal.md",
+                    "skills/_shared/resources/training-methods/sweet-spot.md"
             };
             for (String skill : skillResources) {
                 hints.resources().registerPattern(skill);

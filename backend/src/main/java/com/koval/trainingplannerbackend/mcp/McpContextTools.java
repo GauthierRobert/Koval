@@ -18,6 +18,7 @@ import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.plan.TrainingPlan;
 import com.koval.trainingplannerbackend.plan.TrainingPlanService;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
+import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.tool.annotation.Tool;
@@ -54,6 +55,7 @@ public class McpContextTools {
     private final TrainingPlanService planService;
     private final ContextService contextService;
     private final CoachService coachService;
+    private final AnalyticsService analyticsService;
 
     public McpContextTools(UserService userService,
                            RaceGoalService raceGoalService,
@@ -62,7 +64,8 @@ public class McpContextTools {
                            TrainingRepository trainingRepository,
                            TrainingPlanService planService,
                            ContextService contextService,
-                           CoachService coachService) {
+                           CoachService coachService,
+                           AnalyticsService analyticsService) {
         this.userService = userService;
         this.raceGoalService = raceGoalService;
         this.sessionRepository = sessionRepository;
@@ -71,6 +74,7 @@ public class McpContextTools {
         this.planService = planService;
         this.contextService = contextService;
         this.coachService = coachService;
+        this.analyticsService = analyticsService;
     }
 
     @Tool(description = "Load everything you need to reason about an athlete in ONE call. Omit "
@@ -143,7 +147,7 @@ public class McpContextTools {
 
         return new AthleteContextPayload(
                 Subject.from(subject),
-                new TrainingLoad(subject.getCtl(), subject.getAtl(), subject.getTsb()),
+                currentTrainingLoad(subjectId, today, subject),
                 goals,
                 recentSessions,
                 upcoming,
@@ -178,6 +182,21 @@ public class McpContextTools {
         AthleteContext saved = contextService.upsertCoachAthleteContext(
                 SecurityUtils.getCurrentUserId(), athleteId, sections, Provenance.mcp());
         return ContextEntry.from(saved);
+    }
+
+    /**
+     * Compute CTL/ATL/TSB live as of today (with rest-day decay) rather than reading the
+     * cached values on the User document. The cached fields are only refreshed when a session
+     * is logged/imported or a workout is scheduled, so they go stale on rest days — this keeps
+     * the context tool consistent with the live PMC tools ({@code getPmcData}/{@code getAthletePmc}).
+     */
+    private TrainingLoad currentTrainingLoad(String subjectId, LocalDate today, User subject) {
+        List<AnalyticsService.PmcDataPoint> pmc = analyticsService.generatePmc(subjectId, today, today);
+        if (pmc.isEmpty()) {
+            return new TrainingLoad(subject.getCtl(), subject.getAtl(), subject.getTsb());
+        }
+        AnalyticsService.PmcDataPoint point = pmc.getLast();
+        return new TrainingLoad(point.ctl(), point.atl(), point.tsb());
     }
 
     private ActivePlanInfo findActivePlan(String userId) {
