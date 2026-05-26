@@ -71,7 +71,7 @@ On a set, two fields control rest between reps:
 - **Swimming**: `intensityTarget` = %CSS, `cadenceTarget` = SPM (50-80).
 
 ## Zone system
-Call `getDefaultZoneSystem(sportType)` (or rely on the value already in context if known) and branch:
+Find the sport's default in `getAthleteContext` → `zoneSystems` (the entry with `isDefault: true` for this `sportType`) and branch:
 
 **A. Custom Default Zone System exists for the sport**
 - Set `zoneSystemId`, use zone labels in block labels, set `zoneTarget` to the label (e.g. `"Z2"`).

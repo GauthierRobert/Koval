@@ -1,6 +1,6 @@
 # Reference — Default Zones (Coggan-style)
 
-Canonical fallback zone definitions used when the coach has **no `defaultZoneSystem`** in their profile and `getDefaultZoneSystem(sportType)` returns nothing.
+Canonical fallback zone definitions used when the coach has **no `defaultZoneSystem`** in their profile and `getAthleteContext` → `zoneSystems` has no default for that sport.
 
 Used by `create-workout.md`, `build-plan.md`, `assign-workout.md`, and any other workflow that needs to label a block, pick a `zoneTarget`, or derive an `intensityTarget` midpoint when neither the coach nor the request specified one.
 
@@ -14,7 +14,7 @@ Used by `create-workout.md`, `build-plan.md`, `assign-workout.md`, and any other
 
 Trainings stay generic — these are % of FTP / threshold pace / CSS, so the same template applies on every athlete at assign time.
 
-If the coach has a custom `defaultZoneSystem` (from `coach-profile.md` or `getDefaultZoneSystem`), use it instead and ignore this file.
+If the coach has a custom `defaultZoneSystem` (from `coach-profile.md` or `getAthleteContext` → `zoneSystems`), use it instead and ignore this file.
 
 ---
 

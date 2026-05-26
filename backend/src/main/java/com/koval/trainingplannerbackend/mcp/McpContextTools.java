@@ -19,6 +19,9 @@ import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import com.koval.trainingplannerbackend.training.model.Training;
+import com.koval.trainingplannerbackend.training.zone.Zone;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +57,7 @@ public class McpContextTools {
     private final TrainingPlanService planService;
     private final ContextService contextService;
     private final AnalyticsService analyticsService;
+    private final ZoneSystemService zoneSystemService;
     private final McpAccessResolver accessResolver;
 
     public McpContextTools(UserService userService,
@@ -63,6 +68,7 @@ public class McpContextTools {
                            TrainingPlanService planService,
                            ContextService contextService,
                            AnalyticsService analyticsService,
+                           ZoneSystemService zoneSystemService,
                            McpAccessResolver accessResolver) {
         this.userService = userService;
         this.raceGoalService = raceGoalService;
@@ -72,6 +78,7 @@ public class McpContextTools {
         this.planService = planService;
         this.contextService = contextService;
         this.analyticsService = analyticsService;
+        this.zoneSystemService = zoneSystemService;
         this.accessResolver = accessResolver;
     }
 
@@ -81,9 +88,12 @@ public class McpContextTools {
             + "values (FTP, weight, threshold pace, swim CSS), current training load (CTL=fitness, "
             + "ATL=fatigue, TSB=form), upcoming race goals, the last ~2 weeks of completed "
             + "sessions, the next 7 days of scheduled workouts, the active plan's current week, "
-            + "and the stored context: the athlete's self-described preferences/habits, plus — "
-            + "when you are the coach — your coaching philosophy and your private notes about this "
-            + "athlete. Prefer this over calling profile/sessions/goals/schedule tools separately.")
+            + "the athlete's zone systems (each sport's intensity zones with full %% bounds, the "
+            + "default flagged), and the stored context: the athlete's self-described "
+            + "preferences/habits, plus — when you are the coach — your coaching philosophy and "
+            + "your private notes about this athlete. The zone bounds plus the reference values "
+            + "let you classify any power/pace/HR value yourself. Prefer this over calling "
+            + "profile/sessions/goals/schedule/zone-list tools separately.")
     public AthleteContextPayload getAthleteContext(
             @ToolParam(required = false, description = "Coached athlete's user ID. Omit/null to load your own context.")
             String athleteId) {
@@ -117,6 +127,8 @@ public class McpContextTools {
 
         ActivePlanInfo activePlan = findActivePlan(subjectId);
 
+        List<ZoneSystemView> zoneSystems = resolveZoneSystems(subjectId);
+
         Map<String, String> athleteContext = contextService.getAthleteSelfContext(subjectId)
                 .map(AthleteContext::getSections).orElse(null);
 
@@ -140,9 +152,27 @@ public class McpContextTools {
                 recentSessions,
                 upcoming,
                 activePlan,
+                zoneSystems,
                 athleteContext,
                 coachAboutAthlete,
                 coachPhilosophy);
+    }
+
+    /**
+     * Gather every zone system that governs the subject's training: the ones they own (self-coached
+     * athletes / coaches) plus the ones inherited from their coaches. Deduped by id, owned first.
+     * Each view carries the full zone bounds so the caller can classify a measured value against
+     * the subject's reference values without a separate lookup.
+     */
+    private List<ZoneSystemView> resolveZoneSystems(String subjectId) {
+        Map<String, ZoneSystem> byId = new LinkedHashMap<>();
+        for (ZoneSystem zs : zoneSystemService.getZoneSystemsForCoach(subjectId)) {
+            byId.putIfAbsent(zs.getId(), zs);
+        }
+        for (ZoneSystem zs : zoneSystemService.getZoneSystemsForAthlete(subjectId)) {
+            byId.putIfAbsent(zs.getId(), zs);
+        }
+        return byId.values().stream().map(ZoneSystemView::from).toList();
     }
 
     @Tool(description = "Save YOUR own context as structured sections (section title → markdown). "
@@ -226,9 +256,28 @@ public class McpContextTools {
             List<McpHistoryTools.SessionSummary> recentSessions,
             List<McpSchedulingTools.ScheduleSummary> upcomingSchedule,
             ActivePlanInfo activePlan,
+            List<ZoneSystemView> zoneSystems,
             Map<String, String> athleteContext,
             Map<String, String> coachContextAboutAthlete,
             Map<String, String> coachPhilosophy) {}
+
+    /**
+     * A zone system as seen in athlete context: identity, the reference metric it is scaled
+     * against, whether it is the sport default, and the full ordered zone bounds.
+     */
+    public record ZoneSystemView(String id, String name, String sportType, String referenceType,
+                                 String referenceName, String referenceUnit, boolean isDefault,
+                                 List<Zone> zones) {
+        static ZoneSystemView from(ZoneSystem zs) {
+            return new ZoneSystemView(
+                    zs.getId(), zs.getName(),
+                    zs.getSportType() != null ? zs.getSportType().name() : null,
+                    zs.getReferenceType() != null ? zs.getReferenceType().name() : null,
+                    zs.getReferenceName(), zs.getReferenceUnit(),
+                    Boolean.TRUE.equals(zs.getDefaultForSport()),
+                    zs.getZones() != null ? zs.getZones() : List.of());
+        }
+    }
 
     public record Subject(String id, String displayName, String role, Integer ftp, Integer weightKg,
                           Integer functionalThresholdPace, Integer criticalSwimSpeed,

@@ -25,22 +25,7 @@ public class McpZoneTools {
         this.zoneSystemService = zoneSystemService;
     }
 
-    @Tool(description = "List the user's zone systems. Zone systems define intensity zones (e.g. Z1=55-75%, Z2=75-90%) for a specific sport and reference metric (FTP, CSS, threshold pace, etc.).")
-    public List<ZoneSystemSummary> listZoneSystems() {
-        String userId = SecurityUtils.getCurrentUserId();
-        return zoneSystemService.getZoneSystemsForCoach(userId).stream()
-                .map(ZoneSystemSummary::from)
-                .toList();
-    }
-
-    @Tool(description = "Get the default zone system for a specific sport. Returns null if no default is set.")
-    public ZoneSystem getDefaultZoneSystem(
-            @ToolParam(description = "Sport type: CYCLING, RUNNING, SWIMMING, or BRICK") SportType sportType) {
-        String userId = SecurityUtils.getCurrentUserId();
-        return zoneSystemService.getDefaultZoneSystem(userId, sportType).orElse(null);
-    }
-
-    @Tool(description = "Get a full zone system by id: name, sport, reference metric, and the ordered list of zones with their label and percentage bounds.")
+    @Tool(description = "Get a full zone system by id: name, sport, reference metric, and the ordered list of zones with their label and percentage bounds. The user's zone systems (with bounds and the per-sport default flag) are already returned by getAthleteContext — call this only when you need a system by id that isn't in that payload.")
     public ZoneSystem getZoneSystem(
             @ToolParam(description = "Zone system id") String systemId) {
         String userId = SecurityUtils.getCurrentUserId();
@@ -87,16 +72,5 @@ public class McpZoneTools {
         zs.setReferenceUnit(referenceUnit);
         zs.setZones(zones);
         return zoneSystemService.createZoneSystem(zs);
-    }
-
-    public record ZoneSystemSummary(String id, String name, String sportType, String referenceType,
-                                     int zoneCount) {
-        public static ZoneSystemSummary from(ZoneSystem zs) {
-            return new ZoneSystemSummary(
-                    zs.getId(), zs.getName(),
-                    zs.getSportType() != null ? zs.getSportType().name() : null,
-                    zs.getReferenceType() != null ? zs.getReferenceType().name() : null,
-                    zs.getZones() != null ? zs.getZones().size() : 0);
-        }
     }
 }

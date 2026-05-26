@@ -13,8 +13,7 @@ Produce or update `athlete-profile.md` so every other koval-athlete workflow has
 Already enforced by the parent skill. If somehow reached as a COACH, bounce to `koval-coach`.
 
 ## Step 1 — Context (one call)
-- `getAthleteContext` → name, FTP, weight, threshold pace, CSS, CTL/ATL/TSB (`subject` + `trainingLoad`), upcoming `goals`, recent sessions, and any previously stored `athleteContext` (your self-context from a prior onboarding — pre-fill the interview from it). One call replaces the old profile/goals/schedule chain.
-- `listZoneSystems` → detect whether zones are configured
+- `getAthleteContext` → name, FTP, weight, threshold pace, CSS, CTL/ATL/TSB (`subject` + `trainingLoad`), upcoming `goals`, recent sessions, your configured `zoneSystems` (whether zones exist, and the default per sport), and any previously stored `athleteContext` (your self-context from a prior onboarding — pre-fill the interview from it). One call replaces the old profile/goals/schedule/zone chain.
 
 ## Step 2 — Existing profile?
 - If `athlete-profile.md` exists: ask *"You already have a profile from <date>. Review & update section by section, start over, or just show it?"*
@@ -76,7 +75,7 @@ Ask in **grouped batches**, not one-by-one. Wait for the answer before the next 
 ### Group 6 — Targets & data
 - Prescriptions in **% FTP / watts / HR / RPE / pace**?
 - Comfortable with TSS, or prefer hours / km?
-- Default zone system to use? (auto-pick from `getDefaultZoneSystem(sport)`)
+- Default zone system to use? (auto-pick the `isDefault` entry per sport from `getAthleteContext` → `zoneSystems`)
 
 ### Group 7 — Voice & communication
 - How should session descriptions be written? (terse cue list / detailed / motivational / data-only)

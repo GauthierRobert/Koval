@@ -14,6 +14,11 @@ import com.koval.trainingplannerbackend.plan.TrainingPlanService;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
+import com.koval.trainingplannerbackend.training.model.SportType;
+import com.koval.trainingplannerbackend.training.zone.Zone;
+import com.koval.trainingplannerbackend.training.zone.ZoneReferenceType;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystem;
+import com.koval.trainingplannerbackend.training.zone.ZoneSystemService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +54,7 @@ class McpContextToolsTest {
     @Mock private ContextService contextService;
     @Mock private CoachService coachService;
     @Mock private AnalyticsService analyticsService;
+    @Mock private ZoneSystemService zoneSystemService;
 
     private McpContextTools tools;
 
@@ -56,12 +62,14 @@ class McpContextToolsTest {
     void setUp() {
         tools = new McpContextTools(userService, raceGoalService, sessionRepository,
                 scheduledWorkoutService, trainingRepository, planService, contextService,
-                analyticsService, new McpAccessResolver(coachService));
+                analyticsService, zoneSystemService, new McpAccessResolver(coachService));
         when(raceGoalService.getGoalsForAthlete(any())).thenReturn(List.of());
         when(sessionRepository.findByUserIdAndCompletedAtBetween(any(), any(), any()))
                 .thenReturn(List.of());
         when(scheduledWorkoutService.getAthleteSchedule(any(), any(), any())).thenReturn(List.of());
         when(planService.listPlans(any())).thenReturn(List.of());
+        when(zoneSystemService.getZoneSystemsForCoach(any())).thenReturn(List.of());
+        when(zoneSystemService.getZoneSystemsForAthlete(any())).thenReturn(List.of());
     }
 
     @AfterEach
@@ -98,6 +106,25 @@ class McpContextToolsTest {
         assertThat(payload.athleteContext()).containsEntry("Voice & communication", "terse");
         assertThat(payload.coachContextAboutAthlete()).isNull();
         assertThat(payload.coachPhilosophy()).isNull();
+    }
+
+    @Test
+    void foldsInZoneSystems_dedupedWithFullBoundsAndDefaultFlag() {
+        authenticateAs("ath-1", "ATHLETE");
+        when(userService.getUserById("ath-1")).thenReturn(user("ath-1", UserRole.ATHLETE));
+        when(contextService.getAthleteSelfContext("ath-1")).thenReturn(Optional.empty());
+        // Same system reachable as both owned and coach-provided — must appear once, owned wins.
+        when(zoneSystemService.getZoneSystemsForCoach("ath-1")).thenReturn(List.of(cyclingDefault()));
+        when(zoneSystemService.getZoneSystemsForAthlete("ath-1")).thenReturn(List.of(cyclingDefault()));
+
+        var payload = tools.getAthleteContext(null);
+
+        assertThat(payload.zoneSystems()).hasSize(1);
+        var view = payload.zoneSystems().get(0);
+        assertThat(view.sportType()).isEqualTo("CYCLING");
+        assertThat(view.isDefault()).isTrue();
+        assertThat(view.zones()).hasSize(2);
+        assertThat(view.zones().get(0).label()).isEqualTo("Z1");
     }
 
     @Test
@@ -150,6 +177,21 @@ class McpContextToolsTest {
         a.setSections(Map.of("Voice & communication", "terse"));
         a.setUpdatedAt(LocalDateTime.now());
         return Optional.of(a);
+    }
+
+    private ZoneSystem cyclingDefault() {
+        ZoneSystem zs = new ZoneSystem();
+        zs.setId("zs-1");
+        zs.setName("Coggan Power Zones");
+        zs.setSportType(SportType.CYCLING);
+        zs.setReferenceType(ZoneReferenceType.FTP);
+        zs.setReferenceName("FTP");
+        zs.setReferenceUnit("W");
+        zs.setDefaultForSport(true);
+        zs.setZones(List.of(
+                new Zone("Z1", 0, 55, "Active recovery"),
+                new Zone("Z2", 56, 75, "Endurance")));
+        return zs;
     }
 
     private Optional<com.koval.trainingplannerbackend.context.CoachContext> coachPhilosophy() {

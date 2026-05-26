@@ -37,7 +37,7 @@ Every workflow below reads `coach-profile.md` from the skill folder as ground tr
 
 ## Zone reference — `resources/default-zones.md`
 
-Canonical Coggan-style zone tables (cycling %FTP, running %threshold pace, swimming %CSS) plus midpoints and intent → zone mapping. Workflows fall back to these whenever the coach has no `defaultZoneSystem` in their profile AND `getDefaultZoneSystem(sportType)` returns nothing — used by `create-workout.md` and `build-plan.md` for `zoneTarget` labels and to derive `intensityTarget` when neither the coach nor the request specified one.
+Canonical Coggan-style zone tables (cycling %FTP, running %threshold pace, swimming %CSS) plus midpoints and intent → zone mapping. Workflows fall back to these whenever the coach has no `defaultZoneSystem` in their profile AND `getAthleteContext` → `zoneSystems` has no default for the sport — used by `create-workout.md` and `build-plan.md` for `zoneTarget` labels and to derive `intensityTarget` when neither the coach nor the request specified one.
 
 ## Training methods — `resources/training-methods.md` (+ `resources/training-methods/<slug>.md`)
 
@@ -47,13 +47,13 @@ Eight pre-defined endurance training methodologies the coach can opt into during
 
 The connector exposes ~70 tools. The ones every coach workflow uses:
 
-- **Athlete context (start here)**: `getAthleteContext(athleteId)` — one call returns the athlete's profile, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, next 7 days of schedule, active-plan week, the athlete's self-context (treat as a recommendation — see Rule 9), **your coaching philosophy** (binding), and **your private context about this athlete** (binding). Prefer it over the per-domain roster reads below.
+- **Athlete context (start here)**: `getAthleteContext(athleteId)` — one call returns the athlete's profile, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, next 7 days of schedule, active-plan week, the athlete's zone systems (each sport's zones with full bounds, the default flagged), the athlete's self-context (treat as a recommendation — see Rule 9), **your coaching philosophy** (binding), and **your private context about this athlete** (binding). Prefer it over the per-domain roster reads below.
 - **Coach roster**: `listAthletes`; for range-based drill-downs into one athlete, the read tools take an `athleteId` — `getSchedule(athleteId, …)`, `getPmcData(athleteId, …)`, `getBestPowerCurve(athleteId, …)`, `getVolume(athleteId, …)`, `getSessions(athleteId, …)`
 - **Context (write)**: `updateMyContext` (your coaching philosophy), `setAthleteCoachingContext(athleteId, sections)` (private per-athlete context, never shown to the athlete)
 - **Trainings**: `searchTrainings`, `createTraining`, `updateTraining`, `cloneTraining`, `getTraining`
 - **Assigning**: `assignTraining(trainingId, athleteId, date)`, `scheduleTraining`, `rescheduleWorkout`, `unassignWorkout`
 - **Plans**: `createPlan`, `addDayToPlan`, `removeDayFromPlan`, `setPlanStatus` (status='ACTIVE'/'PAUSED'), `clonePlan`, `getPlanProgress`, `getPlanAnalytics`
-- **Zones**: `listZoneSystems`, `getDefaultZoneSystem`, `createZoneSystem`
+- **Zones**: `createZoneSystem` (read zone systems — bounds + default flag — from `getAthleteContext` → `zoneSystems`; `getZoneSystem(systemId)` fetches one by id)
 - **Groups**: list and assign training groups (coach Group + ClubGroup)
 - **Club**: `getClub`, `listClubMembers`, `createClubSession`, `createRecurringSession`, `listClubSessions`, `listClubTests`, `createClubTestFromPreset`, `applyTestReferences`
 

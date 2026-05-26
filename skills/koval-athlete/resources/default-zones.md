@@ -1,6 +1,6 @@
 # Reference — Default Zones (Coggan-style)
 
-Canonical fallback zone definitions used when **no custom Default Zone System** exists for the sport (`getDefaultZoneSystem(sportType)` returns nothing).
+Canonical fallback zone definitions used when **no custom Default Zone System** exists for the sport (`getAthleteContext` → `zoneSystems` has no entry with `isDefault: true` for that sport).
 
 Used by `create-workout.md`, `zone-setup.md`, and any other workflow that needs to label a block, pick a `zoneTarget`, or derive an `intensityTarget` midpoint when the user did not specify one.
 

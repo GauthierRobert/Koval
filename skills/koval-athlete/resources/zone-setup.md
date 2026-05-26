@@ -27,7 +27,7 @@ Capture the athlete's threshold value and create a personalised zone system for 
    - Cycling: `updateProfile(ftp=<watts>)`
    - Running: `updateProfile(thresholdPaceSecPerKm=<sec>)` — e.g. 4:10/km = 250
    - Swimming: `updateProfile(swimCssSecPer100m=<sec>)` — e.g. 1:35/100m = 95
-5. **Existing default zone system?** — `getDefaultZoneSystem(sportType)`.
+5. **Existing default zone system?** — check `getAthleteContext` → `zoneSystems` for an entry with this `sportType` and `isDefault: true`.
    - If one exists: *"You already have a default zone system. Replace or keep?"*
    - If none, proceed.
 6. **Create the zone system** — `createZoneSystem(name, sportType, referenceType, referenceName, referenceUnit, zones)`.
@@ -36,7 +36,7 @@ Capture the athlete's threshold value and create a personalised zone system for 
 
 Use the canonical tables in **`default-zones.md`** as the starting point for `createZoneSystem` — pass each row's range and label straight through unless the user requested custom bounds. The same tables are the project-wide fallback when no Default Zone System exists, so editing them in one place keeps zone-setup and workout creation aligned.
 
-7. **Confirm** with `listZoneSystems` and render a one-line summary.
+7. **Confirm** from the `createZoneSystem` return value (or re-read `getAthleteContext` → `zoneSystems`) and render a one-line summary.
 8. **Suggest follow-up** — *"Want me to capture the rest of your training preferences now (available days, goals, voice)?"* → `onboarding.md`.
 
 ## Output format

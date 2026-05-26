@@ -45,7 +45,7 @@ Every workflow below the router reads `athlete-profile.md` from the skill folder
 
 ## Zone reference — `resources/default-zones.md`
 
-Canonical Coggan-style zone tables (cycling %FTP, running %threshold pace, swimming %CSS) plus midpoints and intent → zone mapping. Workflows fall back to these whenever `getDefaultZoneSystem(sportType)` returns nothing — used by `create-workout.md` (for `zoneTarget` labels and to derive `intensityTarget` when the user did not specify one) and by `zone-setup.md` (as the starting bounds when calling `createZoneSystem`).
+Canonical Coggan-style zone tables (cycling %FTP, running %threshold pace, swimming %CSS) plus midpoints and intent → zone mapping. Workflows fall back to these whenever `getAthleteContext` → `zoneSystems` has no default for the sport — used by `create-workout.md` (for `zoneTarget` labels and to derive `intensityTarget` when the user did not specify one) and by `zone-setup.md` (as the starting bounds when calling `createZoneSystem`).
 
 ## Training methods — `resources/training-methods.md` (+ `resources/training-methods/<slug>.md`)
 
@@ -55,9 +55,9 @@ Eight pre-defined endurance training methodologies the athlete can opt into duri
 
 The connector exposes ~60 tools. The ones every athlete workflow uses:
 
-- **Context (start here)**: `getAthleteContext` — one call returns your profile + reference values, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, the next 7 days of scheduled workouts, the active plan's current week, and your stored self-context. Prefer it over the per-domain reads below.
+- **Context (start here)**: `getAthleteContext` — one call returns your profile + reference values, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, the next 7 days of scheduled workouts, the active plan's current week, your zone systems (each sport's intensity zones with full bounds, the default flagged), and your stored self-context. Prefer it over the per-domain reads below.
 - **Profile**: `updateProfile` (FTP, weight, threshold pace, swim CSS — pass only the fields you're changing), `updateMyContext` (save your self-context as section title → markdown)
-- **Zones**: `listZoneSystems`, `getDefaultZoneSystem`, `createZoneSystem`, `deleteZoneSystem`
+- **Zones**: `createZoneSystem`, `deleteZoneSystem` (read your zone systems — bounds + default flag — from `getAthleteContext` → `zoneSystems`; `getZoneSystem(systemId)` fetches one by id)
 - **Goals & races**: `getGoal`, `createGoal`, `searchRaces`, `getRace`, `linkRaceToGoal` (the goal list is in `getAthleteContext`)
 - **Trainings**: `searchTrainings`, `createTraining`, `getTraining`, `updateTraining`, `cloneTraining`
 - **Schedule**: `scheduleTraining`, `getSchedule` (arbitrary date range), `getScheduledWorkoutDetail`, `rescheduleWorkout`, `unassignWorkout`, `markCompleted`, `markSkipped`

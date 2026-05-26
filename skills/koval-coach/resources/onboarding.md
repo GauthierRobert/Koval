@@ -14,9 +14,8 @@ Produce or update `coach-profile.md` so every other koval-coach workflow generat
 Already enforced by the parent skill. If somehow reached as an ATHLETE, bounce to `koval-athlete`.
 
 ## Step 1 — Context (parallel)
-- `getAthleteContext` → confirm COACH role (`subject.role`), capture name, default sport, FTP/threshold, and any previously stored coaching philosophy (`coachPhilosophy` — pre-fill the interview from it)
+- `getAthleteContext` → confirm COACH role (`subject.role`), capture name, default sport, FTP/threshold, your existing `zoneSystems` (zones already in use, with the default per sport), and any previously stored coaching philosophy (`coachPhilosophy` — pre-fill the interview from it)
 - `listAthletes` → roster size (informs volume defaults)
-- `listZoneSystems` → existing zone systems already in use
 - `listPlans(limit=5)` → spot any plans the coach already authored, infer style hints from titles/structure
 
 ## Step 2 — Existing profile?
@@ -93,7 +92,7 @@ Ask in **grouped batches**, not one-by-one. Wait for the answer before the next 
 - Default visibility for new trainings — **private / shared with athletes only / club-wide / public template**?
 
 ## Step 4 — Confirm zone systems
-For each sport from Group 1, check `getDefaultZoneSystem(sport)`. If missing and the coach gave custom bounds in Group 5, `createZoneSystem(...)` to materialise them. Otherwise hand to `koval-athlete:zone-setup.md` for that sport.
+For each sport from Group 1, check `getAthleteContext` → `zoneSystems` for a default. If missing and the coach gave custom bounds in Group 5, `createZoneSystem(...)` to materialise them. Otherwise hand to `koval-athlete:zone-setup.md` for that sport.
 
 ## Step 5 — Persist + save
 - **Persist your philosophy to the backend → `updateMyContext(sections)`.** As a coach, this writes your coaching philosophy (one document per coach), surfaced as `coachPhilosophy` in every `getAthleteContext` call so the AI coaches the way you do. Pass a map of section title → markdown using the template headings (`Coaching philosophy`, `Volume & week shape`, `Workout structure`, `Targets & zones`, `Recovery & monitoring`, `Voice & communication`).
