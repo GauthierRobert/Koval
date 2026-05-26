@@ -69,10 +69,10 @@ public class ClubRecurringSessionController {
     }
 
     @DeleteMapping("/{id}/recurring-sessions/{templateId}")
-    public ResponseEntity<Void> deactivateRecurringSession(
+    public ResponseEntity<Void> deleteRecurringSession(
             @PathVariable String id, @PathVariable String templateId) {
         String userId = SecurityUtils.getCurrentUserId();
-        recurringSessionService.deactivateTemplate(userId, templateId);
+        recurringSessionService.deleteTemplate(userId, id, templateId);
         return ResponseEntity.noContent().build();
     }
 }

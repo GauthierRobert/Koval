@@ -89,6 +89,13 @@ public class ClubSessionController {
         return ResponseEntity.ok(clubSessionService.cancelEntireSession(userId, id, sessionId, req.reason()));
     }
 
+    @DeleteMapping("/{id}/sessions/{sessionId}")
+    public ResponseEntity<Void> deleteSession(@PathVariable String id, @PathVariable String sessionId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        clubSessionService.deleteSession(userId, id, sessionId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{id}/sessions/{sessionId}/join")
     public ResponseEntity<ClubTrainingSession> joinSession(@PathVariable String id,
                                                             @PathVariable String sessionId) {

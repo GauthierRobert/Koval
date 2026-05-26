@@ -217,6 +217,36 @@ public class ClubSessionService {
         return saved;
     }
 
+    /**
+     * Permanently removes a single session from the database. Unlike cancellation,
+     * which keeps a cancelled record for the audit trail, this deletes the document
+     * outright. Participants are notified that the session was removed.
+     */
+    public void deleteSession(String userId, String clubId, String sessionId) {
+        ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);
+        if (!session.getClubId().equals(clubId)) {
+            throw new IllegalArgumentException("Session does not belong to this club");
+        }
+        authorizeSessionModification(userId, clubId, session);
+
+        List<String> participantIds = List.copyOf(session.getParticipantIds());
+        String title = session.getTitle();
+        String date = formatSessionDate(session);
+        sessionRepository.delete(session);
+        activityService.emitActivity(clubId, ClubActivityType.SESSION_CANCELLED, userId, session.getId(), title);
+
+        if (!participantIds.isEmpty()) {
+            notificationService.sendToUsers(
+                    participantIds,
+                    "Session Removed",
+                    getClubName(clubId) + " — \"" + title + "\" (" + date + ") has been removed",
+                    Map.of("type", "SESSION_CANCELLED",
+                           "clubId", clubId,
+                           "sessionId", session.getId()),
+                    "clubSessionCancelled");
+        }
+    }
+
     public ClubTrainingSession updateSession(String userId, String clubId, String sessionId,
                                               CreateSessionRequest req) {
         ClubTrainingSession session = materializer.resolveOrMaterialize(sessionId);

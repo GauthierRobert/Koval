@@ -12,6 +12,7 @@ import com.koval.trainingplannerbackend.context.ContextService.ContextEntry;
 import com.koval.trainingplannerbackend.goal.RaceGoalService;
 import com.koval.trainingplannerbackend.plan.TrainingPlanService;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
+import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +48,7 @@ class McpContextToolsTest {
     @Mock private TrainingPlanService planService;
     @Mock private ContextService contextService;
     @Mock private CoachService coachService;
+    @Mock private AnalyticsService analyticsService;
 
     private McpContextTools tools;
 
@@ -54,7 +56,7 @@ class McpContextToolsTest {
     void setUp() {
         tools = new McpContextTools(userService, raceGoalService, sessionRepository,
                 scheduledWorkoutService, trainingRepository, planService, contextService,
-                coachService);
+                coachService, analyticsService);
         when(raceGoalService.getGoalsForAthlete(any())).thenReturn(List.of());
         when(sessionRepository.findByUserIdAndCompletedAtBetween(any(), any(), any()))
                 .thenReturn(List.of());

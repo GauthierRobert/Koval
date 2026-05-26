@@ -95,12 +95,31 @@ public class RecurringSessionService {
         return cancelledCount;
     }
 
-    public void deactivateTemplate(String userId, String templateId) {
+    /**
+     * Permanently removes a recurring template and all of its future materialized
+     * instances from the database. Past instances are kept as a faithful record of
+     * sessions that already happened. Returns the number of future instances deleted.
+     */
+    public int deleteTemplate(String userId, String clubId, String templateId) {
         RecurringSessionTemplate template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Template not found"));
-        authorizationService.requireAdminOrCoach(userId, template.getClubId());
-        template.setActive(false);
-        templateRepository.save(template);
+        if (!template.getClubId().equals(clubId)) {
+            throw new ValidationException("Template does not belong to this club");
+        }
+        authorizationService.requireAdminOrCoach(userId, clubId);
+
+        List<ClubTrainingSession> futureInstances = sessionRepository
+                .findByRecurringTemplateIdAndScheduledAtAfter(templateId, LocalDateTime.now());
+        int deletedCount = futureInstances.size();
+        if (!futureInstances.isEmpty()) {
+            sessionRepository.deleteAll(futureInstances);
+        }
+        templateRepository.delete(template);
+
+        clubActivityService.emitActivity(clubId, ClubActivityType.RECURRING_SERIES_CANCELLED,
+                userId, templateId, template.getTitle());
+
+        return deletedCount;
     }
 
     public List<RecurringSessionTemplate> listTemplates(String userId, String clubId) {

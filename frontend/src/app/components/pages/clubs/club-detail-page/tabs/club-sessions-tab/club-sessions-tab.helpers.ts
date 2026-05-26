@@ -1,9 +1,13 @@
-import {ClubTrainingSession, GroupLinkedTraining} from '../../../../../../services/club.service';
-import {ClubSessionService} from '../../../../../../services/club-session.service';
-import {SessionFormSaveEvent} from './session-form-modal/session-form-modal.component';
-import {SingleSessionCreateEvent} from './create-single-session-modal/create-single-session-modal.component';
-import {RecurringTemplateCreateEvent} from './create-recurring-template-modal/create-recurring-template-modal.component';
-import {toRecurringSessionDto, toRecurringSessionDtoFromEdit, toSessionDto} from './session-form-mapper';
+import { ClubTrainingSession, GroupLinkedTraining } from '../../../../../../services/club.service';
+import { ClubSessionService } from '../../../../../../services/club-session.service';
+import { SessionFormSaveEvent } from './session-form-modal/session-form-modal.component';
+import { SingleSessionCreateEvent } from './create-single-session-modal/create-single-session-modal.component';
+import { RecurringTemplateCreateEvent } from './create-recurring-template-modal/create-recurring-template-modal.component';
+import {
+  toRecurringSessionDto,
+  toRecurringSessionDtoFromEdit,
+  toSessionDto,
+} from './session-form-mapper';
 
 /** Triggers a browser download of the session's GPX file. */
 export function downloadSessionGpx(
@@ -35,9 +39,11 @@ export async function shareSessionGpx(
   }
   service.downloadSessionGpx(clubId, session.id).subscribe({
     next: async (blob) => {
-      const file = new File([blob], session.gpxFileName ?? 'route.gpx', {type: 'application/gpx+xml'});
+      const file = new File([blob], session.gpxFileName ?? 'route.gpx', {
+        type: 'application/gpx+xml',
+      });
       try {
-        await navigator.share({title: session.title, files: [file]});
+        await navigator.share({ title: session.title, files: [file] });
       } catch {
         // user cancelled share
       }
@@ -61,7 +67,7 @@ export function submitEditSession(
   callbacks: SessionSaveCallbacks,
 ): void {
   if (!event.editingSession) return;
-  const {form, editingSession, editAllFutureMode, gpxFile} = event;
+  const { form, editingSession, editAllFutureMode, gpxFile } = event;
   callbacks.setSaving(true);
 
   if (form['__action'] === 'removeGpx') {
@@ -154,7 +160,7 @@ export interface SessionActionCallbacks {
 
 /** Coalesces the join / leave / duplicate / unlink calls — each is a service call then reload. */
 export function runSessionAction(
-  obs: { subscribe: (handlers: {next: () => void; error?: (err: unknown) => void}) => unknown },
+  obs: { subscribe: (handlers: { next: () => void; error?: (err: unknown) => void }) => unknown },
   cb: SessionActionCallbacks,
   errorLabel?: string,
 ): void {
@@ -191,7 +197,7 @@ export function confirmSessionCancellation(
   target: ClubTrainingSession,
   mode: 'single' | 'all',
   cancelReason: string,
-  cb: SessionActionCallbacks & {onClose: () => void},
+  cb: SessionActionCallbacks & { onClose: () => void },
 ): void {
   const reason = cancelReason || undefined;
   if (mode === 'all' && target.recurringTemplateId) {
@@ -212,6 +218,38 @@ export function confirmSessionCancellation(
       cb.reload();
       cb.afterChange?.();
     },
+    error: () => {},
+  });
+}
+
+/**
+ * Permanently deletes a session. For a recurring series ('series' mode) it removes the
+ * template and all future sessions; otherwise it removes the single session document.
+ */
+export function confirmSessionDeletion(
+  service: ClubSessionService,
+  clubId: string,
+  target: ClubTrainingSession,
+  mode: 'single' | 'series',
+  cb: SessionActionCallbacks & { onClose: () => void },
+): void {
+  const done = () => {
+    cb.onClose();
+    cb.reload();
+    cb.afterChange?.();
+  };
+  if (mode === 'series' && target.recurringTemplateId) {
+    service.deleteRecurringTemplate(clubId, target.recurringTemplateId).subscribe({
+      next: () => {
+        service.loadRecurringTemplates(clubId);
+        done();
+      },
+      error: () => {},
+    });
+    return;
+  }
+  service.deleteSession(clubId, target.id).subscribe({
+    next: done,
     error: () => {},
   });
 }

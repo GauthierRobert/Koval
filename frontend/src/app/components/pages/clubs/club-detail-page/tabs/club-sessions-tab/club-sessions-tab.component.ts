@@ -10,12 +10,12 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {BehaviorSubject} from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BehaviorSubject } from 'rxjs';
 
-import {Router, RouterModule} from '@angular/router';
-import {TranslateModule} from '@ngx-translate/core';
+import { Router, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import {
   canManageClub,
   ClubDetail,
@@ -26,11 +26,14 @@ import {
   GroupLinkedTraining,
   isClubCoach,
 } from '../../../../../../services/club.service';
-import {ClubSessionService} from '../../../../../../services/club-session.service';
-import {AuthService} from '../../../../../../services/auth.service';
-import {SPORT_BANNER_COLORS} from '../../../../../../models/plan.model';
-import {SessionCardComponent} from '../../../../../shared/session-card/session-card.component';
-import {SessionFormModalComponent, SessionFormSaveEvent} from './session-form-modal/session-form-modal.component';
+import { ClubSessionService } from '../../../../../../services/club-session.service';
+import { AuthService } from '../../../../../../services/auth.service';
+import { SPORT_BANNER_COLORS } from '../../../../../../models/plan.model';
+import { SessionCardComponent } from '../../../../../shared/session-card/session-card.component';
+import {
+  SessionFormModalComponent,
+  SessionFormSaveEvent,
+} from './session-form-modal/session-form-modal.component';
 import {
   CreateSingleSessionModalComponent,
   SingleSessionCreateEvent,
@@ -39,8 +42,8 @@ import {
   CreateRecurringTemplateModalComponent,
   RecurringTemplateCreateEvent,
 } from './create-recurring-template-modal/create-recurring-template-modal.component';
-import {CancelSessionDialogsComponent} from './cancel-session-dialogs/cancel-session-dialogs.component';
-import {DAYS_OF_WEEK} from './session-form-mapper';
+import { CancelSessionDialogsComponent } from './cancel-session-dialogs/cancel-session-dialogs.component';
+import { DAYS_OF_WEEK } from './session-form-mapper';
 import {
   buildWeekDays,
   formatDayHeader,
@@ -53,6 +56,7 @@ import {
 } from './club-session-calendar.utils';
 import {
   confirmSessionCancellation,
+  confirmSessionDeletion,
   downloadSessionGpx,
   runSessionAction,
   SessionActionCallbacks,
@@ -122,6 +126,11 @@ export class ClubSessionsTabComponent implements OnInit {
   pendingCancelSession: ClubTrainingSession | null = null;
   cancelMode: 'single' | 'all' = 'single';
 
+  // Delete session state
+  showDeleteConfirm = false;
+  deleteTargetSession: ClubTrainingSession | null = null;
+  deleteMode: 'single' | 'series' = 'single';
+
   coachMembers: ClubMember[] = [];
   allMembers: ClubMember[] = [];
   expandedSessionId: string | null = null;
@@ -130,7 +139,8 @@ export class ClubSessionsTabComponent implements OnInit {
   readonly daysOfWeek = DAYS_OF_WEEK;
 
   private static readonly SHOW_OTHER_GROUPS_KEY = 'club-sessions-show-other-groups';
-  showOtherGroupSessions = localStorage.getItem(ClubSessionsTabComponent.SHOW_OTHER_GROUPS_KEY) !== 'false';
+  showOtherGroupSessions =
+    localStorage.getItem(ClubSessionsTabComponent.SHOW_OTHER_GROUPS_KEY) !== 'false';
 
   ngOnInit(): void {
     this.authService.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((u) => {
@@ -176,14 +186,19 @@ export class ClubSessionsTabComponent implements OnInit {
   }
 
   canEditSession(session: ClubTrainingSession): boolean {
-    return (!!this.currentUserId && session.createdBy === this.currentUserId) || this.canCreateRecurring;
+    return (
+      (!!this.currentUserId && session.createdBy === this.currentUserId) || this.canCreateRecurring
+    );
   }
 
   // --- Filters ---
 
   toggleShowOtherGroupSessions(): void {
     this.showOtherGroupSessions = !this.showOtherGroupSessions;
-    localStorage.setItem(ClubSessionsTabComponent.SHOW_OTHER_GROUPS_KEY, String(this.showOtherGroupSessions));
+    localStorage.setItem(
+      ClubSessionsTabComponent.SHOW_OTHER_GROUPS_KEY,
+      String(this.showOtherGroupSessions),
+    );
     this.cdr.markForCheck();
   }
 
@@ -218,9 +233,15 @@ export class ClubSessionsTabComponent implements OnInit {
 
   // --- Calendar navigation ---
 
-  prevWeek(): void { this.setCalendarWeek(shiftWeek(this.calendarWeekStart, -1)); }
-  nextWeek(): void { this.setCalendarWeek(shiftWeek(this.calendarWeekStart, 1)); }
-  goToday(): void { this.setCalendarWeek(getMonday(new Date())); }
+  prevWeek(): void {
+    this.setCalendarWeek(shiftWeek(this.calendarWeekStart, -1));
+  }
+  nextWeek(): void {
+    this.setCalendarWeek(shiftWeek(this.calendarWeekStart, 1));
+  }
+  goToday(): void {
+    this.setCalendarWeek(getMonday(new Date()));
+  }
 
   private setCalendarWeek(weekStart: Date): void {
     this.calendarWeekStart = weekStart;
@@ -311,8 +332,12 @@ export class ClubSessionsTabComponent implements OnInit {
     this.startEditing(session, false);
   }
 
-  editThisSessionOnly(): void { this.resolvePendingEdit(false); }
-  editEntireTemplate(): void { this.resolvePendingEdit(true); }
+  editThisSessionOnly(): void {
+    this.resolvePendingEdit(false);
+  }
+  editEntireTemplate(): void {
+    this.resolvePendingEdit(true);
+  }
 
   private resolvePendingEdit(allFuture: boolean): void {
     if (!this.pendingEditSession) return;
@@ -337,7 +362,12 @@ export class ClubSessionsTabComponent implements OnInit {
   }
 
   onEditFormSaved(event: SessionFormSaveEvent): void {
-    submitEditSession(this.clubSessionService, this.club.id, event, this.saveCallbacks(() => this.finishEdit()));
+    submitEditSession(
+      this.clubSessionService,
+      this.club.id,
+      event,
+      this.saveCallbacks(() => this.finishEdit()),
+    );
   }
 
   onCreateSingleSaved(event: SingleSessionCreateEvent): void {
@@ -401,11 +431,17 @@ export class ClubSessionsTabComponent implements OnInit {
   // --- Session actions ---
 
   joinSession(session: ClubTrainingSession): void {
-    runSessionAction(this.clubSessionService.joinSession(this.club.id, session.id), this.actionCallbacks);
+    runSessionAction(
+      this.clubSessionService.joinSession(this.club.id, session.id),
+      this.actionCallbacks,
+    );
   }
 
   cancelParticipation(session: ClubTrainingSession): void {
-    runSessionAction(this.clubSessionService.cancelSession(this.club.id, session.id), this.actionCallbacks);
+    runSessionAction(
+      this.clubSessionService.cancelSession(this.club.id, session.id),
+      this.actionCallbacks,
+    );
   }
 
   duplicateSession(session: ClubTrainingSession): void {
@@ -425,7 +461,13 @@ export class ClubSessionsTabComponent implements OnInit {
   }
 
   unlinkTraining(session: ClubTrainingSession, glt: GroupLinkedTraining): void {
-    unlinkSessionTraining(this.clubSessionService, this.club.id, session, glt, this.actionCallbacks);
+    unlinkSessionTraining(
+      this.clubSessionService,
+      this.club.id,
+      session,
+      glt,
+      this.actionCallbacks,
+    );
   }
 
   private get actionCallbacks(): SessionActionCallbacks {
@@ -454,8 +496,12 @@ export class ClubSessionsTabComponent implements OnInit {
     }
   }
 
-  cancelThisOnly(): void { this.resolvePendingCancel('single'); }
-  cancelAllFuture(): void { this.resolvePendingCancel('all'); }
+  cancelThisOnly(): void {
+    this.resolvePendingCancel('single');
+  }
+  cancelAllFuture(): void {
+    this.resolvePendingCancel('all');
+  }
 
   private resolvePendingCancel(mode: 'single' | 'all'): void {
     if (!this.pendingCancelSession) return;
@@ -494,14 +540,57 @@ export class ClubSessionsTabComponent implements OnInit {
     );
   }
 
+  // --- Delete session ---
+
+  /** From the single cancel dialog: delete just this session. */
+  requestDeleteSingle(): void {
+    if (!this.cancelTargetSession) return;
+    this.deleteTargetSession = this.cancelTargetSession;
+    this.deleteMode = 'single';
+    this.showCancelConfirm = false;
+    this.showDeleteConfirm = true;
+    this.cdr.markForCheck();
+  }
+
+  /** From the recurring choice dialog: delete the template and all future sessions. */
+  requestDeleteSeries(): void {
+    if (!this.pendingCancelSession) return;
+    this.deleteTargetSession = this.pendingCancelSession;
+    this.deleteMode = 'series';
+    this.showCancelRecurringChoice = false;
+    this.pendingCancelSession = null;
+    this.showDeleteConfirm = true;
+    this.cdr.markForCheck();
+  }
+
+  closeDeleteConfirm(): void {
+    this.showDeleteConfirm = false;
+    this.deleteTargetSession = null;
+    this.deleteMode = 'single';
+    this.cdr.markForCheck();
+  }
+
+  confirmDeleteSession(): void {
+    if (!this.deleteTargetSession) return;
+    confirmSessionDeletion(
+      this.clubSessionService,
+      this.club.id,
+      this.deleteTargetSession,
+      this.deleteMode,
+      {
+        reload: () => this.loadCalendarSessions(),
+        afterChange: () => this.cdr.markForCheck(),
+        onClose: () => this.closeDeleteConfirm(),
+      },
+    );
+  }
+
   // --- Helpers ---
 
   private getUserGroupIds(): Set<string> {
     if (!this.currentUserId) return new Set();
     return new Set(
-      this.clubGroups
-        .filter((g) => g.memberIds.includes(this.currentUserId!))
-        .map((g) => g.id),
+      this.clubGroups.filter((g) => g.memberIds.includes(this.currentUserId!)).map((g) => g.id),
     );
   }
 }

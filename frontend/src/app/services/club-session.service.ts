@@ -1,8 +1,8 @@
-import {inject, Injectable, NgZone} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {BehaviorSubject, Observable, of} from 'rxjs';
-import {catchError, tap} from 'rxjs/operators';
-import {environment} from '../../environments/environment';
+import { inject, Injectable, NgZone } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 import {
   ClubTrainingSession,
   CreateRecurringSessionData,
@@ -18,7 +18,12 @@ export class ClubSessionService {
 
   private sessionsSubject = new BehaviorSubject<ClubTrainingSession[]>([]);
   sessions$ = this.sessionsSubject.asObservable();
-  private lastSessionsQuery: { clubId: string; from: string; to: string; category?: string } | null = null;
+  private lastSessionsQuery: {
+    clubId: string;
+    from: string;
+    to: string;
+    category?: string;
+  } | null = null;
 
   private openSessionsSubject = new BehaviorSubject<ClubTrainingSession[]>([]);
   openSessions$ = this.openSessionsSubject.asObservable();
@@ -38,7 +43,12 @@ export class ClubSessionService {
       .subscribe((sessions) => this.ngZone.run(() => this.sessionsSubject.next(sessions)));
   }
 
-  loadSessionsForRange(clubId: string, from: string, to: string, category?: 'SCHEDULED' | 'OPEN'): void {
+  loadSessionsForRange(
+    clubId: string,
+    from: string,
+    to: string,
+    category?: 'SCHEDULED' | 'OPEN',
+  ): void {
     this.lastSessionsQuery = { clubId, from, to, category };
     const params: Record<string, string> = { from, to };
     if (category) params['category'] = category;
@@ -48,7 +58,12 @@ export class ClubSessionService {
       .subscribe((sessions) => this.ngZone.run(() => this.sessionsSubject.next(sessions)));
   }
 
-  getSessionsForClub(clubId: string, from: string, to: string, category?: 'SCHEDULED' | 'OPEN'): Observable<ClubTrainingSession[]> {
+  getSessionsForClub(
+    clubId: string,
+    from: string,
+    to: string,
+    category?: 'SCHEDULED' | 'OPEN',
+  ): Observable<ClubTrainingSession[]> {
     const params: Record<string, string> = { from, to };
     if (category) params['category'] = category;
     return this.http
@@ -58,7 +73,9 @@ export class ClubSessionService {
 
   loadOpenSessions(clubId: string, from: string, to: string): void {
     this.http
-      .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, { params: { from, to, category: 'OPEN' } })
+      .get<ClubTrainingSession[]>(`${this.apiUrl}/${clubId}/sessions`, {
+        params: { from, to, category: 'OPEN' },
+      })
       .pipe(catchError(() => of([] as ClubTrainingSession[])))
       .subscribe((sessions) => this.ngZone.run(() => this.openSessionsSubject.next(sessions)));
   }
@@ -81,12 +98,28 @@ export class ClubSessionService {
     return this.http.post<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions`, data);
   }
 
-  updateSession(clubId: string, sessionId: string, data: CreateSessionData): Observable<ClubTrainingSession> {
-    return this.http.put<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}`, data);
+  updateSession(
+    clubId: string,
+    sessionId: string,
+    data: CreateSessionData,
+  ): Observable<ClubTrainingSession> {
+    return this.http.put<ClubTrainingSession>(
+      `${this.apiUrl}/${clubId}/sessions/${sessionId}`,
+      data,
+    );
   }
 
-  duplicateSession(clubId: string, sessionId: string, newScheduledAt?: string): Observable<ClubTrainingSession> {
-    const url = `${this.apiUrl}/${clubId}/sessions/${sessionId}/duplicate` +
+  deleteSession(clubId: string, sessionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}`);
+  }
+
+  duplicateSession(
+    clubId: string,
+    sessionId: string,
+    newScheduledAt?: string,
+  ): Observable<ClubTrainingSession> {
+    const url =
+      `${this.apiUrl}/${clubId}/sessions/${sessionId}/duplicate` +
       (newScheduledAt ? `?newScheduledAt=${encodeURIComponent(newScheduledAt)}` : '');
     return this.http.post<ClubTrainingSession>(url, {});
   }
@@ -100,10 +133,16 @@ export class ClubSessionService {
   }
 
   cancelEntireSession(clubId: string, sessionId: string, reason?: string): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/cancel`, { reason: reason || null });
+    return this.http.put<void>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/cancel`, {
+      reason: reason || null,
+    });
   }
 
-  cancelRecurringSessions(clubId: string, templateId: string, reason?: string): Observable<{ cancelledCount: number }> {
+  cancelRecurringSessions(
+    clubId: string,
+    templateId: string,
+    reason?: string,
+  ): Observable<{ cancelledCount: number }> {
     return this.http.put<{ cancelledCount: number }>(
       `${this.apiUrl}/${clubId}/recurring-sessions/${templateId}/cancel-future`,
       { reason: reason || null },
@@ -113,18 +152,30 @@ export class ClubSessionService {
   uploadSessionGpx(clubId: string, sessionId: string, file: File): Observable<ClubTrainingSession> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`, formData);
+    return this.http.post<ClubTrainingSession>(
+      `${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`,
+      formData,
+    );
   }
 
   deleteSessionGpx(clubId: string, sessionId: string): Observable<ClubTrainingSession> {
-    return this.http.delete<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`);
+    return this.http.delete<ClubTrainingSession>(
+      `${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`,
+    );
   }
 
   downloadSessionGpx(clubId: string, sessionId: string): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`, { responseType: 'blob' });
+    return this.http.get(`${this.apiUrl}/${clubId}/sessions/${sessionId}/gpx`, {
+      responseType: 'blob',
+    });
   }
 
-  linkTrainingToSession(clubId: string, sessionId: string, trainingId: string, clubGroupId?: string): Observable<ClubTrainingSession> {
+  linkTrainingToSession(
+    clubId: string,
+    sessionId: string,
+    trainingId: string,
+    clubGroupId?: string,
+  ): Observable<ClubTrainingSession> {
     return this.http
       .put<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/link-training`, {
         trainingId,
@@ -133,7 +184,11 @@ export class ClubSessionService {
       .pipe(tap((session) => this.ngZone.run(() => this.patchSession(session))));
   }
 
-  unlinkTrainingFromSession(clubId: string, sessionId: string, clubGroupId?: string): Observable<ClubTrainingSession> {
+  unlinkTrainingFromSession(
+    clubId: string,
+    sessionId: string,
+    clubGroupId?: string,
+  ): Observable<ClubTrainingSession> {
     return this.http
       .put<ClubTrainingSession>(`${this.apiUrl}/${clubId}/sessions/${sessionId}/unlink-training`, {
         clubGroupId: clubGroupId ?? null,
@@ -147,19 +202,41 @@ export class ClubSessionService {
     this.http
       .get<RecurringSessionTemplate[]>(`${this.apiUrl}/${clubId}/recurring-sessions`)
       .pipe(catchError(() => of([] as RecurringSessionTemplate[])))
-      .subscribe((templates) => this.ngZone.run(() => this.recurringTemplatesSubject.next(templates)));
+      .subscribe((templates) =>
+        this.ngZone.run(() => this.recurringTemplatesSubject.next(templates)),
+      );
   }
 
-  createRecurringTemplate(clubId: string, data: CreateRecurringSessionData): Observable<RecurringSessionTemplate> {
-    return this.http.post<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions`, data);
+  createRecurringTemplate(
+    clubId: string,
+    data: CreateRecurringSessionData,
+  ): Observable<RecurringSessionTemplate> {
+    return this.http.post<RecurringSessionTemplate>(
+      `${this.apiUrl}/${clubId}/recurring-sessions`,
+      data,
+    );
   }
 
-  updateRecurringTemplate(clubId: string, templateId: string, data: CreateRecurringSessionData): Observable<RecurringSessionTemplate> {
-    return this.http.put<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}`, data);
+  updateRecurringTemplate(
+    clubId: string,
+    templateId: string,
+    data: CreateRecurringSessionData,
+  ): Observable<RecurringSessionTemplate> {
+    return this.http.put<RecurringSessionTemplate>(
+      `${this.apiUrl}/${clubId}/recurring-sessions/${templateId}`,
+      data,
+    );
   }
 
-  updateRecurringTemplateWithInstances(clubId: string, templateId: string, data: CreateRecurringSessionData): Observable<RecurringSessionTemplate> {
-    return this.http.put<RecurringSessionTemplate>(`${this.apiUrl}/${clubId}/recurring-sessions/${templateId}/with-instances`, data);
+  updateRecurringTemplateWithInstances(
+    clubId: string,
+    templateId: string,
+    data: CreateRecurringSessionData,
+  ): Observable<RecurringSessionTemplate> {
+    return this.http.put<RecurringSessionTemplate>(
+      `${this.apiUrl}/${clubId}/recurring-sessions/${templateId}/with-instances`,
+      data,
+    );
   }
 
   deleteRecurringTemplate(clubId: string, templateId: string): Observable<void> {
