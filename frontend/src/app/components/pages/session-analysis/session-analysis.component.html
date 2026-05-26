@@ -10,10 +10,12 @@
       [ftp]="ftp"
       [movingTime]="(movingTime$ | async) ?? null"
       [linkedSessions]="linkedSessions"
+      [coachAthleteId]="coachAthleteId"
       (rpeChanged)="selectRpe(session, $event)"
       (navTo)="navTo.emit($event)"
       (linkClicked)="linkClicked.emit(session)"
       (downloadClicked)="downloadClicked.emit(session)"
+      (alignmentChanged)="onAlignmentChanged(session, $event)"
     />
 
     <!-- Pending action: confirm a plan link or classify a race day -->

@@ -4,11 +4,13 @@ import { TranslateModule } from '@ngx-translate/core';
 import { SavedSession } from '../../../../services/history.service';
 import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
 import { formatTimeHMS } from '../../../shared/format/format.utils';
+import { AlignmentScore } from '../../../../models/alignment.model';
+import { SessionAlignmentPanelComponent } from '../session-alignment-panel/session-alignment-panel.component';
 
 @Component({
   selector: 'app-session-stats-header',
   standalone: true,
-  imports: [CommonModule, TranslateModule, SportIconComponent],
+  imports: [CommonModule, TranslateModule, SportIconComponent, SessionAlignmentPanelComponent],
   templateUrl: './session-stats-header.component.html',
   styleUrl: './session-stats-header.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,10 +26,14 @@ export class SessionStatsHeaderComponent {
    * When length > 1, the title row shows a pill switcher. */
   @Input() linkedSessions: SavedSession[] = [];
 
+  /** When set, the viewer is a coach looking at this athlete's session (enables coach rating). */
+  @Input() coachAthleteId: string | null = null;
+
   @Output() rpeChanged = new EventEmitter<number>();
   @Output() navTo = new EventEmitter<string>();
   @Output() linkClicked = new EventEmitter<void>();
   @Output() downloadClicked = new EventEmitter<void>();
+  @Output() alignmentChanged = new EventEmitter<AlignmentScore>();
 
   rpeValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 

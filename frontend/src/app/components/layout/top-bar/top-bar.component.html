@@ -429,6 +429,15 @@
               <span class="dropdown-label">{{ 'TOP_BAR.NAV_COACHING' | translate }}</span>
             </a>
             <a
+              routerLink="/coach-context"
+              routerLinkActive="active"
+              class="dropdown-item"
+              role="menuitem"
+              (click)="closeCoaching(); closeMobileMenu()"
+            >
+              <span class="dropdown-label">{{ 'TOP_BAR.NAV_COACH_CONTEXT' | translate }}</span>
+            </a>
+            <a
               routerLink="/groups"
               routerLinkActive="active"
               class="dropdown-item"

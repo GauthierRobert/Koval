@@ -203,3 +203,10 @@
     </div>
   }
 </div>
+
+<!-- Plan-alignment strip: only renders when the session is linked to a scheduled workout. -->
+<app-session-alignment-panel
+  [session]="session"
+  [coachAthleteId]="coachAthleteId"
+  (changed)="alignmentChanged.emit($event)"
+/>

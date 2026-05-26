@@ -1,0 +1,48 @@
+.align-panel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.align-main {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.align-scores {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.score-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.not-rated {
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+}
+
+.align-btn {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .align-btn {
+    margin-left: 0;
+    width: 100%;
+  }
+}

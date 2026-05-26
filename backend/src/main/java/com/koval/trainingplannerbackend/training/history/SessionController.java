@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,17 +39,20 @@ public class SessionController {
     private final SessionFitFileService fitFileService;
     private final AnalyticsService analyticsService;
     private final PowerCurveService powerCurveService;
+    private final SessionAlignmentService alignmentService;
 
     public SessionController(SessionService sessionService,
                              SessionHistoryQueryService historyQueryService,
                              SessionFitFileService fitFileService,
                              AnalyticsService analyticsService,
-                             PowerCurveService powerCurveService) {
+                             PowerCurveService powerCurveService,
+                             SessionAlignmentService alignmentService) {
         this.sessionService = sessionService;
         this.historyQueryService = historyQueryService;
         this.fitFileService = fitFileService;
         this.analyticsService = analyticsService;
         this.powerCurveService = powerCurveService;
+        this.alignmentService = alignmentService;
     }
 
     /** Saves a completed workout session with automatic metrics computation and schedule association. */
@@ -194,6 +198,50 @@ public class SessionController {
         CompletedSession result = sessionService.patchSession(id, body, userId);
         return ResponseEntity.of(Optional.ofNullable(result));
     }
+
+    // ── Alignment score ─────────────────────────────────────────────────────
+
+    /**
+     * Deterministic suggestion for how this session matched its scheduled workout, used to pre-fill
+     * the rating modal. Readable by the session owner or their coach.
+     */
+    @GetMapping("/{id}/alignment/estimate")
+    public ResponseEntity<AlignmentEstimator.AlignmentEstimate> estimateAlignment(@PathVariable String id) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(alignmentService.estimate(id, userId));
+    }
+
+    /** Sets the athlete's own alignment rating (owner only). */
+    @PutMapping("/{id}/alignment/athlete")
+    public ResponseEntity<CompletedSession> setAthleteAlignment(@PathVariable String id,
+            @RequestBody AlignmentScoreRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(alignmentService.setAthleteScore(id, request.score(), request.note(), userId));
+    }
+
+    /** Sets the coach's alignment rating, validating or overriding the athlete's (coach only). */
+    @PutMapping("/{id}/alignment/coach")
+    public ResponseEntity<CompletedSession> setCoachAlignment(@PathVariable String id,
+            @RequestBody AlignmentScoreRequest request) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(alignmentService.setCoachScore(
+                id, request.score(), request.note(), AlignmentScore.SOURCE_COACH, userId));
+    }
+
+    /**
+     * Scored sessions over a date range for the alignment evolution chart, oldest first.
+     * Pass athleteId (coach only) to read a coached athlete's history.
+     */
+    @GetMapping("/alignment/history")
+    public ResponseEntity<List<SessionAlignmentService.AlignmentHistoryPoint>> alignmentHistory(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String athleteId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(alignmentService.history(userId, athleteId, from, to));
+    }
+
+    public record AlignmentScoreRequest(int score, String note) {}
 
     /** Deletes a session and its associated FIT file. */
     @DeleteMapping("/{id}")

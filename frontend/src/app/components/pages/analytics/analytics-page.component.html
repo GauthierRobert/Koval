@@ -44,6 +44,14 @@
     >
       {{ 'ANALYTICS.TAB_RECORDS' | translate }}
     </button>
+    <button
+      data-testid="tab-alignment"
+      class="tab"
+      [class.active]="activeTab === 'alignment'"
+      (click)="setTab('alignment')"
+    >
+      {{ 'ANALYTICS.TAB_ALIGNMENT' | translate }}
+    </button>
   </div>
 
   <!-- Power Curve Tab -->
@@ -224,6 +232,37 @@
           @for (r of [0, 1, 2, 3, 4, 5, 6, 7]; track r) {
             <div class="skeleton skeleton-block skeleton-record-card"></div>
           }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Alignment Tab -->
+  @if (activeTab === 'alignment') {
+    <div class="tab-content">
+      @if (alignmentHistory$ | async; as points) {
+        @if (points.length === 0) {
+          <app-empty-state
+            [title]="'ALIGNMENT.NO_DATA' | translate"
+            [caption]="'ALIGNMENT.NO_DATA_DESC' | translate"
+          />
+        } @else {
+          <div class="chart-container glass">
+            <h3>{{ 'ALIGNMENT.EVOLUTION_TITLE' | translate }}</h3>
+            <app-alignment-evolution-chart [points]="points" />
+            <div class="align-legend">
+              <span class="legend-item">
+                <span class="legend-swatch green"></span>{{ 'ALIGNMENT.LEGEND_ON_TARGET' | translate }}
+              </span>
+              <span class="legend-item">
+                <span class="legend-swatch red"></span>{{ 'ALIGNMENT.LEGEND_OFF_TARGET' | translate }}
+              </span>
+            </div>
+          </div>
+        }
+      } @else {
+        <div class="skeleton-stack" aria-busy="true" aria-hidden="true">
+          <div class="skeleton skeleton-block skeleton-block--xl skeleton-chart"></div>
         </div>
       }
     </div>

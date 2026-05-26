@@ -147,6 +147,68 @@ class ContextServiceTest {
     }
 
     @Test
+    void getMyAthleteContext_readsSelfEntryWithoutResolvingRole() {
+        AthleteContext self = new AthleteContext();
+        self.setSections(sections());
+        when(athleteRepo.findByAthleteIdAndAuthorId("u-1", "u-1")).thenReturn(Optional.of(self));
+
+        ContextService.MyContext result = service.getMyAthleteContext("u-1");
+
+        assertEquals(UserRole.ATHLETE.name(), result.role());
+        assertEquals(sections(), result.sections());
+        // A coach is also an athlete: this path never gates on role.
+        verifyNoInteractions(userService);
+        verify(coachRepo, never()).findByCoachId(any());
+    }
+
+    @Test
+    void upsertMyAthleteContext_asCoach_writesSelfAuthoredAthleteEntry() {
+        // A coach editing the Training > Context page writes their OWN athlete self-context,
+        // not their coaching philosophy. Role is never consulted on this path.
+        when(athleteRepo.findByAthleteIdAndAuthorId("coach-1", "coach-1")).thenReturn(Optional.empty());
+        when(athleteRepo.save(any(AthleteContext.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ContextService.MyContext result = service.upsertMyAthleteContext("coach-1", sections(), Provenance.web());
+
+        assertEquals(UserRole.ATHLETE.name(), result.role());
+        ArgumentCaptor<AthleteContext> captor = ArgumentCaptor.forClass(AthleteContext.class);
+        verify(athleteRepo).save(captor.capture());
+        AthleteContext saved = captor.getValue();
+        assertEquals("coach-1", saved.getAthleteId());
+        assertEquals("coach-1", saved.getAuthorId());
+        assertEquals(ContextAuthorRole.ATHLETE, saved.getAuthorRole());
+        verify(coachRepo, never()).save(any());
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void getMyCoachContext_readsPhilosophy() {
+        CoachContext phil = new CoachContext();
+        phil.setSections(sections());
+        when(coachRepo.findByCoachId("coach-1")).thenReturn(Optional.of(phil));
+
+        ContextService.MyContext result = service.getMyCoachContext("coach-1");
+
+        assertEquals(UserRole.COACH.name(), result.role());
+        assertEquals(sections(), result.sections());
+        verify(athleteRepo, never()).findByAthleteIdAndAuthorId(any(), any());
+    }
+
+    @Test
+    void upsertMyCoachContext_writesPhilosophy() {
+        when(coachRepo.findByCoachId("coach-1")).thenReturn(Optional.empty());
+        when(coachRepo.save(any(CoachContext.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ContextService.MyContext result = service.upsertMyCoachContext("coach-1", sections(), Provenance.web());
+
+        assertEquals(UserRole.COACH.name(), result.role());
+        ArgumentCaptor<CoachContext> captor = ArgumentCaptor.forClass(CoachContext.class);
+        verify(coachRepo).save(captor.capture());
+        assertEquals("coach-1", captor.getValue().getCoachId());
+        verify(athleteRepo, never()).save(any());
+    }
+
+    @Test
     void getCoachViewOfAthlete_returnsSelfAndOwnEntryOnly() {
         when(coachService.isCoachOfAthlete("coach-1", "ath-1")).thenReturn(true);
         AthleteContext self = new AthleteContext();

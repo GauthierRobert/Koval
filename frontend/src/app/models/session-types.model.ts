@@ -17,6 +17,8 @@ export interface SessionData {
   tss?: number;
   intensityFactor?: number;
   timestamp: string;
+  /** Athlete + coach/AI plan-alignment ratings (embedded from CompletedSession); null until rated. */
+  alignmentScore?: import('./alignment.model').AlignmentScore | null;
 }
 
 export type AthleteSessions = SessionData[];

@@ -270,18 +270,17 @@
                         <div class="metrics-row">
                           <div class="metric">
                             <span class="metric-val">{{
+                              ($any(group.entry).scheduled.tss | number: '1.0-0') || '—'
+                            }}</span>
+                            <span class="metric-unit">TSS</span>
+                          </div>
+                          <div class="metric">
+                            <span class="metric-val">{{
                               formatDuration($any(group.entry).scheduled)
                             }}</span>
                             <span class="metric-unit">{{
                               'CALENDAR_WEEK.METRIC_DUR' | translate
                             }}</span>
-                          </div>
-                          <span class="metric-sep"></span>
-                          <div class="metric">
-                            <span class="metric-val">{{
-                              ($any(group.entry).scheduled.tss | number: '1.0-0') || '—'
-                            }}</span>
-                            <span class="metric-unit">TSS</span>
                           </div>
                         </div>
                       </div>
@@ -294,18 +293,17 @@
                           <div class="metrics-row">
                             <div class="metric">
                               <span class="metric-val">{{
+                                ($any(group.entry).session.tss | number: '1.0-0') || '—'
+                              }}</span>
+                              <span class="metric-unit">TSS</span>
+                            </div>
+                            <div class="metric">
+                              <span class="metric-val">{{
                                 formatSessionDuration($any(group.entry).session)
                               }}</span>
                               <span class="metric-unit">{{
                                 'CALENDAR_WEEK.METRIC_DUR' | translate
                               }}</span>
-                            </div>
-                            <span class="metric-sep"></span>
-                            <div class="metric">
-                              <span class="metric-val">{{
-                                ($any(group.entry).session.tss | number: '1.0-0') || '—'
-                              }}</span>
-                              <span class="metric-unit">TSS</span>
                             </div>
                           </div>
                         </div>

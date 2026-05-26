@@ -10,6 +10,7 @@ import { MetricsService } from './metrics.service';
 import { ErrorToastService } from './error-toast.service';
 import { TranslateService } from '@ngx-translate/core';
 import { environment } from '../../environments/environment';
+import { AlignmentScore } from '../models/alignment.model';
 
 export type RaceRole = 'RACE' | 'WARMUP' | 'NONE';
 
@@ -43,6 +44,8 @@ export interface SavedSession extends SessionSummary {
   groupId?: string | null;
   manuallyCreated?: boolean;
   totalDistance?: number | null;
+  /** Athlete + coach/AI alignment ratings vs the scheduled workout; null until rated. */
+  alignmentScore?: AlignmentScore | null;
 }
 
 /** Race-on-this-day candidate returned by `GET /api/sessions/{id}/race-candidates`. */
@@ -116,6 +119,7 @@ interface RawSavedSession {
   groupId?: string | null;
   manuallyCreated?: boolean | null;
   totalDistance?: number | null;
+  alignmentScore?: AlignmentScore | null;
 }
 
 interface SessionWindowResponse {
@@ -505,6 +509,18 @@ export class HistoryService {
     }
   }
 
+  /** Merge a newly-set alignment rating into the dashboard, history, and selected-session state. */
+  applyAlignment(sessionId: string, alignmentScore: AlignmentScore): void {
+    const apply = (s: SavedSession) => (s.id === sessionId ? { ...s, alignmentScore } : s);
+    this.sessionsSubject.next(this.sessionsSubject.value.map(apply));
+    const state = this.historyStateSubject.value;
+    this.patchHistory({ sessions: state.sessions.map(apply) });
+    const selected = this.selectedSessionSubject.value;
+    if (selected?.id === sessionId) {
+      this.selectedSessionSubject.next({ ...selected, alignmentScore });
+    }
+  }
+
   updateSession(id: string, updates: Partial<SavedSession>): Observable<SavedSession> {
     return this.http.patch<SavedSession>(`${this.apiUrl}/${id}`, updates).pipe(
       tap((updated) => {
@@ -550,6 +566,7 @@ export class HistoryService {
     groupId: s.groupId ?? undefined,
     manuallyCreated: s.manuallyCreated ?? undefined,
     totalDistance: s.totalDistance ?? undefined,
+    alignmentScore: s.alignmentScore ?? undefined,
   });
 
   private buildParams(filters: SessionFilters, before: string | null, weeks: number): HttpParams {

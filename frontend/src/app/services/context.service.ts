@@ -19,10 +19,18 @@ export class ContextService {
   private ngZone = inject(NgZone);
 
   private myContextSubject = new BehaviorSubject<MyContext | null>(null);
+  /** The caller's athlete self-context. Everyone has one — a coach is also an athlete. */
   myContext$ = this.myContextSubject.asObservable();
 
   private loadingSubject = new BehaviorSubject<boolean>(true);
   loading$ = this.loadingSubject.asObservable();
+
+  private myCoachContextSubject = new BehaviorSubject<MyContext | null>(null);
+  /** The caller's coaching philosophy (coaches only). */
+  myCoachContext$ = this.myCoachContextSubject.asObservable();
+
+  private coachLoadingSubject = new BehaviorSubject<boolean>(true);
+  coachLoading$ = this.coachLoadingSubject.asObservable();
 
   constructor() {
     this.authService.user$.pipe(filter((u) => !!u)).subscribe(() => this.loadMyContext());
@@ -30,7 +38,7 @@ export class ContextService {
 
   loadMyContext(): void {
     this.loadingSubject.next(true);
-    this.http.get<MyContext>(`${this.apiUrl}/context/me`).subscribe({
+    this.http.get<MyContext>(`${this.apiUrl}/context/me/athlete`).subscribe({
       next: (ctx) =>
         this.ngZone.run(() => {
           this.myContextSubject.next(ctx);
@@ -42,8 +50,26 @@ export class ContextService {
 
   saveMyContext(sections: ContextSections): Observable<MyContext> {
     return this.http
-      .put<MyContext>(`${this.apiUrl}/context/me`, { sections })
+      .put<MyContext>(`${this.apiUrl}/context/me/athlete`, { sections })
       .pipe(tap((ctx) => this.ngZone.run(() => this.myContextSubject.next(ctx))));
+  }
+
+  loadMyCoachContext(): void {
+    this.coachLoadingSubject.next(true);
+    this.http.get<MyContext>(`${this.apiUrl}/context/me/coach`).subscribe({
+      next: (ctx) =>
+        this.ngZone.run(() => {
+          this.myCoachContextSubject.next(ctx);
+          this.coachLoadingSubject.next(false);
+        }),
+      error: () => this.ngZone.run(() => this.coachLoadingSubject.next(false)),
+    });
+  }
+
+  saveMyCoachContext(sections: ContextSections): Observable<MyContext> {
+    return this.http
+      .put<MyContext>(`${this.apiUrl}/context/me/coach`, { sections })
+      .pipe(tap((ctx) => this.ngZone.run(() => this.myCoachContextSubject.next(ctx))));
   }
 
   getAthleteContext(athleteId: string): Observable<CoachAthleteContext> {

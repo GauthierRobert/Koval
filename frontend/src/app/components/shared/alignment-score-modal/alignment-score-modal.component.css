@@ -1,0 +1,123 @@
+.align-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.suggestion {
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.suggestion-head,
+.athlete-rating {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.suggestion-head > div,
+.athlete-rating > div,
+.field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.factors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+}
+
+.factors li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+}
+
+.factor-name {
+  color: var(--text-muted);
+}
+
+.factor-val {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.athlete-rating {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.athlete-note {
+  margin: calc(-1 * var(--space-xs)) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.field-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.score-row input[type='range'] {
+  flex: 1;
+  accent-color: var(--accent-color);
+}
+
+.score-row input[type='range'].zone-green {
+  accent-color: var(--success-color);
+}
+
+.score-row input[type='range'].zone-red {
+  accent-color: var(--danger-color);
+}
+
+.score-number {
+  width: 4.5rem;
+  text-align: center;
+}
+
+textarea {
+  resize: vertical;
+  width: 100%;
+}
+
+.error-msg {
+  margin: 0;
+  color: var(--danger-color);
+  font-size: var(--text-sm);
+}
+
+.btn-xs {
+  padding: 2px var(--space-sm);
+  font-size: var(--text-xs);
+}
+
+.align-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}

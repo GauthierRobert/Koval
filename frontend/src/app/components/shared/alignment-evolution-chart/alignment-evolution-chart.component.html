@@ -1,0 +1,50 @@
+@if (vm) {
+  <svg
+    class="evo-chart"
+    [attr.viewBox]="'0 0 ' + W + ' ' + H"
+    preserveAspectRatio="xMidYMid meet"
+    role="img"
+  >
+    <!-- On-target band (90–110%) -->
+    <rect
+      class="band"
+      [attr.x]="0"
+      [attr.y]="vm.bandY"
+      [attr.width]="W"
+      [attr.height]="vm.bandHeight"
+    />
+
+    <!-- Y gridlines + labels -->
+    @for (t of vm.yTicks; track t.label) {
+      <line class="grid" [attr.x1]="0" [attr.x2]="W" [attr.y1]="t.y" [attr.y2]="t.y" />
+      <text class="axis-label" [attr.x]="4" [attr.y]="t.y - 2">{{ t.label }}%</text>
+    }
+
+    <!-- 100% baseline -->
+    <line class="baseline" [attr.x1]="0" [attr.x2]="W" [attr.y1]="vm.baselineY" [attr.y2]="vm.baselineY" />
+
+    <!-- Connecting line -->
+    <path class="series" [attr.d]="vm.linePath" />
+
+    <!-- Points -->
+    @for (p of vm.points; track p.cx) {
+      <circle
+        class="point"
+        [class.zone-green]="p.zone === 'green'"
+        [class.zone-red]="p.zone === 'red'"
+        [attr.cx]="p.cx"
+        [attr.cy]="p.cy"
+        r="4"
+      >
+        <title>{{ p.label }}</title>
+      </circle>
+    }
+
+    <!-- X labels -->
+    @for (xl of vm.xLabels; track xl.x) {
+      <text class="axis-label" [attr.x]="xl.x" [attr.y]="H - 8" [attr.text-anchor]="xl.anchor">
+        {{ xl.label }}
+      </text>
+    }
+  </svg>
+}

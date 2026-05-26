@@ -1,0 +1,45 @@
+.evo-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.band {
+  fill: color-mix(in srgb, var(--success-color) 12%, transparent);
+}
+
+.grid {
+  stroke: var(--glass-border);
+  stroke-width: 1;
+}
+
+.baseline {
+  stroke: color-mix(in srgb, var(--success-color) 55%, transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.series {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 2;
+}
+
+.point {
+  stroke: var(--bg-color);
+  stroke-width: 1.5;
+}
+
+.point.zone-green {
+  fill: var(--success-color);
+}
+
+.point.zone-red {
+  fill: var(--danger-color);
+}
+
+.axis-label {
+  fill: var(--text-dim);
+  font-size: 10px;
+  font-weight: 600;
+}

@@ -6,16 +6,15 @@ import { ContextService } from '../../../services/context.service';
 import {
   ATHLETE_CONTEXT_SECTIONS,
   ATHLETE_CONTEXT_SECTION_GUIDANCE,
-  COACH_PHILOSOPHY_SECTIONS,
-  COACH_PHILOSOPHY_SECTION_GUIDANCE,
   ContextSections,
 } from '../../../models/context.model';
 import { ContextEditorComponent } from '../../shared/context-editor/context-editor.component';
 
 /**
- * Standalone page for the caller's own training context (athlete self-context or coach philosophy).
- * Reached from the Training nav dropdown. Reuses {@link ContextEditorComponent} and the shared
- * {@link ContextService}; previously this editor lived inside the Settings modal.
+ * Standalone page for the caller's own athlete self-context. Reached from the Training nav
+ * dropdown. Always shows the athlete context regardless of role — a coach is also an athlete who
+ * trains themselves; their coaching philosophy lives on the separate Coach Context page. Reuses
+ * {@link ContextEditorComponent} and the shared {@link ContextService}.
  */
 @Component({
   selector: 'app-context-page',
@@ -29,9 +28,7 @@ export class ContextPageComponent implements OnInit {
   private contextService = inject(ContextService);
 
   readonly athleteSections = ATHLETE_CONTEXT_SECTIONS;
-  readonly coachSections = COACH_PHILOSOPHY_SECTIONS;
   readonly athleteGuidance = ATHLETE_CONTEXT_SECTION_GUIDANCE;
-  readonly coachGuidance = COACH_PHILOSOPHY_SECTION_GUIDANCE;
 
   myContext$ = this.contextService.myContext$;
   loading$ = this.contextService.loading$;

@@ -5,14 +5,22 @@ import {Observable} from 'rxjs';
 import {User} from '../../../../services/auth.service';
 import {SavedSession} from '../../../../services/history.service';
 import {SessionData} from '../../../../models/session-types.model';
+import {effectiveAlignmentScore} from '../../../../models/alignment.model';
 import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
 import {SessionAnalysisComponent} from '../../session-analysis/session-analysis.component';
+import {AlignmentBadgeComponent} from '../../../shared/alignment-badge/alignment-badge.component';
 import {formatTimeHMS} from '../../../shared/format/format.utils';
 
 @Component({
   selector: 'app-coach-history-tab',
   standalone: true,
-  imports: [CommonModule, TranslateModule, SportIconComponent, SessionAnalysisComponent],
+  imports: [
+    CommonModule,
+    TranslateModule,
+    SportIconComponent,
+    SessionAnalysisComponent,
+    AlignmentBadgeComponent,
+  ],
   templateUrl: './coach-history-tab.component.html',
   styleUrl: './coach-history-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,6 +36,10 @@ export class CoachHistoryTabComponent {
 
   formatSessionDur(sec: number): string {
     return formatTimeHMS(sec);
+  }
+
+  alignmentScore(s: SessionData): number | null {
+    return effectiveAlignmentScore(s.alignmentScore);
   }
 
   trackSessionById(s: SessionData): string {

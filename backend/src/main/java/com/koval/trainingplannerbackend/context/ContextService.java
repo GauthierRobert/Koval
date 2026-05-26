@@ -47,34 +47,42 @@ public class ContextService {
      */
     public MyContext getMyContext(String userId) {
         User user = userService.getUserById(userId);
-        if (user.getRole() == UserRole.COACH) {
-            return coachRepo.findByCoachId(userId)
-                    .map(MyContext::coach)
-                    .orElseGet(() -> MyContext.empty(UserRole.COACH));
-        }
+        return user.getRole() == UserRole.COACH
+                ? getMyCoachContext(userId)
+                : getMyAthleteContext(userId);
+    }
+
+    /**
+     * The caller's own athlete self-context, regardless of role. Everyone has one — a coach is
+     * also an athlete who trains themselves — so this never gates on role.
+     */
+    public MyContext getMyAthleteContext(String userId) {
         return athleteRepo.findByAthleteIdAndAuthorId(userId, userId)
                 .map(MyContext::athlete)
                 .orElseGet(() -> MyContext.empty(UserRole.ATHLETE));
     }
 
+    /** The caller's own coaching philosophy. */
+    public MyContext getMyCoachContext(String userId) {
+        return coachRepo.findByCoachId(userId)
+                .map(MyContext::coach)
+                .orElseGet(() -> MyContext.empty(UserRole.COACH));
+    }
+
     /** Role-aware upsert of the caller's own context (coach philosophy or athlete self-context). */
     public MyContext upsertMyContext(String userId, Map<String, String> sections, Provenance provenance) {
-        validate(sections);
+        validate(sections); // fail fast on bad input before resolving the user
         User user = userService.getUserById(userId);
+        return user.getRole() == UserRole.COACH
+                ? upsertMyCoachContext(userId, sections, provenance)
+                : upsertMyAthleteContext(userId, sections, provenance);
+    }
+
+    /** Upsert the caller's own athlete self-context, regardless of role. */
+    public MyContext upsertMyAthleteContext(String userId, Map<String, String> sections, Provenance provenance) {
+        validate(sections);
         LocalDateTime now = LocalDateTime.now();
         Provenance prov = provenance != null ? provenance : Provenance.web();
-
-        if (user.getRole() == UserRole.COACH) {
-            CoachContext c = coachRepo.findByCoachId(userId).orElseGet(CoachContext::new);
-            if (c.getId() == null) {
-                c.setCoachId(userId);
-                c.setCreatedAt(now);
-            }
-            c.setSections(new LinkedHashMap<>(sections));
-            c.setProvenance(prov);
-            c.setUpdatedAt(now);
-            return MyContext.coach(coachRepo.save(c));
-        }
 
         AthleteContext a = athleteRepo.findByAthleteIdAndAuthorId(userId, userId)
                 .orElseGet(AthleteContext::new);
@@ -88,6 +96,23 @@ public class ContextService {
         a.setProvenance(prov);
         a.setUpdatedAt(now);
         return MyContext.athlete(athleteRepo.save(a));
+    }
+
+    /** Upsert the caller's own coaching philosophy. */
+    public MyContext upsertMyCoachContext(String userId, Map<String, String> sections, Provenance provenance) {
+        validate(sections);
+        LocalDateTime now = LocalDateTime.now();
+        Provenance prov = provenance != null ? provenance : Provenance.web();
+
+        CoachContext c = coachRepo.findByCoachId(userId).orElseGet(CoachContext::new);
+        if (c.getId() == null) {
+            c.setCoachId(userId);
+            c.setCreatedAt(now);
+        }
+        c.setSections(new LinkedHashMap<>(sections));
+        c.setProvenance(prov);
+        c.setUpdatedAt(now);
+        return MyContext.coach(coachRepo.save(c));
     }
 
     /** The athlete's own self-authored context, if any. Coach-authored entries are excluded. */

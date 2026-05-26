@@ -175,6 +175,19 @@
             >
               {{ 'COACH_DASHBOARD.TAB_CONTEXT' | translate }}
             </div>
+            <div
+              class="tab"
+              role="tab"
+              id="coach-tab-alignment"
+              data-testid="tab-alignment"
+              [attr.aria-selected]="activeTab === 'alignment'"
+              [class.active]="activeTab === 'alignment'"
+              (click)="activeTab = 'alignment'"
+              tabindex="0"
+              (keydown.enter)="activeTab = 'alignment'"
+            >
+              {{ 'COACH_DASHBOARD.TAB_ALIGNMENT' | translate }}
+            </div>
           </div>
         </div>
 
@@ -243,6 +256,10 @@
 
         @if (activeTab === 'context') {
           <app-coach-context-tab [athleteId]="selectedAthlete!.id" />
+        }
+
+        @if (activeTab === 'alignment') {
+          <app-coach-alignment-tab [athleteId]="selectedAthlete!.id" />
         }
       </div>
     } @else {

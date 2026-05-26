@@ -2,12 +2,16 @@ import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { BehaviorSubject, catchError, of } from 'rxjs';
 import { AnalyticsService, DURATION_LABELS } from '../../../services/analytics.service';
+import { AlignmentService } from '../../../services/alignment.service';
+import { AlignmentHistoryPoint } from '../../../models/alignment.model';
 import { PowerCurveChartComponent } from '../session-analysis/power-curve-chart/power-curve-chart.component';
 import { DashboardVolumeChartComponent } from '../dashboard/dashboard-volume-chart/dashboard-volume-chart.component';
+import { AlignmentEvolutionChartComponent } from '../../shared/alignment-evolution-chart/alignment-evolution-chart.component';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 
-type Tab = 'power-curve' | 'volume' | 'records';
+type Tab = 'power-curve' | 'volume' | 'records' | 'alignment';
 type VolumeMetric = 'time' | 'tss' | 'distance';
 
 @Component({
@@ -19,6 +23,7 @@ type VolumeMetric = 'time' | 'tss' | 'distance';
     TranslateModule,
     PowerCurveChartComponent,
     DashboardVolumeChartComponent,
+    AlignmentEvolutionChartComponent,
     EmptyStateComponent,
   ],
   templateUrl: './analytics-page.component.html',
@@ -27,11 +32,15 @@ type VolumeMetric = 'time' | 'tss' | 'distance';
 })
 export class AnalyticsPageComponent implements OnInit {
   private analyticsService = inject(AnalyticsService);
+  private alignmentService = inject(AlignmentService);
 
   powerCurve$ = this.analyticsService.powerCurve$;
   volume$ = this.analyticsService.volume$;
   personalRecords$ = this.analyticsService.personalRecords$;
   loading$ = this.analyticsService.loading$;
+
+  private alignmentHistorySubject = new BehaviorSubject<AlignmentHistoryPoint[] | null>(null);
+  alignmentHistory$ = this.alignmentHistorySubject.asObservable();
 
   activeTab: Tab = 'power-curve';
   dateFrom = '';
@@ -60,6 +69,15 @@ export class AnalyticsPageComponent implements OnInit {
   loadData(): void {
     this.analyticsService.loadPowerCurve(this.dateFrom, this.dateTo);
     this.analyticsService.loadVolume(this.dateFrom, this.dateTo, this.volumeGroupBy);
+    this.loadAlignmentHistory();
+  }
+
+  private loadAlignmentHistory(): void {
+    this.alignmentHistorySubject.next(null);
+    this.alignmentService
+      .getHistory(this.dateFrom, this.dateTo)
+      .pipe(catchError(() => of([] as AlignmentHistoryPoint[])))
+      .subscribe((pts) => this.alignmentHistorySubject.next(pts));
   }
 
   // Power curve helpers

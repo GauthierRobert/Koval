@@ -1,0 +1,100 @@
+<app-modal-shell [title]="title | translate" size="sm" (closed)="closed.emit()">
+  <div class="align-modal-body">
+    <!-- Deterministic estimate / planned-vs-actual suggestion -->
+    @if (estimateLoading) {
+      <div class="skeleton skeleton-block skeleton-block--md"></div>
+    } @else if (estimate) {
+      <div class="suggestion glass">
+        <div class="suggestion-head">
+          <div>
+            <span class="section-label">{{ 'ALIGNMENT.SUGGESTED' | translate }}</span>
+            <app-alignment-badge [score]="estimate.score" />
+          </div>
+          <button type="button" class="btn-ghost-neutral btn-xs" (click)="useEstimate()">
+            {{ 'ALIGNMENT.USE_SUGGESTION' | translate }}
+          </button>
+        </div>
+        @if (estimate.factors.length > 0) {
+          <ul class="factors">
+            @for (f of estimate.factors; track f.name) {
+              <li>
+                <span class="factor-name">{{ factorLabel(f.name) | translate }}</span>
+                <span class="factor-val">{{ f.ratioPercent }}%</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
+    <!-- In coach mode, show the athlete's own rating to validate or override -->
+    @if (mode === 'coach' && athleteScore != null) {
+      <div class="athlete-rating">
+        <div>
+          <span class="section-label">{{ 'ALIGNMENT.ATHLETE_RATED' | translate }}</span>
+          <app-alignment-badge [score]="athleteScore" />
+        </div>
+        <button type="button" class="btn-ghost-neutral btn-xs" (click)="useAthleteScore()">
+          {{ 'ALIGNMENT.USE_ATHLETE' | translate }}
+        </button>
+      </div>
+      @if (alignment?.athleteNote) {
+        <p class="athlete-note">{{ alignment?.athleteNote }}</p>
+      }
+    }
+
+    <!-- Score input -->
+    <label class="field">
+      <span class="field-label">
+        {{ 'ALIGNMENT.SCORE_LABEL' | translate }}
+        <app-alignment-badge [score]="score" />
+      </span>
+      <div class="score-row">
+        <input
+          type="range"
+          [min]="minScore"
+          [max]="maxScore"
+          step="1"
+          [(ngModel)]="score"
+          [class]="zoneClass"
+          (input)="clampScore()"
+          [attr.aria-label]="'ALIGNMENT.SCORE_LABEL' | translate"
+        />
+        <input
+          type="number"
+          class="score-number"
+          [min]="minScore"
+          [max]="maxScore"
+          [(ngModel)]="score"
+          (change)="clampScore()"
+        />
+      </div>
+    </label>
+
+    <!-- Note -->
+    <label class="field">
+      <span class="field-label">{{ 'ALIGNMENT.NOTE_LABEL' | translate }}</span>
+      <textarea
+        rows="3"
+        [(ngModel)]="note"
+        [placeholder]="'ALIGNMENT.NOTE_PLACEHOLDER' | translate"
+      ></textarea>
+    </label>
+
+    @if (error) {
+      <p class="error-msg" role="alert">{{ 'ALIGNMENT.SAVE_ERROR' | translate }}</p>
+    }
+  </div>
+
+  <div modal-footer class="align-modal-footer">
+    <button type="button" class="btn-ghost-neutral" (click)="closed.emit()">
+      {{ 'COMMON.CANCEL' | translate }}
+    </button>
+    <button type="button" class="btn-primary" [disabled]="saving" (click)="save()">
+      @if (saving) {
+        <span class="btn-spinner"></span>
+      }
+      {{ 'COMMON.SAVE' | translate }}
+    </button>
+  </div>
+</app-modal-shell>

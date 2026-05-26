@@ -40,6 +40,12 @@ public class CompletedSession {
     private String scheduledWorkoutId; // Reference to ScheduledWorkout
 
     /**
+     * Alignment of this session to its scheduled workout (athlete + coach/AI ratings, as a %).
+     * Null until someone rates it; only meaningful when {@link #scheduledWorkoutId} is set.
+     */
+    private AlignmentScore alignmentScore;
+
+    /**
      * Sub-threshold auto-association candidate: set when scoring landed below the auto-link
      * threshold but above the dismissal floor. The user is prompted in history to confirm or reject.
      * Cleared once the session is firmly linked, dismissed, or marked unplanned.

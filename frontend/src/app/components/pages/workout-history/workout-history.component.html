@@ -335,6 +335,7 @@
                     (click)="onSelect(row.session)"
                   >
                     @let action = pendingActionFor(row.session);
+                    @let score = alignmentScore(row.session);
                     <span class="sport-rail" aria-hidden="true"></span>
                     <div class="item-sport">
                       <app-sport-icon [sport]="row.session.sportType" [size]="16" />
@@ -357,6 +358,20 @@
                             ) | translate
                           "
                         ></span>
+                      }
+                      @if (score !== null) {
+                        <span
+                          class="align-corner-badge"
+                          [class.zone-green]="alignmentZoneFor(row.session) === 'green'"
+                          [class.zone-red]="alignmentZoneFor(row.session) === 'red'"
+                          [title]="
+                            'WORKOUT_HISTORY.ALIGNMENT_BADGE_LABEL' | translate: { score: score }
+                          "
+                          [attr.aria-label]="
+                            'WORKOUT_HISTORY.ALIGNMENT_BADGE_LABEL' | translate: { score: score }
+                          "
+                          >{{ score }}</span
+                        >
                       }
                     </div>
                     <div class="item-info">

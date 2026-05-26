@@ -115,6 +115,14 @@ export const routes: Routes = [
     canActivate: [authGuard, coachGuard],
   },
   {
+    path: 'coach-context',
+    loadComponent: () =>
+      import('./components/pages/coach-context-page/coach-context-page.component').then(
+        (m) => m.CoachContextPageComponent,
+      ),
+    canActivate: [authGuard, coachGuard],
+  },
+  {
     path: 'zones',
     loadComponent: () =>
       import('./components/pages/zone-manager/zone-manager.component').then(

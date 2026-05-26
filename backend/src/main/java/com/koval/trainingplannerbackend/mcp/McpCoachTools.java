@@ -8,6 +8,8 @@ import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.dto.AthleteResponse;
 import com.koval.trainingplannerbackend.config.Provenance;
 import com.koval.trainingplannerbackend.training.TrainingService;
+import com.koval.trainingplannerbackend.training.history.AlignmentScore;
+import com.koval.trainingplannerbackend.training.history.SessionAlignmentService;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
@@ -28,13 +30,16 @@ public class McpCoachTools {
     private final CoachService coachService;
     private final TrainingService trainingService;
     private final CoachNoteService coachNoteService;
+    private final SessionAlignmentService alignmentService;
 
     public McpCoachTools(CoachService coachService,
                          TrainingService trainingService,
-                         CoachNoteService coachNoteService) {
+                         CoachNoteService coachNoteService,
+                         SessionAlignmentService alignmentService) {
         this.coachService = coachService;
         this.trainingService = trainingService;
         this.coachNoteService = coachNoteService;
+        this.alignmentService = alignmentService;
     }
 
     @Tool(description = "List all athletes coached by the current user. Returns athlete profiles with FTP, weight, and performance metrics. Requires COACH role.")
@@ -67,14 +72,24 @@ public class McpCoachTools {
     @Tool(description = "Append a coach note about an athlete you manage. Use this to leave AI-drafted " +
             "feedback after reviewing the athlete's recent work — the note shows up on the athlete's coach " +
             "view with an AI-source badge. Pass sessionId to tie the note to a specific completed session, " +
-            "or omit it for a general note. Requires the current user to be the athlete's coach.")
+            "or omit it for a general note. When the note assesses how well a completed session matched the " +
+            "workout that was scheduled for it, also pass alignmentScore (with sessionId): a percentage where " +
+            "100 = exactly on plan, above 100 = the athlete exceeded the scheduled power/duration/TSS/IF/zone " +
+            "targets, and below 100 = they fell short. The body becomes the reasoning behind the score. " +
+            "Requires the current user to be the athlete's coach.")
     public CoachNoteSummary appendCoachNote(
             @ToolParam(description = "Athlete user ID") String athleteId,
             @ToolParam(description = "Note body in markdown (max 10000 chars)") String body,
-            @ToolParam(description = "Optional completed session ID this note refers to") String sessionId) {
+            @ToolParam(description = "Optional completed session ID this note refers to") String sessionId,
+            @ToolParam(required = false, description = "Optional alignment score as a percentage (0-300, "
+                    + "100 = on plan). Requires sessionId. Sets the coach/AI rating shown on the session badge "
+                    + "and the alignment evolution chart.") Integer alignmentScore) {
         SecurityUtils.requireCoach();
         String coachId = SecurityUtils.getCurrentUserId();
         CoachNote saved = coachNoteService.append(coachId, athleteId, sessionId, body, Provenance.mcp());
+        if (alignmentScore != null && sessionId != null && !sessionId.isBlank()) {
+            alignmentService.setCoachScore(sessionId, alignmentScore, body, AlignmentScore.SOURCE_AI, coachId);
+        }
         return CoachNoteSummary.from(saved);
     }
 

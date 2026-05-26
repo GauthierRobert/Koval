@@ -21,6 +21,11 @@ import { FilterPillsComponent } from '../../shared/filter-pills/filter-pills.com
 import { ModalShellComponent } from '../../shared/modal-shell/modal-shell.component';
 import { SkeletonComponent } from '../../shared/skeleton/skeleton.component';
 import { HistoryService, SavedSession, SessionFilters } from '../../../services/history.service';
+import {
+  alignmentZone,
+  AlignmentZone,
+  effectiveAlignmentScore,
+} from '../../../models/alignment.model';
 import { formatTimeText } from '../../shared/format/format.utils';
 
 import { FitExportService } from '../../../services/fit-export.service';
@@ -552,6 +557,17 @@ export class WorkoutHistoryComponent implements OnInit {
     if (session.tss != null) return Math.round(session.tss);
     if (!ftp) return null;
     return Math.round(this.metricsService.computeTss(session.totalDuration, session.avgPower, ftp));
+  }
+
+  /** Effective plan-alignment percentage for the list badge (coach rating, else athlete's). */
+  alignmentScore(session: SavedSession): number | null {
+    return effectiveAlignmentScore(session.alignmentScore);
+  }
+
+  /** On-target (green) vs off-target (red) zone for the corner badge; null when unrated. */
+  alignmentZoneFor(session: SavedSession): AlignmentZone | null {
+    const score = this.alignmentScore(session);
+    return score == null ? null : alignmentZone(score);
   }
 
   getIF(session: SavedSession, ftp: number | null): number | null {

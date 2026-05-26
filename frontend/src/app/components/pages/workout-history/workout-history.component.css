@@ -676,18 +676,50 @@
 }
 
 /* ─── Pending-action dot ──────────────────────────────────────────
- * Notification bullet on the sport icon: blue = plan-link suggestion,
- * amber = unclassified race day. The action itself is resolved in the
- * detail view (see session-action-panel). */
+ * Notification bullet on the top-left of the sport icon: blue = plan-link
+ * suggestion, amber = unclassified race day. The action itself is resolved
+ * in the detail view (see session-action-panel). */
 .action-dot {
   position: absolute;
   top: -3px;
-  right: -3px;
+  left: -3px;
   width: 9px;
   height: 9px;
   border-radius: 50%;
   border: 2px solid var(--bg-color);
   box-shadow: 0 0 0 1px color-mix(in oklch, var(--dot-color) 60%, transparent);
+}
+
+/* ─── Plan-alignment corner badge ─────────────────────────────────
+ * Round badge on the top-right of the sport icon showing the session's
+ * plan-alignment score. Green inside the 90–110% on-target band, red
+ * outside it. The number carries the meaning, colour is a secondary cue. */
+.align-corner-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 0px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--bg-color);
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.align-corner-badge.zone-green {
+  color: var(--color-black);
+  background: var(--success-color);
+}
+
+.align-corner-badge.zone-red {
+  color: var(--color-black);
+  background: var(--danger-color);
 }
 
 .action-dot.link {

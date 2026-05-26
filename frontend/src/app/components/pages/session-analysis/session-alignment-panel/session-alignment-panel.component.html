@@ -1,0 +1,44 @@
+@if (linked) {
+  <div class="align-panel glass">
+    <div class="align-main">
+      <span class="section-label">{{ 'ALIGNMENT.PANEL_TITLE' | translate }}</span>
+      <app-alignment-badge [score]="effectiveScore" />
+    </div>
+
+    <div class="align-scores">
+      @if (athleteScore != null) {
+        <span class="score-chip">
+          {{ 'ALIGNMENT.ATHLETE_SHORT' | translate }}
+          <app-alignment-badge [score]="athleteScore" />
+        </span>
+      }
+      @if (coachScore != null) {
+        <span class="score-chip">
+          {{ (coachIsAi ? 'ALIGNMENT.AI_SHORT' : 'ALIGNMENT.COACH_SHORT') | translate }}
+          <app-alignment-badge [score]="coachScore" />
+        </span>
+      }
+      @if (athleteScore == null && coachScore == null) {
+        <span class="not-rated">{{ 'ALIGNMENT.NOT_RATED' | translate }}</span>
+      }
+    </div>
+
+    <button type="button" class="btn-ghost-neutral align-btn" (click)="openModal()">
+      @if (isCoachView) {
+        {{ (coachScore != null ? 'ALIGNMENT.EDIT_COACH_BTN' : 'ALIGNMENT.SET_COACH_BTN') | translate }}
+      } @else {
+        {{ (athleteScore != null ? 'ALIGNMENT.EDIT_BTN' : 'ALIGNMENT.RATE_BTN') | translate }}
+      }
+    </button>
+  </div>
+
+  @if (modalOpen) {
+    <app-alignment-score-modal
+      [sessionId]="session.id"
+      [mode]="modalMode"
+      [alignment]="alignment"
+      (saved)="onSaved($event)"
+      (closed)="closeModal()"
+    />
+  }
+}

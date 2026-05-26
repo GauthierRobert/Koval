@@ -35,6 +35,32 @@ public class ContextController {
                 SecurityUtils.getCurrentUserId(), request.sections(), Provenance.web());
     }
 
+    /** The caller's athlete self-context. Available to any role — a coach is also an athlete. */
+    @GetMapping("/context/me/athlete")
+    public MyContext getMyAthleteContext() {
+        return contextService.getMyAthleteContext(SecurityUtils.getCurrentUserId());
+    }
+
+    @PutMapping("/context/me/athlete")
+    public MyContext updateMyAthleteContext(@RequestBody UpdateContextRequest request) {
+        return contextService.upsertMyAthleteContext(
+                SecurityUtils.getCurrentUserId(), request.sections(), Provenance.web());
+    }
+
+    /** The caller's coaching philosophy. Coaches only. */
+    @GetMapping("/context/me/coach")
+    public MyContext getMyCoachContext() {
+        SecurityUtils.requireCoach();
+        return contextService.getMyCoachContext(SecurityUtils.getCurrentUserId());
+    }
+
+    @PutMapping("/context/me/coach")
+    public MyContext updateMyCoachContext(@RequestBody UpdateContextRequest request) {
+        SecurityUtils.requireCoach();
+        return contextService.upsertMyCoachContext(
+                SecurityUtils.getCurrentUserId(), request.sections(), Provenance.web());
+    }
+
     @GetMapping("/coach/athletes/{athleteId}/context")
     public CoachAthleteContext getAthleteContext(@PathVariable String athleteId) {
         SecurityUtils.requireCoach();

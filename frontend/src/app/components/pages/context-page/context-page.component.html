@@ -2,30 +2,16 @@
   @if (myContext$ | async; as myContext) {
     <div class="page-header">
       <div class="header-text">
-        <h1 class="page-title">
-          {{
-            (myContext.role === 'COACH'
-              ? 'CONTEXT_PAGE.TITLE_COACH'
-              : 'CONTEXT_PAGE.TITLE_ATHLETE'
-            ) | translate
-          }}
-        </h1>
-        <p class="page-subtitle">
-          {{
-            (myContext.role === 'COACH'
-              ? 'CONTEXT_PAGE.SUBTITLE_COACH'
-              : 'CONTEXT_PAGE.SUBTITLE_ATHLETE'
-            ) | translate
-          }}
-        </p>
+        <h1 class="page-title">{{ 'CONTEXT_PAGE.TITLE_ATHLETE' | translate }}</h1>
+        <p class="page-subtitle">{{ 'CONTEXT_PAGE.SUBTITLE_ATHLETE' | translate }}</p>
       </div>
     </div>
 
     <section class="glass context-card">
       <app-context-editor
         [sections]="myContext.sections"
-        [sectionTitles]="myContext.role === 'COACH' ? coachSections : athleteSections"
-        [sectionGuidance]="myContext.role === 'COACH' ? coachGuidance : athleteGuidance"
+        [sectionTitles]="athleteSections"
+        [sectionGuidance]="athleteGuidance"
         [updatedAt]="myContext.updatedAt ?? null"
         [saving]="(saving$ | async) ?? false"
         (save)="onSaveContext($event)"

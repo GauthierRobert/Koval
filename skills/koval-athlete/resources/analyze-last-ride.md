@@ -14,7 +14,7 @@ Pull the most recent completed session and render a markdown summary card with o
 1. `getSessions(mode='recent', limit=1)` → most recent `CompletedSession`. Capture `sessionId` and `sport`.
 2. Build the session card yourself: `getSessionDetail(sessionId)` for the overview (duration, avg power/HR, TSS, IF, RPE, distance), `getSessionBlocks(sessionId)` for the per-block table, and — for cycling — `getSessionPowerCurve(sessionId)` for a power-curve bar row. Lay it out as a compact overview table + a blocks table.
 3. **PR check** (cycling only) — call `getPersonalRecords` and compare against the session power curve from step 2. If any duration's best from this session ties or beats the all-time PR, prepend a `**🏆 New PR:**` line right after the verdict.
-4. **Planned vs actual** — if the session has a `scheduledWorkoutId`, call `getScheduledWorkoutDetail(scheduledWorkoutId)` and append a short delta line (planned TSS vs actual TSS, planned duration vs actual).
+4. **Planned vs actual** — if the session has a `scheduledWorkoutId`, call `getScheduledWorkoutDetail(scheduledWorkoutId)` and append a short delta line (planned TSS vs actual TSS, planned duration vs actual). If `getSessionDetail` returns an `alignmentScore` (a % where 100 = on plan), surface it too — e.g. *"Plan alignment: 104%"*. This rating is set by you (in the app's session view) or by your coach; it's a judgement of how well you matched the prescription, not just a number — mention the athlete can rate it in the app if it's unset.
 
 ## Output format
 

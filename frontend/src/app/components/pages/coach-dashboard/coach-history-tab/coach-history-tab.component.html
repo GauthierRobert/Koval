@@ -4,7 +4,7 @@
       {{ 'COACH_DASHBOARD.BACK_TO_HISTORY' | translate }}
     </button>
   </div>
-  <app-session-analysis [session]="analysisSession" />
+  <app-session-analysis [session]="analysisSession" [coachAthleteId]="selectedAthlete.id" />
 } @else {
   @if (athleteSessions$ | async; as sessions) {
     @if (sessions.length > 0) {
@@ -17,6 +17,7 @@
           <span>{{ 'COACH_DASHBOARD.HISTORY_COL_PWR' | translate }}</span>
           <span>{{ 'COACH_DASHBOARD.HISTORY_COL_TSS' | translate }}</span>
           <span>{{ 'COACH_DASHBOARD.HISTORY_COL_IF' | translate }}</span>
+          <span>{{ 'COACH_DASHBOARD.HISTORY_COL_ALIGN' | translate }}</span>
         </div>
         @for (s of sessions; track trackSessionById(s)) {
           <div class="hist-row clickable" (click)="openSessionAnalysis.emit(s)">
@@ -27,6 +28,7 @@
             <span>{{ s.avgPower | number: '1.0-0' }}W</span>
             <span>{{ s.tss | number: '1.0-0' }}</span>
             <span>{{ s.intensityFactor | number: '1.2-2' }}</span>
+            <span><app-alignment-badge [score]="alignmentScore(s)" /></span>
           </div>
         }
       </div>

@@ -4,6 +4,7 @@ import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.config.Provenance;
 import com.koval.trainingplannerbackend.training.history.AiAnalysis;
 import com.koval.trainingplannerbackend.training.history.AiAnalysisService;
+import com.koval.trainingplannerbackend.training.history.AlignmentScore;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService;
 import com.koval.trainingplannerbackend.training.history.AnalyticsService.PmcDataPoint;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
@@ -183,13 +184,13 @@ public class McpHistoryTools {
 
     public record SessionSummary(String id, String title, String sportType, String completedAt,
                                   int durationSeconds, double avgPower, double avgHR,
-                                  Double tss, Double intensityFactor) {
+                                  Double tss, Double intensityFactor, Integer alignmentScore) {
         public static SessionSummary from(CompletedSession s) {
             return new SessionSummary(
                     s.getId(), s.getTitle(), s.getSportType(),
                     Optional.ofNullable(s.getCompletedAt()).map(Object::toString).orElse(null),
                     s.getTotalDurationSeconds(), s.getAvgPower(), s.getAvgHR(),
-                    s.getTss(), s.getIntensityFactor());
+                    s.getTss(), s.getIntensityFactor(), effectiveAlignment(s));
         }
     }
 
@@ -198,8 +199,11 @@ public class McpHistoryTools {
                                  double avgPower, double avgHR, double avgCadence, double avgSpeed,
                                  Double totalDistance, Double tss, Double intensityFactor,
                                  Integer rpe, boolean hasFitFile, String scheduledWorkoutId,
-                                 String clubSessionId, int blockCount) {
+                                 String clubSessionId, int blockCount,
+                                 Integer alignmentScore, Integer athleteAlignmentScore,
+                                 Integer coachAlignmentScore, String coachAlignmentSource) {
         public static SessionDetail from(CompletedSession s) {
+            AlignmentScore a = s.getAlignmentScore();
             return new SessionDetail(
                     s.getId(), s.getTitle(), s.getSportType(),
                     Optional.ofNullable(s.getCompletedAt()).map(Object::toString).orElse(null),
@@ -208,7 +212,15 @@ public class McpHistoryTools {
                     s.getTotalDistance(), s.getTss(), s.getIntensityFactor(),
                     s.getRpe(), s.getFitFileId() != null,
                     s.getScheduledWorkoutId(), s.getClubSessionId(),
-                    Optional.ofNullable(s.getBlockSummaries()).map(List::size).orElse(0));
+                    Optional.ofNullable(s.getBlockSummaries()).map(List::size).orElse(0),
+                    effectiveAlignment(s),
+                    a != null ? a.getAthleteScore() : null,
+                    a != null ? a.getCoachScore() : null,
+                    a != null ? a.getCoachSource() : null);
         }
+    }
+
+    private static Integer effectiveAlignment(CompletedSession s) {
+        return s.getAlignmentScore() != null ? s.getAlignmentScore().effectiveScore() : null;
     }
 }

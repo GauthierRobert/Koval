@@ -266,6 +266,12 @@
     "allDeclaredFields": true
   },
   {
+    "name": "com.koval.trainingplannerbackend.training.history.AlignmentScore",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true
+  },
+  {
     "name": "com.koval.trainingplannerbackend.training.group.Group",
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true,

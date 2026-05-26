@@ -20,6 +20,7 @@ import {
   switchMap,
 } from 'rxjs/operators';
 import { HistoryService, SavedSession } from '../../../services/history.service';
+import { AlignmentScore } from '../../../models/alignment.model';
 import { AuthService } from '../../../services/auth.service';
 import {
   FitLap,
@@ -133,6 +134,9 @@ export class SessionAnalysisComponent implements OnDestroy {
 
   /** Sessions linked together (same groupId). Includes the current one. */
   @Input() linkedSessions: SavedSession[] = [];
+
+  /** When set, a coach is viewing this athlete's session — enables coach-side alignment rating. */
+  @Input() coachAthleteId: string | null = null;
 
   /** Pending action surfaced as the colored dot in the list, resolved inline below the header. */
   @Input() pendingAction: SessionActionKind | null = null;
@@ -456,6 +460,13 @@ export class SessionAnalysisComponent implements OnDestroy {
     }
     this.sessionSubject.next(updated);
     this.rpeUpdate$.next({ id: session.id, rpe: val });
+  }
+
+  /** Reflect a newly-set alignment rating locally and propagate to history-driven lists/badges. */
+  onAlignmentChanged(session: SavedSession, alignment: AlignmentScore): void {
+    const updated: SavedSession = { ...session, alignmentScore: alignment };
+    this.sessionSubject.next(updated);
+    this.historyService.applyAlignment(session.id, alignment);
   }
 
   getIF(session: SavedSession, ftp: number | null): number | null {

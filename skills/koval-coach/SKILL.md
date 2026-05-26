@@ -23,6 +23,7 @@ Pick **one** workflow from the user's request, then **read the matching file in 
 | Design a workout for an athlete / group | "create a 5x5 VO2 for my Tuesday group", "build a sweet spot 2x20 for Alice", "design a brick for the team" | `resources/create-workout.md` |
 | Assign / schedule a workout | "assign this to Alice for Tuesday", "schedule X for the whole group", "send this workout to my club" | `resources/assign-workout.md` |
 | Multi-week plan for one athlete | "build Alice a 6-week base block", "make a training plan for Bob" | `resources/build-plan.md` |
+| Score a session vs its plan | "score Alice's last session against the plan", "how well did Bob hit Tuesday's intervals", "rate alignment for X" | `resources/alignment-score.md` |
 | Club / group session admin | "create a club session", "set up our Tuesday group ride", "make this a recurring session" | `resources/club-sessions.md` |
 
 If the request maps to several workflows (e.g. "review my athletes and then build Alice a plan") run them sequentially.
@@ -50,6 +51,7 @@ The connector exposes ~70 tools. The ones every coach workflow uses:
 - **Athlete context (start here)**: `getAthleteContext(athleteId)` — one call returns the athlete's profile, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, next 7 days of schedule, active-plan week, the athlete's zone systems (each sport's zones with full bounds, the default flagged), the athlete's self-context (treat as a recommendation — see Rule 9), **your coaching philosophy** (binding), and **your private context about this athlete** (binding). Prefer it over the per-domain roster reads below.
 - **Coach roster**: `listAthletes`; for range-based drill-downs into one athlete, the read tools take an `athleteId` — `getSchedule(athleteId, …)`, `getPmcData(athleteId, …)`, `getBestPowerCurve(athleteId, …)`, `getVolume(athleteId, …)`, `getSessions(athleteId, …)`
 - **Context (write)**: `updateMyContext` (your coaching philosophy), `setAthleteCoachingContext(athleteId, sections)` (private per-athlete context, never shown to the athlete)
+- **Session review & alignment**: `getSessionDetail`, `getSessionBlocks`, `getScheduledWorkoutDetail` (planned vs actual), and `appendCoachNote(athleteId, body, sessionId, alignmentScore)` — leave feedback and, with `alignmentScore` (a % where 100 = on plan), record how a completed session matched its prescription. See `resources/alignment-score.md`.
 - **Trainings**: `searchTrainings`, `createTraining`, `updateTraining`, `cloneTraining`, `getTraining`
 - **Assigning**: `assignTraining(trainingId, athleteId, date)`, `scheduleTraining`, `rescheduleWorkout`, `unassignWorkout`
 - **Plans**: `createPlan`, `addDayToPlan`, `removeDayFromPlan`, `setPlanStatus` (status='ACTIVE'/'PAUSED'), `clonePlan`, `getPlanProgress`, `getPlanAnalytics`

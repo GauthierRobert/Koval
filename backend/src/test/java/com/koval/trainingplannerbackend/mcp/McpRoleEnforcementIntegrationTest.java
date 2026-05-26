@@ -47,7 +47,7 @@ class McpRoleEnforcementIntegrationTest extends BaseIntegrationTest {
     @Test
     void appendCoachNote_asAthlete_throwsForbidden() {
         authenticateAs("athlete-1", "ATHLETE");
-        assertThatThrownBy(() -> coachTools.appendCoachNote("athlete-2", "looking good", null))
+        assertThatThrownBy(() -> coachTools.appendCoachNote("athlete-2", "looking good", null, null))
                 .isInstanceOf(ForbiddenOperationException.class);
     }
 

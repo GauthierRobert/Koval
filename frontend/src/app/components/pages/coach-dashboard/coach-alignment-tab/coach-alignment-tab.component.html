@@ -1,0 +1,29 @@
+@if (points$ | async; as points) {
+  @if (points.length === 0) {
+    <div class="empty-tab">{{ 'ALIGNMENT.NO_DATA' | translate }}</div>
+  } @else {
+    <div class="coach-align-panel glass">
+      <div class="section-title">{{ 'ALIGNMENT.EVOLUTION_TITLE' | translate }}</div>
+      <app-alignment-evolution-chart [points]="points" />
+    </div>
+
+    <div class="align-list">
+      <div class="align-list-head">
+        <span>{{ 'COACH_DASHBOARD.HISTORY_COL_DATE' | translate }}</span>
+        <span>{{ 'COACH_DASHBOARD.HISTORY_COL_TITLE' | translate }}</span>
+        <span>{{ 'ALIGNMENT.ATHLETE_SHORT' | translate }}</span>
+        <span>{{ 'ALIGNMENT.COACH_SHORT' | translate }}</span>
+      </div>
+      @for (p of reversed(points); track p.sessionId) {
+        <div class="align-list-row">
+          <span>{{ p.date | date: 'MMM d' }}</span>
+          <span class="row-title">{{ p.title }}</span>
+          <span><app-alignment-badge [score]="p.athleteScore" /></span>
+          <span><app-alignment-badge [score]="p.coachScore" /></span>
+        </div>
+      }
+    </div>
+  }
+} @else {
+  <div class="skeleton skeleton-block skeleton-block--xl" aria-busy="true" aria-hidden="true"></div>
+}
