@@ -8,6 +8,6 @@ public record ClubMemberSummary(String userId, String displayName,
                                 String role, List<String> groupTags) {
 
     public static ClubMemberSummary from(ClubMemberResponse m) {
-        return new ClubMemberSummary(m.userId(), m.displayName(), m.role().name(), m.tags());
+        return new ClubMemberSummary(m.userId(), m.displayName(), m.role().name(), m.groups());
     }
 }

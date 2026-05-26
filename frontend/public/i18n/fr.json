@@ -268,6 +268,18 @@
   "AUTH_CALLBACK": {
     "AUTHENTICATING": "Authentification..."
   },
+  "OAUTH_CONSENT": {
+    "LOADING": "Chargement…",
+    "TITLE": "Connecter votre assistant IA",
+    "PROMPT_NAMED": "{{client}} souhaite se connecter à votre compte Koval afin de consulter et gérer vos données d'entraînement en votre nom.",
+    "PROMPT_GENERIC": "Un assistant IA externe souhaite se connecter à votre compte Koval afin de consulter et gérer vos données d'entraînement en votre nom.",
+    "CONNECT": "Connecter",
+    "CANCEL": "Annuler",
+    "CONNECTED_TITLE": "Connecté",
+    "CONNECTED_HINT": "Votre assistant IA est maintenant lié à Koval. Vous pouvez fermer cette page et revenir à votre assistant.",
+    "ERROR_TITLE": "Demande de connexion invalide",
+    "ERROR_HINT": "Ce lien de connexion est incomplet. Veuillez relancer la connexion depuis votre assistant IA."
+  },
   "ONBOARDING": {
     "TITLE": "Bienvenue sur Koval Training",
     "SUBTITLE": "Dis-nous quelque chose sur toi pour commencer",

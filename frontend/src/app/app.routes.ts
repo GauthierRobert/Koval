@@ -300,6 +300,16 @@ export const routes: Routes = [
     ],
   },
   {
+    // MCP OAuth 2.1 consent screen. No guards: the component handles both the logged-in
+    // (show consent) and logged-out (route through /login then return here) cases. A
+    // logged-in→dashboard guard here would break the connect flow.
+    path: 'oauth/authorize',
+    loadComponent: () =>
+      import('./components/pages/auth/oauth-consent/oauth-consent.component').then(
+        (m) => m.OauthConsentComponent,
+      ),
+  },
+  {
     path: 'auth/callback',
     loadComponent: () =>
       import('./components/pages/auth/auth-callback.component').then(

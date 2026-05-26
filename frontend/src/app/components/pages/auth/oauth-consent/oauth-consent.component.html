@@ -1,0 +1,46 @@
+@if (view$ | async; as view) {
+  <div class="consent-container">
+    <div class="consent-card">
+      <div class="logo">
+        <img src="/assets/logo.svg" alt="Koval Logo" class="logo-img" />
+        <h1>Koval <span class="accent">TRAINING</span></h1>
+      </div>
+
+      @switch (view.state) {
+        @case ('loading') {
+          <p class="status">{{ 'OAUTH_CONSENT.LOADING' | translate }}</p>
+        }
+
+        @case ('consent') {
+          <h2 class="title">{{ 'OAUTH_CONSENT.TITLE' | translate }}</h2>
+          <p class="subtitle">
+            @if (view.clientName) {
+              {{ 'OAUTH_CONSENT.PROMPT_NAMED' | translate: { client: view.clientName } }}
+            } @else {
+              {{ 'OAUTH_CONSENT.PROMPT_GENERIC' | translate }}
+            }
+          </p>
+          <div class="actions">
+            <button class="btn-primary" (click)="connect()">
+              {{ 'OAUTH_CONSENT.CONNECT' | translate }}
+            </button>
+            <button class="btn-ghost" (click)="cancel()">
+              {{ 'OAUTH_CONSENT.CANCEL' | translate }}
+            </button>
+          </div>
+        }
+
+        @case ('redirecting') {
+          <div class="success-mark" aria-hidden="true">✓</div>
+          <h2 class="title">{{ 'OAUTH_CONSENT.CONNECTED_TITLE' | translate }}</h2>
+          <p class="subtitle">{{ 'OAUTH_CONSENT.CONNECTED_HINT' | translate }}</p>
+        }
+
+        @case ('error') {
+          <h2 class="title">{{ 'OAUTH_CONSENT.ERROR_TITLE' | translate }}</h2>
+          <p class="subtitle">{{ 'OAUTH_CONSENT.ERROR_HINT' | translate }}</p>
+        }
+      }
+    </div>
+  </div>
+}

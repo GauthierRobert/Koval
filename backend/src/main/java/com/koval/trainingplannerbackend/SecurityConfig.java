@@ -72,7 +72,8 @@ public class SecurityConfig {
                             .requestMatchers("/.well-known/oauth-authorization-server",
                                     "/.well-known/oauth-protected-resource",
                                     "/.well-known/oauth-protected-resource/**",
-                                    "/oauth/register", "/oauth/authorize", "/oauth/token").permitAll()
+                                    "/oauth/register", "/oauth/authorize", "/oauth/token",
+                                    "/oauth/client-info").permitAll()
                             .requestMatchers("/actuator/health").permitAll()
                             .requestMatchers(HttpMethod.GET, "/api/skills", "/api/skills/**").permitAll()
                             .anyRequest().authenticated();

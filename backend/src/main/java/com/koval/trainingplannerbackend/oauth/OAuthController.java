@@ -90,6 +90,18 @@ public class OAuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /**
+     * Public lookup so the frontend consent page can show which application is requesting
+     * access. Returns only the human-readable client name — no secrets.
+     */
+    @GetMapping("/oauth/client-info")
+    public ResponseEntity<Map<String, Object>> clientInfo(@RequestParam("client_id") String clientId) {
+        return oAuthService.clientName(clientId)
+                .map(name -> ResponseEntity.ok(Map.<String, Object>of("clientName", name)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "unknown_client")));
+    }
+
     @GetMapping("/oauth/authorize")
     public ResponseEntity<Void> authorize(
             @RequestParam("client_id") String clientId,
@@ -114,7 +126,10 @@ public class OAuthController {
         }
 
         if (jwt == null) {
-            String authorizeUrl = issuer + "/oauth/authorize"
+            // No JWT on this top-level browser navigation: hand off to the frontend consent
+            // page, which handles both the logged-in and logged-out cases and completes the
+            // handshake by calling back here with the user's token.
+            String consentUrl = frontendBaseUrl() + "/oauth/authorize"
                     + "?client_id=" + encode(clientId)
                     + "&redirect_uri=" + encode(redirectUri)
                     + "&response_type=code"
@@ -122,11 +137,8 @@ public class OAuthController {
                     + (codeChallengeMethod != null ? "&code_challenge_method=" + encode(codeChallengeMethod) : "")
                     + (state != null ? "&state=" + encode(state) : "");
 
-            String frontendLoginUrl = issuer.replace("api.", "").replace(":8080", ":4200")
-                    + "/login?returnTo=" + encode(authorizeUrl);
-
             return ResponseEntity.status(HttpStatus.FOUND)
-                    .header("Location", frontendLoginUrl)
+                    .header("Location", consentUrl)
                     .build();
         }
 
@@ -177,6 +189,10 @@ public class OAuthController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "invalid_grant", "error_description", e.getMessage()));
         }
+    }
+
+    private String frontendBaseUrl() {
+        return issuer.replace("api.", "").replace(":8080", ":4200");
     }
 
     private static String encode(String value) {

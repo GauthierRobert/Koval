@@ -138,6 +138,15 @@ export class AuthService {
       );
   }
 
+  // --- MCP / OAuth 2.1 consent ---
+
+  /** Human-readable name of the AI client requesting access, for the consent screen. */
+  getOAuthClientInfo(clientId: string): Observable<{ clientName: string }> {
+    return this.http.get<{ clientName: string }>(
+      `${environment.apiUrl}/oauth/client-info?client_id=${encodeURIComponent(clientId)}`,
+    );
+  }
+
   // --- DEV ONLY — login with arbitrary userId ---
 
   devLogin(

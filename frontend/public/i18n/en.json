@@ -268,6 +268,18 @@
   "AUTH_CALLBACK": {
     "AUTHENTICATING": "Authenticating..."
   },
+  "OAUTH_CONSENT": {
+    "LOADING": "Loading…",
+    "TITLE": "Connect your AI assistant",
+    "PROMPT_NAMED": "{{client}} wants to connect to your Koval account so it can read and manage your training data on your behalf.",
+    "PROMPT_GENERIC": "An external AI assistant wants to connect to your Koval account so it can read and manage your training data on your behalf.",
+    "CONNECT": "Connect",
+    "CANCEL": "Cancel",
+    "CONNECTED_TITLE": "Connected",
+    "CONNECTED_HINT": "Your AI assistant is now linked to Koval. You can close this page and return to your assistant.",
+    "ERROR_TITLE": "Invalid connection request",
+    "ERROR_HINT": "This connection link is missing required information. Please start the connection again from your AI assistant."
+  },
   "ONBOARDING": {
     "TITLE": "Welcome to Koval Training",
     "SUBTITLE": "Tell us a bit about yourself to get started",

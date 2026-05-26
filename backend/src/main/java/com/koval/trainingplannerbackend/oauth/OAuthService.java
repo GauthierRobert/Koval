@@ -61,6 +61,11 @@ public class OAuthService {
         return new ClientRegistrationResult(clientId, clientSecret, clientName, redirectUris);
     }
 
+    /** Human-readable name of a registered client, for the consent screen. */
+    public java.util.Optional<String> clientName(String clientId) {
+        return clientRepository.findByClientId(clientId).map(OAuthClient::getClientName);
+    }
+
     // --- Authorization ---
 
     public String authorize(String clientId, String redirectUri, String codeChallenge, String codeChallengeMethod, String userId) {

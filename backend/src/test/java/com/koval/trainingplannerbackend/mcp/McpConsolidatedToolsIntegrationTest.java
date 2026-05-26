@@ -81,13 +81,13 @@ class McpConsolidatedToolsIntegrationTest extends BaseIntegrationTest {
         saveSession("athlete-2", LocalDate.of(2026, 1, 20).atStartOfDay());
         saveSession("athlete-2", LocalDate.of(2026, 2, 15).atStartOfDay());
 
-        var recent = historyTools.getSessions("recent", null, null, 2);
+        var recent = historyTools.getSessions("recent", null, null, 2, null);
         assertThat(recent).hasSize(2);
         // Most recent first.
         assertThat(recent.get(0).completedAt()).contains("2026-02-15");
 
         var january = historyTools.getSessions(
-                "range", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), null);
+                "range", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), null, null);
         assertThat(january).hasSize(2);
     }
 
