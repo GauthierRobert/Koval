@@ -2,7 +2,6 @@ import { Router, Routes } from '@angular/router';
 import { inject } from '@angular/core';
 import { authGuard } from './guards/auth.guard';
 import { coachGuard } from './guards/coach.guard';
-import { completeOauthReturn } from './utils/oauth-return.util';
 
 export const routes: Routes = [
   {
@@ -291,16 +290,9 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/pages/auth/login.component').then((m) => m.LoginComponent),
     canActivate: [
-      (route) => {
+      () => {
         const router = inject(Router);
-        const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
-        if (token) {
-          // Already authenticated: if an OAuth/MCP handshake brought us here, finish it by
-          // redirecting back to the authorization endpoint with the JWT instead of bouncing
-          // to the dashboard (which would drop `returnTo` and strand the connector).
-          if (completeOauthReturn(route.queryParamMap.get('returnTo'), token)) {
-            return false;
-          }
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('token')) {
           return router.createUrlTree(['/dashboard']);
         }
         return true;
