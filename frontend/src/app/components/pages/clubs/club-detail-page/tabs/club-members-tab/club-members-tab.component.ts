@@ -1,20 +1,22 @@
-import {ChangeDetectionStrategy, Component, inject, Input, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {TranslateModule} from '@ngx-translate/core';
+import { ChangeDetectionStrategy, Component, inject, Input, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import {
   canManageClub,
   ClubDetail,
   ClubGroup,
+  ClubMember,
   ClubMemberRole,
   ClubService,
   isClubAdmin,
 } from '../../../../../../services/club.service';
+import { ModalShellComponent } from '../../../../../shared/modal-shell/modal-shell.component';
 
 @Component({
   selector: 'app-club-members-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, ModalShellComponent],
   templateUrl: './club-members-tab.component.html',
   styleUrl: './club-members-tab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,6 +31,8 @@ export class ClubMembersTabComponent implements OnInit {
 
   newTagName = '';
   roleChangeInProgress = new Set<string>();
+  removeInProgress = false;
+  memberToRemove: ClubMember | null = null;
 
   get isAdmin(): boolean {
     return isClubAdmin(this.club?.currentMemberRole);
@@ -80,16 +84,20 @@ export class ClubMembersTabComponent implements OnInit {
 
   removeFromTag(groupId: string | undefined, userId: string): void {
     if (!groupId) return;
-    this.clubService.removeMemberFromGroup(this.club.id, groupId, userId).subscribe({ error: () => {} });
+    this.clubService
+      .removeMemberFromGroup(this.club.id, groupId, userId)
+      .subscribe({ error: () => {} });
   }
 
   changeRole(membershipId: string | undefined, role: string): void {
     if (!membershipId || this.roleChangeInProgress.has(membershipId)) return;
     this.roleChangeInProgress.add(membershipId);
-    this.clubService.updateMemberRole(this.club.id, membershipId, role as ClubMemberRole).subscribe({
-      next: () => this.roleChangeInProgress.delete(membershipId),
-      error: () => this.roleChangeInProgress.delete(membershipId),
-    });
+    this.clubService
+      .updateMemberRole(this.club.id, membershipId, role as ClubMemberRole)
+      .subscribe({
+        next: () => this.roleChangeInProgress.delete(membershipId),
+        error: () => this.roleChangeInProgress.delete(membershipId),
+      });
   }
 
   canChangeRole(memberRole: string): boolean {
@@ -97,6 +105,39 @@ export class ClubMembersTabComponent implements OnInit {
     if (this.isOwner) return true;
     if (this.isAdmin && memberRole !== 'ADMIN') return true;
     return false;
+  }
+
+  canRemoveMember(memberRole: string): boolean {
+    if (memberRole === 'OWNER') return false;
+    if (this.isOwner) return true;
+    if (this.isAdmin && memberRole !== 'ADMIN') return true;
+    return false;
+  }
+
+  requestRemove(member: ClubMember): void {
+    if (!member.membershipId) return;
+    this.memberToRemove = member;
+  }
+
+  cancelRemove(): void {
+    if (this.removeInProgress) return;
+    this.memberToRemove = null;
+  }
+
+  confirmRemove(): void {
+    const member = this.memberToRemove;
+    if (!member?.membershipId || this.removeInProgress) return;
+    this.removeInProgress = true;
+    this.clubService.removeMember(this.club.id, member.membershipId).subscribe({
+      next: () => {
+        this.removeInProgress = false;
+        this.memberToRemove = null;
+      },
+      error: () => {
+        this.removeInProgress = false;
+        this.memberToRemove = null;
+      },
+    });
   }
 
   getAvailableRoles(): string[] {
@@ -121,6 +162,10 @@ export class ClubMembersTabComponent implements OnInit {
 
   formatDate(dateStr: string | undefined): string {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   }
 }

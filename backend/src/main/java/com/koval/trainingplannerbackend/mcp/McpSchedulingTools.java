@@ -22,13 +22,16 @@ public class McpSchedulingTools {
     private final CoachService coachService;
     private final ScheduledWorkoutService scheduledWorkoutService;
     private final TrainingService trainingService;
+    private final McpAccessResolver accessResolver;
 
     public McpSchedulingTools(CoachService coachService,
                               ScheduledWorkoutService scheduledWorkoutService,
-                              TrainingService trainingService) {
+                              TrainingService trainingService,
+                              McpAccessResolver accessResolver) {
         this.coachService = coachService;
         this.scheduledWorkoutService = scheduledWorkoutService;
         this.trainingService = trainingService;
+        this.accessResolver = accessResolver;
     }
 
     @Tool(description = "Schedule a training workout for yourself on a specific date. The training must exist first (use listTrainings or createTraining).")
@@ -42,11 +45,12 @@ public class McpSchedulingTools {
         return ScheduleSummary.from(sw, title);
     }
 
-    @Tool(description = "Get your scheduled workouts within a date range. Returns all planned, completed, and skipped workouts for the period.")
-    public List<ScheduleSummary> getMySchedule(
+    @Tool(description = "Get scheduled workouts within a date range. Returns all planned, completed, and skipped workouts for the period. Omit athleteId for your own schedule; pass a coached athlete's id to read theirs (requires COACH role and a coaching relationship).")
+    public List<ScheduleSummary> getSchedule(
             @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
-            @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to,
+            @ToolParam(required = false, description = "Coached athlete's user ID. Omit/null for your own schedule.") String athleteId) {
+        String userId = accessResolver.resolve(athleteId).subjectId();
         return scheduledWorkoutService.getAthleteSchedule(userId, from, to).stream()
                 .map(sw -> {
                     String title = resolveTitle(sw.getTrainingId());

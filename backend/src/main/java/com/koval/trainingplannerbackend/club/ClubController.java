@@ -108,6 +108,14 @@ public class ClubController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{id}/members/{membershipId}")
+    public ResponseEntity<Void> removeMember(@PathVariable String id,
+                                             @PathVariable String membershipId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        clubMembershipService.removeMember(userId, id, membershipId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{id}/members/{membershipId}/role")
     public ResponseEntity<ClubMembership> updateMemberRole(@PathVariable String id,
                                                             @PathVariable String membershipId,

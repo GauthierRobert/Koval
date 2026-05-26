@@ -49,6 +49,7 @@ export interface CalendarClubSession {
   linkedTrainingTitle?: string;
   linkedTrainingDescription?: string;
   linkedTrainings?: CalendarLinkedTraining[];
+  recurringTemplateId?: string;
 }
 
 export interface CalendarLinkedTraining {

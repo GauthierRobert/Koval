@@ -60,7 +60,7 @@ The connector exposes ~60 tools. The ones every athlete workflow uses:
 - **Zones**: `listZoneSystems`, `getDefaultZoneSystem`, `createZoneSystem`, `deleteZoneSystem`
 - **Goals & races**: `getGoal`, `createGoal`, `searchRaces`, `getRace`, `linkRaceToGoal` (the goal list is in `getAthleteContext`)
 - **Trainings**: `searchTrainings`, `createTraining`, `getTraining`, `updateTraining`, `cloneTraining`
-- **Schedule**: `scheduleTraining`, `getMySchedule` (arbitrary date range), `getScheduledWorkoutDetail`, `rescheduleWorkout`, `unassignWorkout`, `markCompleted`, `markSkipped`
+- **Schedule**: `scheduleTraining`, `getSchedule` (arbitrary date range), `getScheduledWorkoutDetail`, `rescheduleWorkout`, `unassignWorkout`, `markCompleted`, `markSkipped`
 - **Sessions / history**: `getSessions` (mode='recent' or 'range'), `getSessionDetail`, `getSessionBlocks`, `getSessionPowerCurve`, `linkSessionToScheduled`
 - **Analytics**: `getPmcData`, `getPersonalRecords`, `getBestPowerCurve`, `getVolume`
 - **Plans**: `listPlans`, `getPlan`, `createPlan`, `addDayToPlan`, `setPlanStatus` (status='ACTIVE' with a start date to schedule, 'PAUSED' to pause, 'ACTIVE' with no date to resume)

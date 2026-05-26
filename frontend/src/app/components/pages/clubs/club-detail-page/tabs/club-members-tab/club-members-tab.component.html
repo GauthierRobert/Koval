@@ -1,6 +1,5 @@
 <div class="members-tab">
   @if (tags$ | async; as allTags) {
-
     <!-- Group Management (coach/admin/owner) -->
     @if (canManageGroups) {
       <h4 class="section-title">{{ 'CLUB_MEMBERS.SECTION_GROUPS' | translate }}</h4>
@@ -11,9 +10,13 @@
               <div class="group-card">
                 <div class="group-card-header">
                   <span class="group-card-name">{{ tag.name }}</span>
-                  <span class="group-card-count">{{ 'CLUB_MEMBERS.GROUP_MEMBER_COUNT' | translate: { count: tag.memberIds.length } }}</span>
+                  <span class="group-card-count">{{
+                    'CLUB_MEMBERS.GROUP_MEMBER_COUNT' | translate: { count: tag.memberIds.length }
+                  }}</span>
                   @if (isAdmin) {
-                    <button class="tag-delete" (click)="deleteTag(tag.id)">{{ 'CLUB_MEMBERS.BTN_DELETE_GROUP' | translate }}</button>
+                    <button class="tag-delete" (click)="deleteTag(tag.id)">
+                      {{ 'CLUB_MEMBERS.BTN_DELETE_GROUP' | translate }}
+                    </button>
                   }
                 </div>
               </div>
@@ -25,8 +28,16 @@
         }
         @if (isAdmin) {
           <div class="tag-create-row">
-            <input class="tag-input" data-testid="group-create-input" [(ngModel)]="newTagName" [placeholder]="'CLUB_MEMBERS.PLACEHOLDER_GROUP_NAME' | translate" (keyup.enter)="createTag()" />
-            <button class="btn-small" data-testid="btn-add-group" (click)="createTag()">{{ 'CLUB_MEMBERS.BTN_ADD_GROUP' | translate }}</button>
+            <input
+              class="tag-input"
+              data-testid="group-create-input"
+              [(ngModel)]="newTagName"
+              [placeholder]="'CLUB_MEMBERS.PLACEHOLDER_GROUP_NAME' | translate"
+              (keyup.enter)="createTag()"
+            />
+            <button class="btn-small" data-testid="btn-add-group" (click)="createTag()">
+              {{ 'CLUB_MEMBERS.BTN_ADD_GROUP' | translate }}
+            </button>
           </div>
         }
       </div>
@@ -37,7 +48,10 @@
       @if (pending$ | async; as pending) {
         @if (pending.length > 0) {
           <div class="pending-section">
-            <h4 class="section-title">{{ 'CLUB_MEMBERS.SECTION_PENDING' | translate }} <span class="badge-count">{{ pending.length }}</span></h4>
+            <h4 class="section-title">
+              {{ 'CLUB_MEMBERS.SECTION_PENDING' | translate }}
+              <span class="badge-count">{{ pending.length }}</span>
+            </h4>
             <div class="member-list">
               @for (m of pending; track m.membershipId) {
                 <div class="member-row glass" data-testid="pending-member-row">
@@ -45,15 +59,23 @@
                     <img class="avatar" [src]="m.profilePicture" alt="avatar" />
                   }
                   @if (!m.profilePicture) {
-                    <div class="avatar-placeholder">{{ (m.displayName || '?').charAt(0).toUpperCase() }}</div>
+                    <div class="avatar-placeholder">
+                      {{ (m.displayName || '?').charAt(0).toUpperCase() }}
+                    </div>
                   }
                   <div class="member-info">
                     <span class="member-name">{{ m.displayName || m.userId }}</span>
-                    <span class="member-date">{{ 'CLUB_MEMBERS.PENDING_REQUESTED' | translate: { date: formatDate(m.joinedAt) } }}</span>
+                    <span class="member-date">{{
+                      'CLUB_MEMBERS.PENDING_REQUESTED' | translate: { date: formatDate(m.joinedAt) }
+                    }}</span>
                   </div>
                   <div class="member-actions">
-                    <button class="btn-approve" (click)="approve(m.membershipId)">{{ 'CLUB_MEMBERS.BTN_APPROVE' | translate }}</button>
-                    <button class="btn-reject" (click)="reject(m.membershipId)">{{ 'CLUB_MEMBERS.BTN_REJECT' | translate }}</button>
+                    <button class="btn-approve" (click)="approve(m.membershipId)">
+                      {{ 'CLUB_MEMBERS.BTN_APPROVE' | translate }}
+                    </button>
+                    <button class="btn-reject" (click)="reject(m.membershipId)">
+                      {{ 'CLUB_MEMBERS.BTN_REJECT' | translate }}
+                    </button>
                   </div>
                 </div>
               }
@@ -74,13 +96,15 @@
                 <img class="avatar" [src]="m.profilePicture" alt="avatar" />
               }
               @if (!m.profilePicture) {
-                <div class="avatar-placeholder">{{ (m.displayName || '?').charAt(0).toUpperCase() }}</div>
+                <div class="avatar-placeholder">
+                  {{ (m.displayName || '?').charAt(0).toUpperCase() }}
+                </div>
               }
 
               <div class="member-info">
                 <div class="member-name-row">
                   <span class="member-name">{{ m.displayName || m.userId }}</span>
-                  @for (tagName of (m.tags || []); track tagName) {
+                  @for (tagName of m.tags || []; track tagName) {
                     <span class="club-tag">
                       {{ tagName }}
                       @if (isAdmin) {
@@ -88,12 +112,16 @@
                           class="tag-remove-tiny"
                           (click)="removeFromTag(getTagIdByName(tagName, allTags), m.userId)"
                           [title]="'CLUB_MEMBERS.REMOVE_TAG_TITLE' | translate"
-                        >×</button>
+                        >
+                          ×
+                        </button>
                       }
                     </span>
                   }
                 </div>
-                <span class="member-date">{{ 'CLUB_MEMBERS.MEMBER_JOINED' | translate: { date: formatDate(m.joinedAt) } }}</span>
+                <span class="member-date">{{
+                  'CLUB_MEMBERS.MEMBER_JOINED' | translate: { date: formatDate(m.joinedAt) }
+                }}</span>
               </div>
 
               <div class="member-right">
@@ -117,7 +145,10 @@
                   @if (getAvailableTags(m, allTags).length > 0) {
                     <select
                       class="tag-select"
-                      (change)="addToTag($any($event.target).value, m.userId); $any($event.target).value = ''"
+                      (change)="
+                        addToTag($any($event.target).value, m.userId);
+                        $any($event.target).value = ''
+                      "
                     >
                       <option value="">{{ 'CLUB_MEMBERS.TAG_ADD_PLACEHOLDER' | translate }}</option>
                       @for (tag of getAvailableTags(m, allTags); track tag.id) {
@@ -126,17 +157,81 @@
                     </select>
                   }
                 }
+
+                <!-- Remove member (owner removes anyone but owner; admin removes coach/member) -->
+                @if (canRemoveMember(m.role)) {
+                  <button
+                    type="button"
+                    class="btn-remove-member"
+                    data-testid="btn-remove-member"
+                    (click)="requestRemove(m)"
+                    [title]="'CLUB_MEMBERS.REMOVE_MEMBER_TITLE' | translate"
+                  >
+                    {{ 'CLUB_MEMBERS.BTN_REMOVE_MEMBER' | translate }}
+                  </button>
+                }
               </div>
             </div>
           }
         </div>
       } @else {
         <div class="empty-tab">
-          <span><svg class="icon-inline" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <span
+            ><svg
+              class="icon-inline"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg
+          ></span>
           <p>{{ 'CLUB_MEMBERS.EMPTY_NO_MEMBERS' | translate }}</p>
         </div>
       }
     }
+  }
 
+  <!-- Remove member confirmation -->
+  @if (memberToRemove) {
+    <app-modal-shell
+      [title]="'CLUB_MEMBERS.REMOVE_CONFIRM_TITLE' | translate"
+      size="sm"
+      [closeOnBackdrop]="!removeInProgress"
+      (closed)="cancelRemove()"
+    >
+      <p class="remove-confirm-text">
+        {{
+          'CLUB_MEMBERS.REMOVE_CONFIRM_BODY'
+            | translate: { name: memberToRemove.displayName || memberToRemove.userId }
+        }}
+      </p>
+      <div modal-footer class="remove-confirm-actions">
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="cancelRemove()"
+          [disabled]="removeInProgress"
+        >
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+        <button
+          type="button"
+          class="btn-danger"
+          data-testid="btn-confirm-remove-member"
+          (click)="confirmRemove()"
+          [disabled]="removeInProgress"
+        >
+          {{ 'CLUB_MEMBERS.BTN_REMOVE_MEMBER' | translate }}
+        </button>
+      </div>
+    </app-modal-shell>
   }
 </div>

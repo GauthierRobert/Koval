@@ -247,7 +247,7 @@
 }
 
 .group-card {
-  background: var(--surface-raised);;
+  background: var(--surface-raised);
   box-shadow: var(--shadow-glass);
   border: none;
   border-radius: var(--radius-md);
@@ -421,9 +421,82 @@
   background: rgba(248, 113, 113, 0.15);
 }
 
+.btn-remove-member {
+  background: rgba(248, 113, 113, 0.08);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s var(--ease-spring-gentle);
+}
+
+.btn-remove-member:hover {
+  background: rgba(248, 113, 113, 0.15);
+}
+
+/* ─── Remove confirmation ─────────────────────────────────── */
+.remove-confirm-text {
+  font-size: 13px;
+  color: var(--text-color);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.remove-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-secondary {
+  background: none;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring-gentle);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-elevated);
+  color: var(--text-color);
+}
+
+.btn-danger {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #f87171;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-spring-gentle);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.btn-secondary:disabled,
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ─── Invite panel ────────────────────────────────────────── */
 .invite-panel {
-  background: var(--surface-raised);;
+  background: var(--surface-raised);
   box-shadow: var(--shadow-glass);
   border: none;
   border-radius: var(--radius-sm);

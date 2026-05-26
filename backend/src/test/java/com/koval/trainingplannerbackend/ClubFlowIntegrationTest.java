@@ -359,6 +359,76 @@ class ClubFlowIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
+    @DisplayName("Owner removes a member from the club")
+    void removeMember() throws Exception {
+        String clubId = createClub("Removal Club", "PUBLIC");
+
+        MvcResult joinResult = mockMvc.perform(post("/api/clubs/" + clubId + "/join")
+                        .header("Authorization", bearer(memberToken)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String membershipId = objectMapper.readTree(
+                joinResult.getResponse().getContentAsString()).get("id").asText();
+
+        // Owner removes the member
+        mockMvc.perform(delete("/api/clubs/" + clubId + "/members/" + membershipId)
+                        .header("Authorization", bearer(ownerToken)))
+                .andExpect(status().isNoContent());
+
+        // Only the owner remains in the member list
+        mockMvc.perform(get("/api/clubs/" + clubId + "/members")
+                        .header("Authorization", bearer(ownerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
+
+        // Removed member no longer sees the club
+        mockMvc.perform(get("/api/clubs")
+                        .header("Authorization", bearer(memberToken)))
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    @Test
+    @DisplayName("A plain member cannot remove another member")
+    void memberCannotRemoveMember() throws Exception {
+        String clubId = createClub("Guarded Club", "PUBLIC");
+
+        MvcResult joinResult = mockMvc.perform(post("/api/clubs/" + clubId + "/join")
+                        .header("Authorization", bearer(memberToken)))
+                .andReturn();
+
+        String membershipId = objectMapper.readTree(
+                joinResult.getResponse().getContentAsString()).get("id").asText();
+
+        // Member tries to remove themselves via the admin endpoint → forbidden
+        mockMvc.perform(delete("/api/clubs/" + clubId + "/members/" + membershipId)
+                        .header("Authorization", bearer(memberToken)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Owner cannot be removed from the club")
+    void ownerCannotBeRemoved() throws Exception {
+        String clubId = createClub("Owner Club", "PUBLIC");
+
+        String membersBody = mockMvc.perform(get("/api/clubs/" + clubId + "/members")
+                        .header("Authorization", bearer(ownerToken)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String ownerMembershipId = null;
+        for (var node : objectMapper.readTree(membersBody)) {
+            if ("OWNER".equals(node.get("role").asText())) {
+                ownerMembershipId = node.get("membershipId").asText();
+            }
+        }
+
+        mockMvc.perform(delete("/api/clubs/" + clubId + "/members/" + ownerMembershipId)
+                        .header("Authorization", bearer(ownerToken)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("Member leaves club")
     void leaveClub() throws Exception {
         String clubId = createClub("Leave Club", "PUBLIC");

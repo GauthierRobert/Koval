@@ -57,7 +57,7 @@ Pause anytime later with `setPlanStatus(planId, status='PAUSED')`; resume with `
 ## Step 5 — Preview
 - `getPlanProgress(planId)` for status numbers.
 - `getPlanAnalytics(planId)` for projected weekly TSS / hours per week.
-- `getMySchedule(from=monday, to=sunday)` for the next 1-2 weeks — build a Mon-Sun grid for each.
+- `getSchedule(from=monday, to=sunday)` for the next 1-2 weeks — build a Mon-Sun grid for each.
 
 ## Output format
 
@@ -72,10 +72,10 @@ Pause anytime later with `setPlanStatus(planId, status='PAUSED')`; resume with `
 - … (compact list to the deload)
 
 ### This week
-<Mon-Sun week grid you build from getMySchedule>
+<Mon-Sun week grid you build from getSchedule>
 
 ### Next week
-<Mon-Sun week grid you build from getMySchedule>
+<Mon-Sun week grid you build from getSchedule>
 
 Plan ID: <planId> — say "swap [day]" or "make [day] easier" to adjust.
 ```

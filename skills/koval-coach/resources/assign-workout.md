@@ -27,18 +27,18 @@ Read `coach-profile.md` for `defaultVisibility`, `restDay`, `longSessionDay`. Us
    - "every Tuesday for 4 weeks" → 4 separate `assignTraining` calls, one per turn.
 4. **Sanity check the date**:
    - Against `coach-profile.restDay` (warn if hard session lands there).
-   - Against the athlete's existing schedule via `getAthleteSchedule(athleteId, from, to)` — flag conflicts but don't block.
+   - Against the athlete's existing schedule via `getSchedule(athleteId, from, to)` — flag conflicts but don't block.
    - Against the athlete's `athleteSelf` weekly availability if present. Self-context is a **recommendation, not a constraint** (SKILL.md rule 9): if the coach picked a day the athlete flagged as off / unavailable, **still assign** and append one line — *"Note: <athlete> flagged <day> as unavailable in their self-context; assigned as requested — say 'move it' to reschedule."* Only **medical / injury constraints** in self-context warrant pausing to confirm before assigning.
 5. **Assign**:
    - One athlete: `assignTraining(trainingId, athleteId, date, status='PENDING')`.
    - Whole group: iterate athletes, **one `assignTraining` per turn**, log `✓ [n/total] <athlete> — <date>`.
-6. **Confirm** by building a Mon-Sun week grid for the affected athlete from `getAthleteSchedule(athleteId, from, to)` for that week.
+6. **Confirm** by building a Mon-Sun week grid for the affected athlete from `getSchedule(athleteId, from, to)` for that week.
 
 ## Reschedule / unassign
 
 - Reschedule: `rescheduleWorkout(scheduledWorkoutId, newDate)`.
 - Drop: `unassignWorkout(scheduledWorkoutId)`.
-Both take the `scheduledWorkoutId` (not the trainingId). Look it up via `getAthleteSchedule` first if you don't have it in context.
+Both take the `scheduledWorkoutId` (not the trainingId). Look it up via `getSchedule` first if you don't have it in context.
 
 ## Output format
 
@@ -46,7 +46,7 @@ Single athlete:
 ```
 Assigned **<title>** to <athlete> for <weekday DD MMM>.
 
-<Mon-Sun week grid for the athlete, built from getAthleteSchedule>
+<Mon-Sun week grid for the athlete, built from getSchedule>
 ```
 
 Whole group (per turn):

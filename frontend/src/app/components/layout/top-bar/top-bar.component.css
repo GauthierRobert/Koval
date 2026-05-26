@@ -325,6 +325,21 @@
   transform: translateY(-1px);
 }
 
+/* Emphasized AI assistants button */
+.control-btn--ai {
+  margin-left: 8px;
+  background: var(--accent-gradient);
+  color: var(--on-primary-color);
+  box-shadow: 0 2px 12px -2px var(--accent-color);
+}
+
+.control-btn--ai:hover {
+  background: var(--accent-gradient);
+  color: var(--on-primary-color);
+  box-shadow: 0 4px 18px -2px var(--accent-color);
+  transform: translateY(-1px);
+}
+
 /* ─── User pill ──────────────────────────────────────────── */
 .user-pill {
   display: flex;

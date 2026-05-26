@@ -49,7 +49,7 @@ Method choice never overrides `forbiddenEfforts`. If a method's signature sharpe
 `setPlanStatus(planId, status='ACTIVE', startDate=<plan start Monday>)` so the sessions appear on the user's schedule.
 
 ### Step 5 — Preview
-`getMySchedule(from=monday, to=sunday)` for the next 1-2 weeks; build a Mon-Sun grid (○ pending / ✔ completed / ✗ skipped) for each.
+`getSchedule(from=monday, to=sunday)` for the next 1-2 weeks; build a Mon-Sun grid (○ pending / ✔ completed / ✗ skipped) for each.
 
 ## Output format
 
@@ -59,10 +59,10 @@ Method choice never overrides `forbiddenEfforts`. If a method's signature sharpe
 <N> days out. Plan: <one-sentence strategy>
 
 ### This week
-<Mon-Sun week grid you build from getMySchedule>
+<Mon-Sun week grid you build from getSchedule>
 
 ### Next week
-<Mon-Sun week grid you build from getMySchedule>
+<Mon-Sun week grid you build from getSchedule>
 
 Plan ID: <planId> — say "swap [day]" or "make [day] easier" to adjust.
 ```

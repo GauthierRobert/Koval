@@ -8,7 +8,6 @@ import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.beans.BeanUtils;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -39,16 +38,38 @@ public class McpTrainingTools {
         this.mcpTrainingMapper = mcpTrainingMapper;
     }
 
-    @Tool(description = "List the user's training workouts with pagination. Returns summaries including title, type, duration, and sport. Trainings are cycling/running/swimming/triathlon workout plans with structured blocks (warmup, intervals, steady, ramps, cooldown).")
-    public List<McpTrainingSummary> listTrainings(
-            @ToolParam(description = "Maximum number of trainings to return (default 15)") Integer limit,
-            @ToolParam(description = "Number of items to skip for pagination (default 0)") Integer offset) {
+    @Tool(description = """
+            Query the user's training workouts by optional filters, with pagination. Trainings are
+            cycling/running/swimming/triathlon workout plans with structured blocks (warmup, intervals,
+            steady, ramps, cooldown). All filters are optional — pass null to skip a filter. When no
+            filters are given this returns the most recent trainings. Returns summaries (id, title, sport,
+            type, duration in minutes, estimated TSS, description).""")
+    public List<McpTrainingSummary> queryTrainings(
+            @ToolParam(description = "Title substring to match (case-insensitive). Null or empty = no title filter.") String query,
+            @ToolParam(description = "Sport filter: CYCLING, RUNNING, SWIMMING, BRICK. Null = any sport.") String sport,
+            @ToolParam(description = "Minimum duration in minutes. Null = no minimum.") Integer minDurationMin,
+            @ToolParam(description = "Maximum duration in minutes. Null = no maximum.") Integer maxDurationMin,
+            @ToolParam(description = "Maximum number of trainings to return (default 15, max 50)") Integer limit,
+            @ToolParam(description = "Number of matching items to skip for pagination (default 0)") Integer offset) {
         String userId = SecurityUtils.getCurrentUserId();
         int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 50) : 15;
         int effectiveOffset = (offset != null && offset >= 0) ? offset : 0;
-        int page = effectiveOffset / effectiveLimit;
-        return trainingService.listTrainingsByUser(userId, PageRequest.of(page, effectiveLimit))
-                .getContent().stream()
+        String q = (query != null && !query.isBlank()) ? query.toLowerCase() : null;
+        String s = (sport != null && !sport.isBlank()) ? sport.toUpperCase() : null;
+        return trainingService.listTrainingsByUser(userId).stream()
+                .filter(t -> q == null || (t.getTitle() != null && t.getTitle().toLowerCase().contains(q)))
+                .filter(t -> s == null || (t.getSportType() != null && t.getSportType().name().equals(s)))
+                .filter(t -> {
+                    if (minDurationMin == null && maxDurationMin == null) return true;
+                    Integer secs = t.getEstimatedDurationSeconds();
+                    if (secs == null) return false;
+                    int mins = secs / 60;
+                    if (minDurationMin != null && mins < minDurationMin) return false;
+                    if (maxDurationMin != null && mins > maxDurationMin) return false;
+                    return true;
+                })
+                .skip(effectiveOffset)
+                .limit(effectiveLimit)
                 .map(McpTrainingSummary::from)
                 .toList();
     }
@@ -79,74 +100,6 @@ public class McpTrainingTools {
         String userId = SecurityUtils.getCurrentUserId();
         Training training = mcpTrainingMapper.mapToEntity(create);
         return McpTrainingSummary.from(trainingService.createTraining(training, userId));
-    }
-
-    @Tool(description = "Update an existing training workout by ID. Provide the full updated training (same schema as createTraining): sportType, title, blocks, etc. The training is replaced wholesale, not merged.")
-    public Object updateTraining(
-            @ToolParam(description = "The training ID to update") String trainingId,
-            @ToolParam(description = "The updated training (verbose schema mirroring the Training entity)") McpTrainingInput updates) {
-        String validationError = McpTrainingMapper.validate(updates);
-        if (validationError != null) return validationError;
-        Training training = mcpTrainingMapper.mapToEntity(updates);
-        return McpTrainingSummary.from(trainingService.updateTraining(trainingId, training));
-    }
-
-    @Tool(description = "Search the user's training workouts by title substring (case-insensitive), sport, and duration window. All filters are optional — pass null to skip a filter. Returns matching summaries (id, title, sport, type, duration, TSS).")
-    public List<McpTrainingSummary> searchTrainings(
-            @ToolParam(description = "Title substring to match (case-insensitive). Pass null or empty to skip.") String query,
-            @ToolParam(description = "Sport filter: CYCLING, RUNNING, SWIMMING, BRICK. Null = any.") String sport,
-            @ToolParam(description = "Minimum duration in minutes. Null = no minimum.") Integer minDurationMin,
-            @ToolParam(description = "Maximum duration in minutes. Null = no maximum.") Integer maxDurationMin) {
-        String userId = SecurityUtils.getCurrentUserId();
-        String q = (query != null && !query.isBlank()) ? query.toLowerCase() : null;
-        String s = (sport != null && !sport.isBlank()) ? sport.toUpperCase() : null;
-        return trainingService.listTrainingsByUser(userId).stream()
-                .filter(t -> q == null || (t.getTitle() != null && t.getTitle().toLowerCase().contains(q)))
-                .filter(t -> s == null || (t.getSportType() != null && t.getSportType().name().equals(s)))
-                .filter(t -> {
-                    if (minDurationMin == null && maxDurationMin == null) return true;
-                    Integer secs = t.getEstimatedDurationSeconds();
-                    if (secs == null) return false;
-                    int mins = secs / 60;
-                    if (minDurationMin != null && mins < minDurationMin) return false;
-                    if (maxDurationMin != null && mins > maxDurationMin) return false;
-                    return true;
-                })
-                .map(McpTrainingSummary::from)
-                .toList();
-    }
-
-    @Tool(description = "Clone an existing training workout into a new training owned by the current user. Useful for reusing a structured workout as a template. The clone keeps all blocks but gets a new title and a fresh ID.")
-    public McpTrainingSummary cloneTraining(
-            @ToolParam(description = "Source training ID") String trainingId,
-            @ToolParam(description = "Title for the new clone (defaults to '<original> (copy)')") String newTitle) {
-        String userId = SecurityUtils.getCurrentUserId();
-        Training source = trainingService.getTrainingById(trainingId);
-        trainingAccessService.verifyAccess(userId, source);
-        Training copy;
-        try {
-            copy = source.getClass().getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Failed to instantiate training subclass " + source.getClass().getSimpleName(), e);
-        }
-        BeanUtils.copyProperties(source, copy);
-        copy.setId(null);
-        copy.setTitle((newTitle != null && !newTitle.isBlank()) ? newTitle : source.getTitle() + " (copy)");
-        return McpTrainingSummary.from(trainingService.createTraining(copy, userId));
-    }
-
-    @Tool(description = "Estimate training metrics (TSS, IF, duration in seconds, distance) for an existing training without persisting any change. Uses the user's current FTP/CSS/threshold to compute intensity.")
-    public TrainingMetricsEstimate estimateTrainingMetrics(
-            @ToolParam(description = "Training ID to estimate") String trainingId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        Training training = trainingService.getTrainingById(trainingId);
-        trainingAccessService.verifyAccess(userId, training);
-        trainingMetricsService.calculateTrainingMetrics(training, userId);
-        return new TrainingMetricsEstimate(
-                training.getId(), training.getTitle(),
-                training.getEstimatedTss(), training.getEstimatedIf(),
-                training.getEstimatedDurationSeconds(),
-                training.getEstimatedDistance());
     }
 
     @Tool(description = "Delete a training workout by ID. Only the creator can delete their own trainings.")

@@ -48,7 +48,7 @@ Eight pre-defined endurance training methodologies the coach can opt into during
 The connector exposes ~70 tools. The ones every coach workflow uses:
 
 - **Athlete context (start here)**: `getAthleteContext(athleteId)` — one call returns the athlete's profile, current fitness/fatigue/form (CTL/ATL/TSB), upcoming goals, recent sessions, next 7 days of schedule, active-plan week, the athlete's self-context (treat as a recommendation — see Rule 9), **your coaching philosophy** (binding), and **your private context about this athlete** (binding). Prefer it over the per-domain roster reads below.
-- **Coach roster**: `listAthletes`, `getAthleteSchedule` (arbitrary range), `getAthletePmc`, `getAthletePowerCurve` (range-based drill-downs)
+- **Coach roster**: `listAthletes`; for range-based drill-downs into one athlete, the read tools take an `athleteId` — `getSchedule(athleteId, …)`, `getPmcData(athleteId, …)`, `getBestPowerCurve(athleteId, …)`, `getVolume(athleteId, …)`, `getSessions(athleteId, …)`
 - **Context (write)**: `updateMyContext` (your coaching philosophy), `setAthleteCoachingContext(athleteId, sections)` (private per-athlete context, never shown to the athlete)
 - **Trainings**: `searchTrainings`, `createTraining`, `updateTraining`, `cloneTraining`, `getTraining`
 - **Assigning**: `assignTraining(trainingId, athleteId, date)`, `scheduleTraining`, `rescheduleWorkout`, `unassignWorkout`
@@ -57,7 +57,7 @@ The connector exposes ~70 tools. The ones every coach workflow uses:
 - **Groups**: list and assign training groups (coach Group + ClubGroup)
 - **Club**: `getClub`, `listClubMembers`, `createClubSession`, `createRecurringSession`, `listClubSessions`, `listClubTests`, `createClubTestFromPreset`, `applyTestReferences`
 
-The context, analytics and schedule tools (`getAthleteContext`, `getAthletePmc`, `getAthletePowerCurve`, `getAthleteSchedule`, `getVolume`) return JSON. Format the numbers yourself into compact markdown — small tables, plus unicode sparklines (`▁▂▃▄▅▆▇█`) / bar rows (`█▉▊▋▌▍▎▏`) when a trend or comparison helps. No images required.
+The context, analytics and schedule tools (`getAthleteContext`, `getPmcData`, `getBestPowerCurve`, `getSchedule`, `getVolume` — pass the `athleteId` to target a coached athlete) return JSON. Format the numbers yourself into compact markdown — small tables, plus unicode sparklines (`▁▂▃▄▅▆▇█`) / bar rows (`█▉▊▋▌▍▎▏`) when a trend or comparison helps. No images required.
 
 ## Cross-cutting rules
 

@@ -5,55 +5,35 @@ import com.koval.trainingplannerbackend.coach.CoachNote;
 import com.koval.trainingplannerbackend.coach.CoachNoteService;
 import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
-import com.koval.trainingplannerbackend.coach.ScheduledWorkoutService;
 import com.koval.trainingplannerbackend.coach.dto.AthleteResponse;
 import com.koval.trainingplannerbackend.config.Provenance;
 import com.koval.trainingplannerbackend.training.TrainingService;
-import com.koval.trainingplannerbackend.training.history.AnalyticsService;
-import com.koval.trainingplannerbackend.training.history.AnalyticsService.PmcDataPoint;
-import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
-import com.koval.trainingplannerbackend.training.TrainingRepository;
-import com.koval.trainingplannerbackend.training.model.Training;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
- * MCP tool adapter for coach operations.
- * Only usable by users with COACH role.
+ * MCP tool adapter for coach-only operations that have no athlete-self equivalent.
+ *
+ * <p>Capabilities that exist for both an athlete (self) and a coach (managed athlete) — reading
+ * PMC, schedule, sessions, etc. — live on their athlete-side adapter and take an optional
+ * {@code athleteId} routed through {@link McpAccessResolver}, rather than being duplicated here.
  */
 @Service
 public class McpCoachTools {
 
     private final CoachService coachService;
-    private final ScheduledWorkoutService scheduledWorkoutService;
     private final TrainingService trainingService;
-    private final TrainingRepository trainingRepository;
-    private final AnalyticsService analyticsService;
-    private final PowerCurveService powerCurveService;
     private final CoachNoteService coachNoteService;
 
     public McpCoachTools(CoachService coachService,
-                         ScheduledWorkoutService scheduledWorkoutService,
                          TrainingService trainingService,
-                         TrainingRepository trainingRepository,
-                         AnalyticsService analyticsService,
-                         PowerCurveService powerCurveService,
                          CoachNoteService coachNoteService) {
         this.coachService = coachService;
-        this.scheduledWorkoutService = scheduledWorkoutService;
         this.trainingService = trainingService;
-        this.trainingRepository = trainingRepository;
-        this.analyticsService = analyticsService;
-        this.powerCurveService = powerCurveService;
         this.coachNoteService = coachNoteService;
     }
 
@@ -84,31 +64,6 @@ public class McpCoachTools {
                 .toList();
     }
 
-    @Tool(description = "Get a specific athlete's scheduled workouts within a date range. Requires COACH role.")
-    public List<McpSchedulingTools.ScheduleSummary> getAthleteSchedule(
-            @ToolParam(description = "Athlete ID") String athleteId,
-            @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
-            @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
-        SecurityUtils.requireCoach();
-        List<ScheduledWorkout> workouts = scheduledWorkoutService.getAthleteSchedule(athleteId, from, to);
-        Map<String, String> titles = batchResolveTitles(workouts);
-        return workouts.stream()
-                .map(sw -> McpSchedulingTools.ScheduleSummary.from(
-                        sw, titles.getOrDefault(sw.getTrainingId(), "Unknown")))
-                .toList();
-    }
-
-    @Tool(description = "Get a coached athlete's PMC (Performance Management Chart) data — daily CTL/ATL/TSB — over a date range. Requires COACH relationship.")
-    public List<PmcDataPoint> getAthletePmc(
-            @ToolParam(description = "Athlete user ID") String athleteId,
-            @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
-            @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
-        SecurityUtils.requireCoach();
-        String coachId = SecurityUtils.getCurrentUserId();
-        verifyCoach(coachId, athleteId);
-        return analyticsService.generatePmc(athleteId, from, to);
-    }
-
     @Tool(description = "Append a coach note about an athlete you manage. Use this to leave AI-drafted " +
             "feedback after reviewing the athlete's recent work — the note shows up on the athlete's coach " +
             "view with an AI-source badge. Pass sessionId to tie the note to a specific completed session, " +
@@ -123,12 +78,6 @@ public class McpCoachTools {
         return CoachNoteSummary.from(saved);
     }
 
-    private void verifyCoach(String coachId, String athleteId) {
-        if (!coachService.isCoachOfAthlete(coachId, athleteId)) {
-            throw new IllegalStateException("Not authorized: you are not the coach of this athlete.");
-        }
-    }
-
     public record CoachNoteSummary(String id, String coachId, String athleteId, String sessionId,
                                     String body, String createdAt, String source) {
         public static CoachNoteSummary from(CoachNote n) {
@@ -138,18 +87,5 @@ public class McpCoachTools {
                     n.getCreatedAt() != null ? n.getCreatedAt().toString() : null,
                     n.getProvenance() != null ? n.getProvenance().source() : null);
         }
-    }
-
-    private Map<String, String> batchResolveTitles(List<ScheduledWorkout> workouts) {
-        Set<String> trainingIds = workouts.stream()
-                .map(ScheduledWorkout::getTrainingId)
-                .filter(id -> id != null && !id.isBlank())
-                .collect(Collectors.toSet());
-        if (trainingIds.isEmpty()) return Map.of();
-        Map<String, String> titles = new HashMap<>(trainingIds.size());
-        for (Training t : trainingRepository.findAllById(new ArrayList<>(trainingIds))) {
-            titles.put(t.getId(), t.getTitle());
-        }
-        return titles;
     }
 }

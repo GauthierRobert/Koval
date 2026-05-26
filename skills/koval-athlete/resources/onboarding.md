@@ -27,6 +27,8 @@ For the athlete's primary sport, if the relevant threshold (FTP / threshold pace
 ## Step 4 — Interview
 Ask in **grouped batches**, not one-by-one. Wait for the answer before the next group. Offer "skip / use defaults" per group. If the athlete pastes a long bio instead, parse what you can into the groups and ask only for the missing pieces.
 
+**Question format — prefer multiple choice.** Whenever a question has a known, enumerable set of answers, present it as a **multiple-choice question** (single- or multi-select as appropriate) rather than open prose — it's faster for the athlete and keeps answers parseable. Most questions below already list their options (sport, level, training method, voice/tone, units, etc.) → render those as choices, and always include a "skip / use defaults" choice. Only fall back to **free text** when the answer is genuinely open-ended (e.g. injuries, "what does a good week look like", custom never-do rules, race names) — ask those directly. In clients that support structured questions, batch a group's choices together; otherwise list them clearly and let the athlete reply with the labels.
+
 ### Group 1 — About you
 - Primary sport(s)? (cycling / running / swimming / triathlon / multisport)
 - Self-described level? (beginner / intermediate / competitive / elite)

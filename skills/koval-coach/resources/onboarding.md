@@ -27,6 +27,8 @@ Already enforced by the parent skill. If somehow reached as an ATHLETE, bounce t
 ## Step 3 — Interview
 Ask in **grouped batches**, not one-by-one. Wait for the answer before the next group. Offer "skip / use defaults" per group.
 
+**Question format — prefer multiple choice.** Whenever a question has a known, enumerable set of answers, present it as a **multiple-choice question** (single- or multi-select as appropriate) rather than open prose — it's faster for the coach and keeps answers parseable. Most questions below already list their options (sports, athlete level, training method, periodization model, units, voice/tone, default visibility, etc.) → render those as choices, and always include a "skip / use defaults" choice. Only fall back to **free text** when the answer is genuinely open-ended (e.g. signature drills, favourite session formats, custom never-do rules, coaching cues) — ask those directly. In clients that support structured questions, batch a group's choices together; otherwise list them clearly and let the coach reply with the labels.
+
 ### Group 1 — Identity & athletes
 - What sports do you primarily coach? (cycling / running / swimming / triathlon / multisport)
 - Typical level of your athletes? (beginner / intermediate / competitive / elite / mixed)

@@ -4,11 +4,9 @@ import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRole;
 import com.koval.trainingplannerbackend.auth.UserService;
-import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutService;
 import com.koval.trainingplannerbackend.config.Provenance;
-import com.koval.trainingplannerbackend.config.exceptions.ForbiddenOperationException;
 import com.koval.trainingplannerbackend.context.AthleteContext;
 import com.koval.trainingplannerbackend.context.CoachContext;
 import com.koval.trainingplannerbackend.context.ContextService;
@@ -54,8 +52,8 @@ public class McpContextTools {
     private final TrainingRepository trainingRepository;
     private final TrainingPlanService planService;
     private final ContextService contextService;
-    private final CoachService coachService;
     private final AnalyticsService analyticsService;
+    private final McpAccessResolver accessResolver;
 
     public McpContextTools(UserService userService,
                            RaceGoalService raceGoalService,
@@ -64,8 +62,8 @@ public class McpContextTools {
                            TrainingRepository trainingRepository,
                            TrainingPlanService planService,
                            ContextService contextService,
-                           CoachService coachService,
-                           AnalyticsService analyticsService) {
+                           AnalyticsService analyticsService,
+                           McpAccessResolver accessResolver) {
         this.userService = userService;
         this.raceGoalService = raceGoalService;
         this.sessionRepository = sessionRepository;
@@ -73,8 +71,8 @@ public class McpContextTools {
         this.trainingRepository = trainingRepository;
         this.planService = planService;
         this.contextService = contextService;
-        this.coachService = coachService;
         this.analyticsService = analyticsService;
+        this.accessResolver = accessResolver;
     }
 
     @Tool(description = "Load everything you need to reason about an athlete in ONE call. Omit "
@@ -87,22 +85,12 @@ public class McpContextTools {
             + "when you are the coach — your coaching philosophy and your private notes about this "
             + "athlete. Prefer this over calling profile/sessions/goals/schedule tools separately.")
     public AthleteContextPayload getAthleteContext(
-            @ToolParam(description = "Coached athlete's user ID. Omit/null to load your own context.")
+            @ToolParam(required = false, description = "Coached athlete's user ID. Omit/null to load your own context.")
             String athleteId) {
-        String callerId = SecurityUtils.getCurrentUserId();
-        boolean coachView = athleteId != null && !athleteId.isBlank() && !athleteId.equals(callerId);
-
-        String subjectId;
-        if (coachView) {
-            SecurityUtils.requireCoach();
-            if (!coachService.isCoachOfAthlete(callerId, athleteId)) {
-                throw new ForbiddenOperationException(
-                        "Not authorized: you are not the coach of this athlete");
-            }
-            subjectId = athleteId;
-        } else {
-            subjectId = callerId;
-        }
+        McpAccessResolver.ResolvedSubject resolved = accessResolver.resolve(athleteId);
+        String callerId = resolved.callerId();
+        String subjectId = resolved.subjectId();
+        boolean coachView = resolved.coachView();
 
         User subject = userService.getUserById(subjectId);
         LocalDate today = LocalDate.now();
@@ -178,9 +166,9 @@ public class McpContextTools {
             @ToolParam(description = "Coached athlete's user ID") String athleteId,
             @ToolParam(description = "Section title → markdown content describing your plan for this athlete")
             Map<String, String> sections) {
-        SecurityUtils.requireCoach();
+        String coachId = accessResolver.resolve(athleteId).callerId();
         AthleteContext saved = contextService.upsertCoachAthleteContext(
-                SecurityUtils.getCurrentUserId(), athleteId, sections, Provenance.mcp());
+                coachId, athleteId, sections, Provenance.mcp());
         return ContextEntry.from(saved);
     }
 
@@ -188,7 +176,7 @@ public class McpContextTools {
      * Compute CTL/ATL/TSB live as of today (with rest-day decay) rather than reading the
      * cached values on the User document. The cached fields are only refreshed when a session
      * is logged/imported or a workout is scheduled, so they go stale on rest days — this keeps
-     * the context tool consistent with the live PMC tools ({@code getPmcData}/{@code getAthletePmc}).
+     * the context tool consistent with the live PMC tool ({@code getPmcData}).
      */
     private TrainingLoad currentTrainingLoad(String subjectId, LocalDate today, User subject) {
         List<AnalyticsService.PmcDataPoint> pmc = analyticsService.generatePmc(subjectId, today, today);

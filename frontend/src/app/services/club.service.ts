@@ -1,5 +1,5 @@
-import {inject, Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 import {
   ClubDetail,
   ClubGroup,
@@ -9,25 +9,25 @@ import {
   ClubSummary,
   CreateClubData,
 } from '../models/club.model';
-import {ClubCrudService} from './club/club-crud.service';
-import {ClubGroupService} from './club/club-group.service';
-import {ClubInviteService} from './club/club-invite.service';
-import {ClubMembershipService} from './club/club-membership.service';
+import { ClubCrudService } from './club/club-crud.service';
+import { ClubGroupService } from './club/club-group.service';
+import { ClubInviteService } from './club/club-invite.service';
+import { ClubMembershipService } from './club/club-membership.service';
 
 // Re-export model types for backwards compatibility.
 export * from '../models/club.model';
 
 // Re-export the focused services so new code can depend on them directly.
-export {ClubCrudService} from './club/club-crud.service';
-export {ClubGroupService} from './club/club-group.service';
-export {ClubInviteService} from './club/club-invite.service';
-export {ClubMembershipService} from './club/club-membership.service';
+export { ClubCrudService } from './club/club-crud.service';
+export { ClubGroupService } from './club/club-group.service';
+export { ClubInviteService } from './club/club-invite.service';
+export { ClubMembershipService } from './club/club-membership.service';
 
 /**
  * Facade over the focused club services. Delegates each method to its owning service
  * so existing consumers keep working while new code can inject the focused services.
  */
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class ClubService {
   private crud = inject(ClubCrudService);
   private membership = inject(ClubMembershipService);
@@ -83,12 +83,11 @@ export class ClubService {
   rejectMember(clubId: string, membershipId: string): Observable<void> {
     return this.membership.rejectMember(clubId, membershipId);
   }
-  updateMemberRole(
-    clubId: string,
-    membershipId: string,
-    role: ClubMemberRole,
-  ): Observable<void> {
+  updateMemberRole(clubId: string, membershipId: string, role: ClubMemberRole): Observable<void> {
     return this.membership.updateMemberRole(clubId, membershipId, role);
+  }
+  removeMember(clubId: string, membershipId: string): Observable<void> {
+    return this.membership.removeMember(clubId, membershipId);
   }
 
   // --- Groups ---
@@ -107,11 +106,7 @@ export class ClubService {
   addMemberToGroup(clubId: string, groupId: string, userId: string): Observable<ClubGroup> {
     return this.groups.addMemberToGroup(clubId, groupId, userId);
   }
-  removeMemberFromGroup(
-    clubId: string,
-    groupId: string,
-    userId: string,
-  ): Observable<ClubGroup> {
+  removeMemberFromGroup(clubId: string, groupId: string, userId: string): Observable<ClubGroup> {
     return this.groups.removeMemberFromGroup(clubId, groupId, userId);
   }
   joinGroupSelf(clubId: string, groupId: string): Observable<ClubGroup> {

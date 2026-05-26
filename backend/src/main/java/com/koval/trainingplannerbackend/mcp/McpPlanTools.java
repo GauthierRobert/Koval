@@ -131,12 +131,6 @@ public class McpPlanTools {
         };
     }
 
-    @Tool(description = "Get progress of a training plan: how many workouts are completed, skipped, or pending.")
-    public Object getPlanProgress(
-            @ToolParam(description = "Plan ID") String planId) {
-        return analyticsService.getProgress(planId);
-    }
-
     @Tool(description = "Get the full structure of a training plan: title, description, sport, status, start date, weeks with their target TSS labels, and the planned workouts per day (training id, day of week, notes).")
     public PlanDetail getPlan(
             @ToolParam(description = "Plan ID") String planId) {
@@ -157,14 +151,6 @@ public class McpPlanTools {
         updates.setTargetFtp(targetFtp);
         updates.setGoalRaceId(goalRaceId);
         return PlanSummary.from(planService.updatePlan(planId, updates, userId));
-    }
-
-    @Tool(description = "Permanently delete a training plan. If the plan is ACTIVE, future pending scheduled workouts created from it are also deleted. Cannot be undone.")
-    public String deletePlan(
-            @ToolParam(description = "Plan ID") String planId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        planService.deletePlan(planId, userId);
-        return "Plan deleted.";
     }
 
     @Tool(description = "Remove planned workouts from a specific day of a week. If trainingId is provided, removes only that workout from the day (leaving any others). If trainingId is null/blank, removes the entire day with all its workouts.")
@@ -203,15 +189,6 @@ public class McpPlanTools {
         updates.setWeeks(plan.getWeeks());
         planService.updatePlan(planId, updates, userId);
         return "Removed from " + dayOfWeek + " of week " + weekNumber + ".";
-    }
-
-    @Tool(description = "Clone an existing training plan as a new DRAFT, copying all weeks and planned days. Useful for reusing a plan as a template with a new start date.")
-    public PlanSummary clonePlan(
-            @ToolParam(description = "Source plan ID") String planId,
-            @ToolParam(description = "Title for the new plan (defaults to '<original> (copy)')") String newTitle,
-            @ToolParam(description = "New start date for the cloned plan (YYYY-MM-DD), or null") LocalDate newStartDate) {
-        String userId = SecurityUtils.getCurrentUserId();
-        return PlanSummary.from(planService.clonePlan(planId, newTitle, newStartDate, userId));
     }
 
     public record PlanDetail(String id, String title, String description, String sport,

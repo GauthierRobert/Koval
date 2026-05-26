@@ -38,26 +38,30 @@ public class McpHistoryTools {
     private final SessionService sessionService;
     private final PowerCurveService powerCurveService;
     private final AiAnalysisService aiAnalysisService;
+    private final McpAccessResolver accessResolver;
 
     public McpHistoryTools(CompletedSessionRepository sessionRepository,
                            AnalyticsService analyticsService,
                            SessionService sessionService,
                            PowerCurveService powerCurveService,
-                           AiAnalysisService aiAnalysisService) {
+                           AiAnalysisService aiAnalysisService,
+                           McpAccessResolver accessResolver) {
         this.sessionRepository = sessionRepository;
         this.analyticsService = analyticsService;
         this.sessionService = sessionService;
         this.powerCurveService = powerCurveService;
         this.aiAnalysisService = aiAnalysisService;
+        this.accessResolver = accessResolver;
     }
 
-    @Tool(description = "Get completed workout sessions. mode='recent' returns the latest N sessions (use limit; default 10, max 50). mode='range' returns all sessions between from and to (YYYY-MM-DD, inclusive). Returns metrics like duration, average power, heart rate, TSS (Training Stress Score) and IF (Intensity Factor).")
+    @Tool(description = "Get completed workout sessions. mode='recent' returns the latest N sessions (use limit; default 10, max 50). mode='range' returns all sessions between from and to (YYYY-MM-DD, inclusive). Returns metrics like duration, average power, heart rate, TSS (Training Stress Score) and IF (Intensity Factor). Omit athleteId for your own sessions; pass a coached athlete's id to read theirs (requires COACH role and a coaching relationship).")
     public List<SessionSummary> getSessions(
             @ToolParam(description = "Query mode: 'recent' for the latest sessions, or 'range' for a date window. Defaults to 'recent'.") String mode,
             @ToolParam(description = "Start date inclusive (YYYY-MM-DD). Required when mode='range'.") LocalDate from,
             @ToolParam(description = "End date inclusive (YYYY-MM-DD). Required when mode='range'.") LocalDate to,
-            @ToolParam(description = "Max sessions to return when mode='recent' (default 10, max 50). Ignored for 'range'.") Integer limit) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "Max sessions to return when mode='recent' (default 10, max 50). Ignored for 'range'.") Integer limit,
+            @ToolParam(required = false, description = "Coached athlete's user ID. Omit/null for your own sessions.") String athleteId) {
+        String userId = accessResolver.resolve(athleteId).subjectId();
         String effectiveMode = (mode == null || mode.isBlank()) ? "recent" : mode.trim().toLowerCase();
         return switch (effectiveMode) {
             case "recent" -> {
@@ -82,57 +86,49 @@ public class McpHistoryTools {
         };
     }
 
-    @Tool(description = "Get Performance Management Chart (PMC) data for a date range. Returns daily CTL (Chronic Training Load / fitness), ATL (Acute Training Load / fatigue), and TSB (Training Stress Balance / form) values. Useful for analyzing training load progression.")
+    @Tool(description = "Get Performance Management Chart (PMC) data for a date range. Returns daily CTL (Chronic Training Load / fitness), ATL (Acute Training Load / fatigue), and TSB (Training Stress Balance / form) values. Useful for analyzing training load progression. Omit athleteId for your own PMC; pass a coached athlete's id to read theirs (requires COACH role and a coaching relationship).")
     public List<PmcDataPoint> getPmcData(
             @ToolParam(description = "Start date (YYYY-MM-DD)") LocalDate from,
-            @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate to) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "End date (YYYY-MM-DD)") LocalDate to,
+            @ToolParam(required = false, description = "Coached athlete's user ID. Omit/null for your own PMC.") String athleteId) {
+        String userId = accessResolver.resolve(athleteId).subjectId();
         return analyticsService.generatePmc(userId, from, to);
     }
 
-    @Tool(description = "Get full detail of a single completed session: title, sport, duration, average power/HR/cadence, TSS, IF, RPE, total distance, whether a FIT file is attached, and the per-block summary list. Use this when the user asks 'how was my last ride' or wants a deep dive on a specific session.")
+    @Tool(description = "Get full detail of a single completed session: title, sport, duration, average power/HR/cadence, TSS, IF, RPE, total distance, whether a FIT file is attached, and the per-block summary list. Use this when the user asks 'how was my last ride' or wants a deep dive on a specific session. Omit athleteId for your own session; pass a coached athlete's id to read theirs (requires COACH role and a coaching relationship).")
     public SessionDetail getSessionDetail(
-            @ToolParam(description = "Completed session ID") String sessionId) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "Completed session ID") String sessionId,
+            @ToolParam(required = false, description = "Coached athlete's user ID. Omit/null for your own session.") String athleteId) {
+        String userId = accessResolver.resolve(athleteId).subjectId();
         CompletedSession s = sessionService.getSession(userId, sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found: " + sessionId));
         return SessionDetail.from(s);
     }
 
-    @Tool(description = "Get the mean-maximal power curve (best average watts per duration) for a single completed cycling session. Durations are 5s, 15s, 30s, 1m, 2m, 5m, 10m, 20m, 30m, 1h, 1.5h, 2h. Computed lazily from the FIT file on first request, then cached. Returns an empty map for non-cycling sessions or sessions without power data.")
-    public Map<Integer, Double> getSessionPowerCurve(
-            @ToolParam(description = "Completed session ID") String sessionId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        return powerCurveService.getSessionPowerCurve(sessionId, userId);
-    }
-
-    @Tool(description = "Get the user's best mean-maximal power curve across all cycling sessions in a date range. Combines the highest average watts achieved at each standard duration (5s through 2h). Use to spot fitness peaks or compare two periods (e.g. last 30 days vs last 90 days).")
+    @Tool(description = "Get the best mean-maximal power curve across all cycling sessions in a date range. Combines the highest average watts achieved at each standard duration (5s through 2h). Use to spot fitness peaks or compare two periods (e.g. last 30 days vs last 90 days). Omit athleteId for your own curve; pass a coached athlete's id to read theirs (requires COACH role and a coaching relationship).")
     public Map<Integer, Double> getBestPowerCurve(
             @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
-            @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to,
+            @ToolParam(required = false, description = "Coached athlete's user ID. Omit/null for your own curve.") String athleteId) {
+        String userId = accessResolver.resolve(athleteId).subjectId();
         return powerCurveService.getBestPowerCurve(userId, from, to);
     }
 
-    @Tool(description = "Get the user's all-time personal records — the best average power ever held over each standard duration (5s, 15s, 30s, 1m, 2m, 5m, 10m, 20m, 30m, 1h, 1.5h, 2h).")
-    public Map<Integer, Double> getPersonalRecords() {
-        String userId = SecurityUtils.getCurrentUserId();
-        return powerCurveService.getPersonalRecords(userId);
-    }
-
-    @Tool(description = "Get aggregated training volume per week or month: total TSS, total duration in seconds, total distance in meters, and TSS broken down by sport. Use groupBy='week' or 'month'.")
+    @Tool(description = "Get aggregated training volume per week or month: total TSS, total duration in seconds, total distance in meters, and TSS broken down by sport. Use groupBy='week' or 'month'. Omit athleteId for your own volume; pass a coached athlete's id to read theirs (requires COACH role and a coaching relationship).")
     public List<VolumeEntry> getVolume(
             @ToolParam(description = "Start date inclusive (YYYY-MM-DD)") LocalDate from,
             @ToolParam(description = "End date inclusive (YYYY-MM-DD)") LocalDate to,
-            @ToolParam(description = "Aggregation period: 'week' or 'month'") String groupBy) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "Aggregation period: 'week' or 'month'") String groupBy,
+            @ToolParam(required = false, description = "Coached athlete's user ID. Omit/null for your own volume.") String athleteId) {
+        String userId = accessResolver.resolve(athleteId).subjectId();
         return powerCurveService.computeVolume(userId, from, to, groupBy);
     }
 
-    @Tool(description = "Get the per-block breakdown of a completed session: each interval/steady/warmup block with its duration, target power, actual power, average HR and cadence. Useful for analysing structured workout execution quality.")
+    @Tool(description = "Get the per-block breakdown of a completed session: each interval/steady/warmup block with its duration, target power, actual power, average HR and cadence. Useful for analysing structured workout execution quality. Omit athleteId for your own session; pass a coached athlete's id to read theirs (requires COACH role and a coaching relationship).")
     public List<BlockSummary> getSessionBlocks(
-            @ToolParam(description = "Completed session ID") String sessionId) {
-        String userId = SecurityUtils.getCurrentUserId();
+            @ToolParam(description = "Completed session ID") String sessionId,
+            @ToolParam(required = false, description = "Coached athlete's user ID. Omit/null for your own session.") String athleteId) {
+        String userId = accessResolver.resolve(athleteId).subjectId();
         CompletedSession s = sessionService.getSession(userId, sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found: " + sessionId));
         return s.getBlockSummaries() != null ? s.getBlockSummaries() : List.of();
@@ -148,15 +144,6 @@ public class McpHistoryTools {
         patch.put("rpe", rpe);
         CompletedSession updated = sessionService.patchSession(sessionId, patch, userId);
         return SessionDetail.from(updated);
-    }
-
-    @Tool(description = "Link a completed session to a previously scheduled workout, marking that workout as completed in the calendar.")
-    public SessionDetail linkSessionToScheduled(
-            @ToolParam(description = "Completed session ID") String sessionId,
-            @ToolParam(description = "Scheduled workout ID to link to") String scheduledWorkoutId) {
-        String userId = SecurityUtils.getCurrentUserId();
-        CompletedSession s = sessionService.linkSessionToSchedule(sessionId, scheduledWorkoutId, userId);
-        return SessionDetail.from(s);
     }
 
     @Tool(description = "Permanently delete a completed session and any FIT file attached to it. This cannot be undone.")

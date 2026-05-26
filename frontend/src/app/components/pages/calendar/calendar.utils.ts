@@ -35,6 +35,15 @@ export type CalendarEntry = ScheduledEntry | FusedEntry | StandaloneEntry | Club
 export interface ClubCalendarPreferences {
   hiddenClubIds: string[];
   hiddenGroupIds: string[];
+  hiddenRecurringTemplateIds: string[];
+  hideSingleSessions: boolean;
+}
+
+/** A distinct recurring session series surfaced in the calendar, used to drive per-series filtering. */
+export interface RecurringSeries {
+  templateId: string;
+  clubId: string;
+  title: string;
 }
 
 export type EntriesByDay = Map<string, CalendarEntry[]>;

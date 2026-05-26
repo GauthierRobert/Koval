@@ -72,52 +72,6 @@ public class McpClubTools {
         return sessions.stream().map(ClubSessionSummary::from).toList();
     }
 
-    @Tool(description = "Create a single club training session. This is a one-time group workout event.")
-    public Object createClubSession(
-            @ToolParam(description = "Club ID") String clubId,
-            @ToolParam(description = "Session title") String title,
-            @ToolParam(description = "Sport: CYCLING, RUNNING, SWIMMING, or BRICK") String sport,
-            @ToolParam(description = "Scheduled date and time (ISO-8601, e.g. 2026-04-15T18:00)") LocalDateTime scheduledAt,
-            @ToolParam(description = "Location (optional)") String location,
-            @ToolParam(description = "Description (optional)") String description,
-            @ToolParam(description = "Max participants, null for unlimited") Integer maxParticipants,
-            @ToolParam(description = "Duration in minutes (optional)") Integer durationMinutes) {
-        if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
-        if (title == null || title.isBlank()) return "Error: title is required.";
-        if (scheduledAt == null) return "Error: scheduledAt is required.";
-
-        String userId = SecurityUtils.getCurrentUserId();
-        var req = new CreateSessionRequest(null, title, sport, scheduledAt, location,
-                null, null, description, null, maxParticipants, durationMinutes,
-                null, userId, null, null, null);
-        ClubTrainingSession session = sessionService.createSession(userId, clubId, req);
-        return ClubSessionSummary.from(session);
-    }
-
-    @Tool(description = "Create a recurring weekly club session that auto-generates instances (4 weeks ahead).")
-    public Object createRecurringSession(
-            @ToolParam(description = "Club ID") String clubId,
-            @ToolParam(description = "Session title") String title,
-            @ToolParam(description = "Sport: CYCLING, RUNNING, SWIMMING, or BRICK") String sport,
-            @ToolParam(description = "Day of week: MONDAY-SUNDAY") DayOfWeek dayOfWeek,
-            @ToolParam(description = "Time of day (HH:mm, e.g. 18:30)") LocalTime timeOfDay,
-            @ToolParam(description = "Location (optional)") String location,
-            @ToolParam(description = "Description (optional)") String description,
-            @ToolParam(description = "Max participants, null for unlimited") Integer maxParticipants,
-            @ToolParam(description = "Duration in minutes (optional)") Integer durationMinutes) {
-        if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
-        if (title == null || title.isBlank()) return "Error: title is required.";
-        if (dayOfWeek == null) return "Error: dayOfWeek is required.";
-        if (timeOfDay == null) return "Error: timeOfDay is required.";
-
-        String userId = SecurityUtils.getCurrentUserId();
-        var req = new CreateRecurringSessionRequest(null, title, sport, dayOfWeek, timeOfDay,
-                location, null, null, description, null, maxParticipants, durationMinutes,
-                null, userId, null, null, null, null);
-        RecurringSessionTemplate template = recurringService.createTemplate(userId, clubId, req);
-        return RecurringTemplateSummary.from(template);
-    }
-
     @Tool(description = "Cancel a club session (notifies participants).")
     public String cancelSession(
             @ToolParam(description = "Club ID") String clubId,

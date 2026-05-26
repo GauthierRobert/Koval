@@ -1,12 +1,12 @@
-import {HttpClient} from '@angular/common/http';
-import {inject, Injectable} from '@angular/core';
-import {BehaviorSubject, Observable, of} from 'rxjs';
-import {catchError, tap} from 'rxjs/operators';
-import {environment} from '../../../environments/environment';
-import {ClubMember, ClubMemberRole} from '../../models/club.model';
-import {ClubCrudService} from './club-crud.service';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
+import { ClubMember, ClubMemberRole } from '../../models/club.model';
+import { ClubCrudService } from './club-crud.service';
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class ClubMembershipService {
   private readonly apiUrl = `${environment.apiUrl}/api/clubs`;
   private http = inject(HttpClient);
@@ -68,14 +68,19 @@ export class ClubMembershipService {
       .pipe(tap(() => this.loadPendingRequests(clubId)));
   }
 
-  updateMemberRole(
-    clubId: string,
-    membershipId: string,
-    role: ClubMemberRole,
-  ): Observable<void> {
+  updateMemberRole(clubId: string, membershipId: string, role: ClubMemberRole): Observable<void> {
     return this.http
-      .put<void>(`${this.apiUrl}/${clubId}/members/${membershipId}/role`, {role})
+      .put<void>(`${this.apiUrl}/${clubId}/members/${membershipId}/role`, { role })
       .pipe(tap(() => this.loadMembers(clubId)));
+  }
+
+  removeMember(clubId: string, membershipId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${clubId}/members/${membershipId}`).pipe(
+      tap(() => {
+        this.loadMembers(clubId);
+        this.crud.loadClubDetail(clubId);
+      }),
+    );
   }
 
   reset(): void {

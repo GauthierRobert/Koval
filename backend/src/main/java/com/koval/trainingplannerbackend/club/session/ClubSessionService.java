@@ -383,7 +383,8 @@ public class ClubSessionService {
                 Optional.ofNullable(resolved).map(GroupLinkedTraining::getTrainingId).orElse(null),
                 Optional.ofNullable(resolved).map(GroupLinkedTraining::getTrainingTitle).orElse(null),
                 Optional.ofNullable(resolved).map(GroupLinkedTraining::getTrainingDescription).orElse(null),
-                linkedTrainings);
+                linkedTrainings,
+                s.getRecurringTemplateId());
     }
 
     private List<ClubTrainingSession> filterByGroupVisibility(String userId, String clubId,

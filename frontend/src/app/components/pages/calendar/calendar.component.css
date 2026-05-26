@@ -237,7 +237,7 @@
   color: var(--text-color);
 }
 
-.prefs-toggle input[type="checkbox"] {
+.prefs-toggle input[type='checkbox'] {
   accent-color: #a78bfa;
   width: 14px;
   height: 14px;
@@ -246,6 +246,22 @@
 
 .prefs-club-name {
   font-weight: 700;
+}
+
+.prefs-subheader {
+  padding-left: 22px;
+  margin-top: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+}
+
+.prefs-single-row {
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--glass-border);
 }
 
 .prefs-groups {
@@ -320,5 +336,14 @@
   .view-selector {
     display: none;
   }
-}
 
+  /* The dropdown anchored to the button's right edge overflowed off-screen on the
+     left-aligned mobile header; pin it to the left and cap its size to the viewport. */
+  .prefs-dropdown {
+    right: auto;
+    left: 0;
+    max-width: calc(100vw - var(--space-sm) * 2);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+}

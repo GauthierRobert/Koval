@@ -51,14 +51,14 @@ For each planned slot:
 - Honour `longSessionDay` for the longest session; respect `restDays`.
 
 ## Step 5 — Render
-- `getMySchedule(from=monday, to=sunday)` → the scheduled workouts (title + status) for the week. Lay them out yourself as a Mon-Sun grid, marking each with ○ pending / ✔ completed / ✗ skipped.
+- `getSchedule(from=monday, to=sunday)` → the scheduled workouts (title + status) for the week. Lay them out yourself as a Mon-Sun grid, marking each with ○ pending / ✔ completed / ✗ skipped.
 
 ## Output format
 
 ```
 Here's your week (TSB: <value>, focus: <focus>):
 
-<Mon-Sun week grid you build from getMySchedule>
+<Mon-Sun week grid you build from getSchedule>
 
 Highlights:
 - <Tuesday>: <session name + why>

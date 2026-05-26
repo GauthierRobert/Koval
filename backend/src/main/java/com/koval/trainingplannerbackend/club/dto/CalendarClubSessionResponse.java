@@ -12,7 +12,8 @@ public record CalendarClubSessionResponse(
         LocalDateTime openToAllFrom,
         boolean cancelled, String cancellationReason,
         String linkedTrainingId, String linkedTrainingTitle, String linkedTrainingDescription,
-        List<CalendarLinkedTraining> linkedTrainings
+        List<CalendarLinkedTraining> linkedTrainings,
+        String recurringTemplateId
 ) {
     public record CalendarLinkedTraining(
             String trainingId, String title,

@@ -58,6 +58,39 @@
                     }
                   </div>
                 }
+                @if (recurringSeriesFor(role.clubId).length) {
+                  <div class="prefs-subheader">
+                    {{ 'CALENDAR.PREFS_RECURRING_HEADER' | translate }}
+                  </div>
+                  <div class="prefs-groups">
+                    @for (series of recurringSeriesFor(role.clubId); track series.templateId) {
+                      <div class="prefs-group-row">
+                        <label class="prefs-toggle">
+                          <input
+                            type="checkbox"
+                            [checked]="isRecurringSeriesVisible(series.templateId)"
+                            (change)="toggleRecurringSeries(series.templateId)"
+                          />
+                          <span class="prefs-group-name">{{ series.title }}</span>
+                        </label>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+            @if (hasSingleSessions) {
+              <div class="prefs-single-row">
+                <label class="prefs-toggle">
+                  <input
+                    type="checkbox"
+                    [checked]="isSingleSessionsVisible()"
+                    (change)="toggleSingleSessions()"
+                  />
+                  <span class="prefs-club-name">{{
+                    'CALENDAR.PREFS_SINGLE_SESSIONS' | translate
+                  }}</span>
+                </label>
               </div>
             }
           </div>

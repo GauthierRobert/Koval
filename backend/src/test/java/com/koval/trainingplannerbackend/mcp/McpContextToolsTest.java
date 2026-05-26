@@ -56,7 +56,7 @@ class McpContextToolsTest {
     void setUp() {
         tools = new McpContextTools(userService, raceGoalService, sessionRepository,
                 scheduledWorkoutService, trainingRepository, planService, contextService,
-                coachService, analyticsService);
+                analyticsService, new McpAccessResolver(coachService));
         when(raceGoalService.getGoalsForAthlete(any())).thenReturn(List.of());
         when(sessionRepository.findByUserIdAndCompletedAtBetween(any(), any(), any()))
                 .thenReturn(List.of());

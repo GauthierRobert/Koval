@@ -225,6 +225,47 @@ public class ClubMembershipService {
         return membershipRepository.save(target);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "userClubs", key = "#result", condition = "#result != null"),
+            @CacheEvict(value = "clubActiveMemberIds", key = "#clubId")
+    })
+    @Transactional
+    public String removeMember(String callerId, String clubId, String membershipId) {
+        ClubMembership caller = membershipRepository.findByClubIdAndUserId(clubId, callerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Not a member"));
+        if (caller.getRole() != ClubMemberRole.OWNER && caller.getRole() != ClubMemberRole.ADMIN) {
+            throw new ForbiddenOperationException("Only owner or admin can remove members");
+        }
+
+        ClubMembership target = membershipRepository.findById(membershipId)
+                .orElseThrow(() -> new ResourceNotFoundException("Membership not found"));
+        if (!target.getClubId().equals(clubId)) {
+            throw new ValidationException("Membership does not belong to this club");
+        }
+        if (target.getUserId().equals(callerId)) {
+            throw new ForbiddenOperationException("Use leave to remove yourself from the club");
+        }
+        if (target.getRole() == ClubMemberRole.OWNER) {
+            throw new ForbiddenOperationException("Cannot remove the club owner");
+        }
+        if (target.getRole() == ClubMemberRole.ADMIN && caller.getRole() != ClubMemberRole.OWNER) {
+            throw new ForbiddenOperationException("Only the owner can remove an admin");
+        }
+
+        String removedUserId = target.getUserId();
+        if (target.getStatus() == ClubMemberStatus.ACTIVE) {
+            Club club = clubRepository.findById(clubId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Club not found"));
+            club.setMemberCount(Math.max(0, club.getMemberCount() - 1));
+            clubRepository.save(club);
+            activityService.emitActivity(clubId, ClubActivityType.MEMBER_LEFT, removedUserId, null, null);
+        }
+        membershipRepository.delete(target);
+        // Soft-leave every chat room in this club so lastReadAt is preserved on rejoin.
+        chatMembershipService.deactivateAllForUserInClub(clubId, removedUserId);
+        return removedUserId;
+    }
+
     public List<MyClubRoleEntry> getMyClubRoles(String userId) {
         List<ClubMembership> memberships = membershipRepository.findByUserId(userId).stream()
                 .filter(m -> m.getStatus() == ClubMemberStatus.ACTIVE)

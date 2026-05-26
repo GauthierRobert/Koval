@@ -55,7 +55,7 @@ Pause anytime later with `setPlanStatus(planId, status='PAUSED')`.
 ## Step 5 — Preview
 - `getPlanProgress(planId)` for status numbers.
 - `getPlanAnalytics(planId)` for projected weekly TSS / hours per week.
-- `getAthleteSchedule(athleteId, from=monday, to=sunday)` for the next 2 weeks; build a Mon-Sun grid for each.
+- `getSchedule(athleteId, from=monday, to=sunday)` for the next 2 weeks; build a Mon-Sun grid for each.
 
 ## Output format
 
@@ -70,10 +70,10 @@ Pause anytime later with `setPlanStatus(planId, status='PAUSED')`.
 - … (compact list)
 
 ### This week
-<Mon-Sun week grid built from getAthleteSchedule>
+<Mon-Sun week grid built from getSchedule>
 
 ### Next week
-<Mon-Sun week grid built from getAthleteSchedule>
+<Mon-Sun week grid built from getSchedule>
 
 Plan ID: <planId> — say "swap [day]" or "make [day] easier" to adjust.
 ```

@@ -7,4 +7,4 @@ import java.util.List;
 
 public record ClubMemberResponse(String membershipId, String userId, String displayName,
                                  String profilePicture, ClubMemberRole role,
-                                 LocalDateTime joinedAt, List<String> tags) {}
+                                 LocalDateTime joinedAt, List<String> groups) {}

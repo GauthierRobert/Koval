@@ -18,14 +18,14 @@ Also invoked automatically from `weekly-review.md` when the coach drills into a 
 
 In parallel:
 - `getAthleteContext(athleteId)` — name, sport focus, FTP/threshold/CSS, weight, role (`subject`), current CTL/ATL/TSB (`trainingLoad`), and the last ~14 days of sessions (`recentSessions`)
-- `getAthletePmc(athleteId, from=today-90d, to=today)` — 90-day form trend
-- `getAthletePowerCurve(athleteId, from=today-90d, to=today)` — recent power curve (cycling)
-- `getAthleteSchedule(athleteId, from=today, to=today+14d)` — what's already booked
-- `getBestPowerCurve(athleteId)` — all-time PRs (cycling)
+- `getPmcData(athleteId, from=today-90d, to=today)` — 90-day form trend
+- `getBestPowerCurve(athleteId, from=today-90d, to=today)` — recent power curve (cycling)
+- `getSchedule(athleteId, from=today, to=today+14d)` — what's already booked
+- `getBestPowerCurve(athleteId, from=today-1095d, to=today)` — all-time PRs (cycling)
 
-Format the fetched data yourself — all of it is athlete-scoped from the `getAthlete*` calls above:
-- form trend → a CTL/ATL/TSB sparkline + latest-values table from `getAthletePmc`
-- power curve (cycling only) → a bar row / table from `getAthletePowerCurve` (vs all-time `getBestPowerCurve`)
+Format the fetched data yourself — all of it is athlete-scoped because you passed the `athleteId` to each read above:
+- form trend → a CTL/ATL/TSB sparkline + latest-values table from `getPmcData`
+- power curve (cycling only) → a bar row / table from the recent `getBestPowerCurve` (vs the all-time `getBestPowerCurve`)
 - most-recent session → a compact card from the newest entry in `getAthleteContext(athleteId).recentSessions` (title, duration, avg power/HR, TSS, IF)
 
 ## Output format
@@ -37,13 +37,13 @@ Format the fetched data yourself — all of it is athlete-scoped from the `getAt
 **Current form:** CTL <…> · ATL <…> · TSB <…>  → <flag emoji + label>
 
 ### Form trend (90d)
-<CTL/ATL/TSB sparkline + latest-values table from getAthletePmc>
+<CTL/ATL/TSB sparkline + latest-values table from getPmcData>
 
 ### Last session
 <compact card from the newest getAthleteContext recentSessions entry>
 
 ### Power curve (last 90d, cycling)
-<table / bar rows from getAthletePowerCurve vs getBestPowerCurve>
+<table / bar rows from getBestPowerCurve vs getBestPowerCurve>
 
 ### Next 14 days on the calendar
 | Date     | Workout           | Status   |

@@ -29,12 +29,11 @@ public class McpServerConfig {
                                          McpPlanTools plan,
                                          McpGoalTools goal,
                                          McpClubTools club,
-                                         McpClubTestTools clubTest,
                                          McpRaceTools race,
                                          McpProfileTools profile,
                                          McpContextTools context) {
         ToolCallbackProvider base = MethodToolCallbackProvider.builder()
-                .toolObjects(training, scheduling, history, coach, zone, plan, goal, club, clubTest, race, profile, context)
+                .toolObjects(training, scheduling, history, coach, zone, plan, goal, club, race, profile, context)
                 .build();
 
         ToolCallback[] corrected = Arrays.stream(base.getToolCallbacks())
