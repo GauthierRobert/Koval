@@ -1,13 +1,13 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {TranslateModule} from '@ngx-translate/core';
-import {Observable} from 'rxjs';
-import {User} from '../../../../services/auth.service';
-import {SavedSession} from '../../../../services/history.service';
-import {SessionData} from '../../../../models/session-types.model';
-import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
-import {SessionAnalysisComponent} from '../../session-analysis/session-analysis.component';
-import {formatTimeHMS} from '../../../shared/format/format.utils';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { Observable } from 'rxjs';
+import { User } from '../../../../services/auth.service';
+import { SavedSession } from '../../../../services/history.service';
+import { SessionData } from '../../../../models/session-types.model';
+import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
+import { SessionAnalysisComponent } from '../../session-analysis/session-analysis.component';
+import { formatTimeHMS } from '../../../shared/format/format.utils';
 
 @Component({
   selector: 'app-coach-history-tab',
@@ -26,8 +26,8 @@ export class CoachHistoryTabComponent {
   @Output() openSessionAnalysis = new EventEmitter<SessionData>();
   @Output() closeSessionAnalysis = new EventEmitter<void>();
 
-  formatSessionDur(sec: number): string {
-    return formatTimeHMS(sec);
+  formatSessionDur(s: SessionData): string {
+    return formatTimeHMS(s.movingTimeSeconds ?? s.totalDurationSeconds);
   }
 
   trackSessionById(s: SessionData): string {

@@ -10,6 +10,8 @@ export interface SessionData {
   completedAt?: string;
   duration: number;
   totalDurationSeconds: number;
+  /** Active time excluding pauses; null when the source didn't provide it. */
+  movingTimeSeconds?: number | null;
   distance?: number;
   avgPower?: number;
   avgHeartRate?: number;

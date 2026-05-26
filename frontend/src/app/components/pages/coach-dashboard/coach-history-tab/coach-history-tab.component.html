@@ -23,7 +23,7 @@
             <span>{{ s.completedAt | date: 'MMM d' }}</span>
             <span><app-sport-icon [sport]="$any(s.sportType)" [size]="12" /></span>
             <span class="hist-title">{{ s.title }}</span>
-            <span>{{ formatSessionDur(s.totalDurationSeconds) }}</span>
+            <span>{{ formatSessionDur(s) }}</span>
             <span>{{ s.avgPower | number: '1.0-0' }}W</span>
             <span>{{ s.tss | number: '1.0-0' }}</span>
             <span>{{ s.intensityFactor | number: '1.2-2' }}</span>
