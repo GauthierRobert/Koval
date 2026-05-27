@@ -76,6 +76,25 @@ export function hoverPrimaryValue(ctx: HoverContext, idx: number, t0: number): n
   return speedToPlotValue(kmh, isSwimming(ctx.sportType), ctx.primaryMax);
 }
 
+/** Speed (km/h) for the dedicated speed panel's hover dot. In block mode this
+ * snaps to the block's average speed so the dot rides the stepped line rather
+ * than the raw per-record spike. */
+export function hoverSpeed(ctx: HoverContext, idx: number, t0: number): number {
+  if (useZoneBlocks(ctx)) {
+    const zb = ctx.zoneBlocks.find((b) => idx >= b.startIndex && idx <= b.endIndex);
+    if (zb) return zb.avgSpeed;
+  } else if (usePlannedBlocks(ctx)) {
+    const pb = findPlannedBlock(ctx.records, ctx.blockSummaries, idx, t0);
+    if (pb) {
+      return pb.distanceMeters && pb.durationSeconds > 0
+        ? (pb.distanceMeters / pb.durationSeconds) * 3.6
+        : 0;
+    }
+  }
+  const t = ctx.records[idx].timestamp;
+  return lerpDsValue(ctx.downsampled, t, (r) => (r.speed || 0) * 3.6);
+}
+
 export function hoverHR(ctx: HoverContext, idx: number, t0: number): number {
   if (useZoneBlocks(ctx)) {
     const zb = ctx.zoneBlocks.find((b) => idx >= b.startIndex && idx <= b.endIndex);

@@ -40,12 +40,20 @@ export function deriveAthleteMetrics(data: PmcDataPoint[]): AthleteMetrics | nul
 }
 
 export function buildProjectionTssMap(
-  workouts: ReadonlyArray<{ status?: string; tss?: number; scheduledDate: string }>,
-): Map<string, number> {
-  const m = new Map<string, number>();
+  workouts: ReadonlyArray<{
+    status?: string;
+    tss?: number;
+    scheduledDate: string;
+    sportType?: string;
+  }>,
+): Map<string, Record<string, number>> {
+  const m = new Map<string, Record<string, number>>();
   for (const w of workouts) {
     if (w.status === 'PENDING' && w.tss) {
-      m.set(w.scheduledDate, (m.get(w.scheduledDate) ?? 0) + w.tss);
+      const sport = w.sportType || 'CYCLING';
+      const day = m.get(w.scheduledDate) ?? {};
+      day[sport] = (day[sport] ?? 0) + w.tss;
+      m.set(w.scheduledDate, day);
     }
   }
   return m;

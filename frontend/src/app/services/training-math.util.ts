@@ -65,9 +65,14 @@ export function findPeakForm(data: PmcDataPoint[]): { date: string; tsb: number 
   return data.reduce((best, d) => (d.tsb > best.tsb ? d : best), data[0]);
 }
 
+/**
+ * Projects future PMC from scheduled workouts. The map carries the per-sport
+ * TSS breakdown for each day so the projected TSS bars can be drawn in sport
+ * colours (matching the historical bars), not a single anonymous total.
+ */
 export function projectPmcFromSchedule(
   realData: PmcDataPoint[],
-  scheduledTss: Map<string, number>,
+  scheduledTss: Map<string, Record<string, number>>,
   days: number,
 ): PmcDataPoint[] {
   if (!realData.length) return [];
@@ -83,7 +88,8 @@ export function projectPmcFromSchedule(
     const d = new Date(lastDate);
     d.setDate(d.getDate() + i);
     const dateStr = d.toISOString().split('T')[0];
-    const dayTss = scheduledTss.get(dateStr) ?? 0;
+    const sportTss = scheduledTss.get(dateStr);
+    const dayTss = sportTss ? Object.values(sportTss).reduce((s, v) => s + v, 0) : 0;
     ctl = ctl + (dayTss - ctl) * kCTL;
     atl = atl + (dayTss - atl) * kATL;
     result.push({
@@ -92,6 +98,7 @@ export function projectPmcFromSchedule(
       atl: Math.round(atl * 10) / 10,
       tsb: Math.round((ctl - atl) * 10) / 10,
       dailyTss: dayTss,
+      sportTss: sportTss ? { ...sportTss } : undefined,
       predicted: true,
     });
   }

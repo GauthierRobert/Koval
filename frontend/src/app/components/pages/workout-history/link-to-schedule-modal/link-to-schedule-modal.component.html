@@ -5,20 +5,23 @@
     (closed)="close()"
   >
     <div class="link-schedule-body">
-      <p class="link-schedule-desc">
-        {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_DESC' | translate }}
-      </p>
-
       @if (loading$ | async) {
-        <div class="link-schedule-loading">
+        <div class="link-schedule-loading" role="status">
+          <span class="spinner" aria-hidden="true"></span>
           {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_LOADING' | translate }}
         </div>
-      } @else if ((candidates$ | async); as candidates) {
+      } @else if (candidates$ | async; as candidates) {
         @if (candidates.length === 0) {
           <div class="link-schedule-empty">
-            {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_NO_CANDIDATES' | translate }}
+            <span class="empty-icon" aria-hidden="true">🗓️</span>
+            <p class="empty-text">
+              {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_NO_CANDIDATES' | translate }}
+            </p>
           </div>
         } @else {
+          <p class="link-schedule-desc">
+            {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_DESC' | translate }}
+          </p>
           <ul class="candidate-list" role="radiogroup">
             @for (c of candidates; track trackByCandidate($index, c)) {
               <li>
@@ -40,7 +43,9 @@
                   <div class="candidate-meta">
                     <span class="meta-date">{{ formatDate(c.scheduledDate) }}</span>
                     <span class="meta-dot" aria-hidden="true">·</span>
-                    <span class="meta-duration">{{ formatDuration(c.plannedDurationSeconds) }}</span>
+                    <span class="meta-duration">{{
+                      formatDuration(c.plannedDurationSeconds)
+                    }}</span>
                   </div>
                   <div class="candidate-cues" aria-hidden="true">
                     <span class="cue" [attr.data-state]="scoreCue(c.sportScore, 30)">
@@ -64,23 +69,29 @@
       }
     </div>
 
-    <div modal-footer class="link-schedule-footer">
-      <button
-        type="button"
-        class="footer-btn footer-btn-secondary"
-        (click)="declareUnplanned()"
-        [disabled]="(submitting$ | async) === true"
-      >
-        {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_BTN_UNPLANNED' | translate }}
-      </button>
-      <button
-        type="button"
-        class="footer-btn footer-btn-primary"
-        (click)="confirm()"
-        [disabled]="!selectedId || (submitting$ | async) === true"
-      >
-        {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_BTN_CONFIRM' | translate }}
-      </button>
-    </div>
+    @if ((loading$ | async) === false && (candidates$ | async); as candidates) {
+      <div modal-footer class="link-schedule-footer" [class.single]="candidates.length === 0">
+        <button
+          type="button"
+          class="footer-btn"
+          [class.footer-btn-secondary]="candidates.length > 0"
+          [class.footer-btn-primary]="candidates.length === 0"
+          (click)="declareUnplanned()"
+          [disabled]="(submitting$ | async) === true"
+        >
+          {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_BTN_UNPLANNED' | translate }}
+        </button>
+        @if (candidates.length > 0) {
+          <button
+            type="button"
+            class="footer-btn footer-btn-primary"
+            (click)="confirm()"
+            [disabled]="!selectedId || (submitting$ | async) === true"
+          >
+            {{ 'WORKOUT_HISTORY.LINK_SCHEDULE_BTN_CONFIRM' | translate }}
+          </button>
+        }
+      </div>
+    }
   </app-modal-shell>
 }

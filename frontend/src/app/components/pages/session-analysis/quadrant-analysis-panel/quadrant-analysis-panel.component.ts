@@ -302,7 +302,7 @@ export class QuadrantAnalysisPanelComponent implements AfterViewInit, OnChanges,
 
     // Reference marker — small target ring at exactly (FTP, 90rpm).
     ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(xT, yT, 5, 0, Math.PI * 2);
     ctx.stroke();
@@ -335,7 +335,7 @@ export class QuadrantAnalysisPanelComponent implements AfterViewInit, OnChanges,
     if (trail.length < 2) return;
 
     ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     for (let i = 0; i < trail.length; i++) {
       const x = xOf(trail[i].cpv);
@@ -356,7 +356,7 @@ export class QuadrantAnalysisPanelComponent implements AfterViewInit, OnChanges,
     }
     const last = trail[trail.length - 1];
     ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(xOf(last.cpv), yOf(last.aepf), 6.5, 0, Math.PI * 2);
     ctx.stroke();
@@ -375,14 +375,42 @@ export class QuadrantAnalysisPanelComponent implements AfterViewInit, OnChanges,
       halign: CanvasTextAlign;
       valign: CanvasTextBaseline;
     }[] = [
-      { q: 2, name: 'MUSCULAR', pct: this.result.q2Pct,
-        x: inset, y: inset, halign: 'left', valign: 'top' },
-      { q: 1, name: 'POWER', pct: this.result.q1Pct,
-        x: w - inset, y: inset, halign: 'right', valign: 'top' },
-      { q: 3, name: 'RECOVERY', pct: this.result.q3Pct,
-        x: inset, y: h - inset, halign: 'left', valign: 'bottom' },
-      { q: 4, name: 'SPINNER', pct: this.result.q4Pct,
-        x: w - inset, y: h - inset, halign: 'right', valign: 'bottom' },
+      {
+        q: 2,
+        name: 'MUSCULAR',
+        pct: this.result.q2Pct,
+        x: inset,
+        y: inset,
+        halign: 'left',
+        valign: 'top',
+      },
+      {
+        q: 1,
+        name: 'POWER',
+        pct: this.result.q1Pct,
+        x: w - inset,
+        y: inset,
+        halign: 'right',
+        valign: 'top',
+      },
+      {
+        q: 3,
+        name: 'RECOVERY',
+        pct: this.result.q3Pct,
+        x: inset,
+        y: h - inset,
+        halign: 'left',
+        valign: 'bottom',
+      },
+      {
+        q: 4,
+        name: 'SPINNER',
+        pct: this.result.q4Pct,
+        x: w - inset,
+        y: h - inset,
+        halign: 'right',
+        valign: 'bottom',
+      },
     ];
     for (const s of slots) {
       ctx.textAlign = s.halign;

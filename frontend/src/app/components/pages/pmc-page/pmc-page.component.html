@@ -54,7 +54,7 @@
 
       <button
         data-testid="pmc-refresh-btn"
-        class="refresh-btn"
+        class="refresh-btn desktop-only"
         (click)="loadPmc()"
         [disabled]="loading"
       >
@@ -70,14 +70,14 @@
         <div class="chart-error">{{ 'PMC.LOAD_ERROR' | translate }}</div>
       }
 
-      <div class="divider"></div>
+      <div class="divider desktop-only"></div>
 
-      <div class="section-header">
+      <div class="section-header desktop-only">
         <h3>{{ 'PMC.SIDEBAR_PROJECTION' | translate }}</h3>
       </div>
 
       @if (scheduledWorkoutCount$ | async; as count) {
-        <div class="schedule-pill" [class.empty]="count === 0">
+        <div class="schedule-pill desktop-only" [class.empty]="count === 0">
           {{
             count > 0
               ? ('PMC.SCHEDULED_WORKOUTS' | translate: { count: count })
@@ -86,13 +86,13 @@
         </div>
       }
 
-      <div class="divider"></div>
+      <div class="divider desktop-only"></div>
 
-      <div class="section-header">
+      <div class="section-header desktop-only">
         <h3>{{ 'PMC.SIDEBAR_PEAK_FORM' | translate }}</h3>
       </div>
       @if (peakForm$ | async; as peak) {
-        <div class="peak-result">
+        <div class="peak-result desktop-only">
           <div class="peak-icon">★</div>
           <div class="peak-info">
             <span class="peak-date">{{ formatPeakDate(peak.date) }}</span>
@@ -103,7 +103,7 @@
           </div>
         </div>
       } @else {
-        <p class="no-peak">{{ 'PMC.NO_PEAK_MSG' | translate }}</p>
+        <p class="no-peak desktop-only">{{ 'PMC.NO_PEAK_MSG' | translate }}</p>
       }
     </aside>
 
@@ -116,7 +116,9 @@
               >{{ 'PMC.HEADER_TITLE' | translate }}
               <span class="dim">{{ 'PMC.HEADER_TITLE_DIM' | translate }}</span></span
             >
-            <span class="header-subtitle">{{ 'PMC.HEADER_SUBTITLE' | translate }}</span>
+            <span class="header-subtitle desktop-only">{{
+              'PMC.HEADER_SUBTITLE' | translate
+            }}</span>
           </div>
         </div>
       </div>

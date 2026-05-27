@@ -1,4 +1,4 @@
-import {DURATION_LABELS} from '../../../../services/analytics.service';
+import { DURATION_LABELS } from '../../../../services/analytics.service';
 
 export interface CurvePoint {
   duration: number;
@@ -25,22 +25,32 @@ export function curveXRatio(duration: number, points: CurvePoint[]): number {
   return (Math.log(duration) - Math.log(minDur)) / (Math.log(maxDur) - Math.log(minDur));
 }
 
-export function curveMargins(width: number): {mL: number; mR: number} {
-  return width < 500 ? {mL: 36, mR: 24} : {mL: 48, mR: 28};
+export function curveMargins(width: number): { mL: number; mR: number } {
+  return width < 500 ? { mL: 36, mR: 24 } : { mL: 48, mR: 28 };
 }
 
-export const CURVE_MARGINS_Y: {mT: number; mB: number} = {mT: 14, mB: 22};
+export const CURVE_MARGINS_Y: { mT: number; mB: number } = { mT: 14, mB: 22 };
 
-export function niceCeil(value: number): number {
-  if (value <= 0) return 1;
-  const pow = Math.pow(10, Math.floor(Math.log10(value)));
-  const norm = value / pow;
+/**
+ * Picks a Y axis ceiling and gridline step for the power curve. The ceiling is kept
+ * close to 20% above the highest sample (never the runaway 1/2/5×10ⁿ jump that pushed
+ * a 1200 W sprint up to a 2000 W axis), while the step stays a round value so labels
+ * read cleanly. Targets ~7 intervals so the axis carries more gridlines.
+ */
+export function niceAxis(maxPower: number, targetSteps = 7): { yMax: number; step: number } {
+  if (maxPower <= 0) return { yMax: 1, step: 1 };
+  const rawMax = maxPower * 1.2;
+  const rawStep = rawMax / targetSteps;
+  const pow = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const norm = rawStep / pow;
   let nice: number;
   if (norm <= 1) nice = 1;
   else if (norm <= 2) nice = 2;
+  else if (norm <= 2.5) nice = 2.5;
   else if (norm <= 5) nice = 5;
   else nice = 10;
-  return nice * pow;
+  const step = nice * pow;
+  return { yMax: Math.ceil(rawMax / step) * step, step };
 }
 
 export function cssToRgb(css: string): [number, number, number] | null {
@@ -80,7 +90,7 @@ export interface CurveDrawContext {
 }
 
 /** Renders the mean-maximal power curve onto the canvas. Returns false if the canvas isn't sized yet. */
-export function drawPowerCurve({canvas, points, theme, hoverIdx}: CurveDrawContext): boolean {
+export function drawPowerCurve({ canvas, points, theme, hoverIdx }: CurveDrawContext): boolean {
   if (points.length === 0) return false;
 
   const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -97,24 +107,24 @@ export function drawPowerCurve({canvas, points, theme, hoverIdx}: CurveDrawConte
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cssW, cssH);
 
-  const {mL, mR} = curveMargins(cssW);
-  const {mT, mB} = CURVE_MARGINS_Y;
+  const { mL, mR } = curveMargins(cssW);
+  const { mT, mB } = CURVE_MARGINS_Y;
   const cW = Math.max(1, cssW - mL - mR);
   const cH = Math.max(1, cssH - mT - mB);
 
   const maxPower = Math.max(...points.map((p) => p.power));
-  const yMax = niceCeil(maxPower * 1.05);
+  const { yMax, step } = niceAxis(maxPower);
 
   // Y gridlines + labels
   ctx.font = '10px monospace';
   ctx.fillStyle = theme.textColor;
   ctx.strokeStyle = theme.gridColor;
   ctx.lineWidth = 1;
-  const ySteps = 5;
+  const ySteps = Math.round(yMax / step);
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for (let i = 0; i <= ySteps; i++) {
-    const v = (yMax * i) / ySteps;
+    const v = step * i;
     const y = mT + cH * (1 - i / ySteps);
     ctx.beginPath();
     ctx.moveTo(mL, y);

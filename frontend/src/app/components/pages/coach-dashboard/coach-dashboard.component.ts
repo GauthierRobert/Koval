@@ -142,7 +142,9 @@ export class CoachDashboardComponent implements OnInit {
   private athletePmcSubject = new BehaviorSubject<PmcDataPoint[]>([]);
   athletePmc$ = this.athletePmcSubject.asObservable();
 
-  private athleteScheduleTssSubject = new BehaviorSubject<Map<string, number>>(new Map());
+  private athleteScheduleTssSubject = new BehaviorSubject<Map<string, Record<string, number>>>(
+    new Map(),
+  );
 
   fullAthletePmc$ = combineLatest([this.athletePmc$, this.athleteScheduleTssSubject]).pipe(
     map(([real, tssMap]) => [

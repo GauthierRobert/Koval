@@ -17,6 +17,7 @@ import {
   hoverCadence,
   hoverHR,
   hoverPrimaryValue,
+  hoverSpeed,
 } from './fit-timeseries-chart-tooltip';
 
 export interface RenderCanvases {
@@ -172,7 +173,7 @@ function drawDot(
   ctx.fillStyle = color;
   ctx.fill();
   ctx.strokeStyle = theme.dotStroke;
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 1;
   ctx.stroke();
 }
 
@@ -243,7 +244,7 @@ function drawSteppedLine(
   }));
   if (fill) fillSteppedArea(ctx, pts, fill);
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 1;
   ctx.beginPath();
   pts.forEach((p, i) => {
     if (i === 0) ctx.moveTo(p.x1, p.y);
@@ -269,7 +270,7 @@ function drawSteppedBlockLine(
   }
   if (fill) fillSteppedArea(ctx, pts, fill);
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 1;
   ctx.beginPath();
   pts.forEach((p, i) => {
     if (i === 0) ctx.moveTo(p.x1, p.y);
@@ -414,7 +415,7 @@ function drawPrimary(
       ctx.fillStyle = `rgba(${br},${bg},${bb},0.25)`;
       ctx.fillRect(x1, y, x2 - x1, bottom - y);
       ctx.strokeStyle = hb;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x1, y);
       ctx.lineTo(x2, y);
@@ -473,7 +474,7 @@ function drawPrimary(
       ctx.fillRect(blk.x1, blk.y, blk.x2 - blk.x1, bottom - blk.y);
     }
 
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     for (let i = 0; i < blocks.length; i++) {
       const blk = blocks[i];
       ctx.strokeStyle = blk.color;
@@ -503,7 +504,7 @@ function drawPrimary(
         ctx.moveTo(dsX(0), yOf(vals[0]));
         vals.forEach((p, i) => ctx.lineTo(dsX(i), yOf(p)));
         ctx.strokeStyle = accent;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1;
         ctx.stroke();
       }
     } else {
@@ -523,7 +524,7 @@ function drawPrimary(
         ctx.moveTo(dsX(0), yOf(vals[0]));
         vals.forEach((v, i) => ctx.lineTo(dsX(i), yOf(v)));
         ctx.strokeStyle = accent;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1;
         ctx.stroke();
       }
     }
@@ -579,7 +580,11 @@ function drawPrimary(
   return { min: primaryMin, max: primaryMax };
 }
 
-function drawSpeed(canvas: HTMLCanvasElement | null | undefined, input: RenderInput): void {
+function drawSpeed(
+  canvas: HTMLCanvasElement | null | undefined,
+  input: RenderInput,
+  hoverCtx: HoverContext | null,
+): void {
   const s = initCanvas(canvas, input.records, viewWindow(input));
   if (!s) return;
   const { ctx, H, xOf, xOfT, mT, mB, mL } = s;
@@ -638,17 +643,17 @@ function drawSpeed(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
       ctx.beginPath();
       pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1;
       ctx.stroke();
     }
   }
 
   drawBlockBounds(ctx, input, xOfT, top, bottom);
 
-  if (input.hoverIdx !== null) {
+  if (input.hoverIdx !== null && hoverCtx) {
     const hx = xOf(input.hoverIdx);
     drawCrosshair(ctx, input.theme, input.hoverIdx, hx, top, bottom);
-    const v = (records[input.hoverIdx].speed || 0) * 3.6;
+    const v = hoverSpeed(hoverCtx, input.hoverIdx, t0);
     drawDot(ctx, input.theme, hx, yOf(v), color);
   }
 
@@ -724,7 +729,7 @@ function drawHR(
     ctx.beginPath();
     pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
     ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     ctx.stroke();
   }
 
@@ -810,7 +815,7 @@ function drawCadence(
     ctx.beginPath();
     pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
     ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     ctx.stroke();
   }
 
@@ -940,7 +945,7 @@ function drawDrift(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
 
   // Output curve (under HR for layer order).
   ctx.strokeStyle = outColor;
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 1;
   ctx.beginPath();
   let started = false;
   for (const p of outPts) {
@@ -957,7 +962,7 @@ function drawDrift(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
 
   // HR curve on top.
   ctx.strokeStyle = hrColor;
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 1;
   ctx.beginPath();
   started = false;
   for (const p of hrPts) {
@@ -1054,7 +1059,7 @@ function drawElevation(canvas: HTMLCanvasElement | null | undefined, input: Rend
     } else ctx.lineTo(x, yOf(r.elevation));
   });
   ctx.strokeStyle = 'rgba(76,175,80,0.6)';
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 1;
   ctx.stroke();
 
   if (input.hoverIdx !== null) {
@@ -1135,7 +1140,7 @@ function drawXAxis(canvas: HTMLCanvasElement | null | undefined, input: RenderIn
 export function drawAll(canvases: RenderCanvases, input: RenderInput): RenderResult {
   const primary = input.showPrimary ? drawPrimary(canvases.primary, input) : { min: 0, max: 0 };
   const hoverCtx = buildHoverContext(input, primary.max);
-  if (input.showSpeed) drawSpeed(canvases.speed, input);
+  if (input.showSpeed) drawSpeed(canvases.speed, input, hoverCtx);
   drawHR(canvases.hr, input, hoverCtx);
   drawCadence(canvases.cad, input, hoverCtx);
   if (input.showDrift) drawDrift(canvases.drift, input);

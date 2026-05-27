@@ -37,6 +37,8 @@ export interface PmcDataPoint {
   tsb: number;
   dailyTss: number;
   sportTss?: Record<string, number>;
+  /** Today's still-pending scheduled TSS per sport, rendered in the scheduled (semi-transparent, dashed) style. */
+  scheduledSportTss?: Record<string, number>;
   predicted: boolean;
 }
 
@@ -120,7 +122,7 @@ export class MetricsService {
 
   projectPmcFromSchedule(
     realData: PmcDataPoint[],
-    scheduledTss: Map<string, number>,
+    scheduledTss: Map<string, Record<string, number>>,
     days: number,
   ): PmcDataPoint[] {
     return _projectPmcFromSchedule(realData, scheduledTss, days);
