@@ -3,8 +3,12 @@ package com.koval.trainingplannerbackend.plan;
 import com.koval.trainingplannerbackend.coach.ScheduleStatus;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutRepository;
+import com.koval.trainingplannerbackend.integration.sync.WorkoutSyncSourceType;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCancelledEvent;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCreatedEvent;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.model.Training;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -26,11 +30,30 @@ public class PlanScheduleSyncService {
 
     private final ScheduledWorkoutRepository scheduledWorkoutRepository;
     private final TrainingRepository trainingRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PlanScheduleSyncService(ScheduledWorkoutRepository scheduledWorkoutRepository,
-                                   TrainingRepository trainingRepository) {
+                                   TrainingRepository trainingRepository,
+                                   ApplicationEventPublisher eventPublisher) {
         this.scheduledWorkoutRepository = scheduledWorkoutRepository;
         this.trainingRepository = trainingRepository;
+        this.eventPublisher = eventPublisher;
+    }
+
+    /**
+     * Notify the integration layer that workouts were placed on / removed from the calendar.
+     * Routing plan-generated changes through the same {@code WorkoutSyncEvent} mechanism the
+     * coach/self-schedule paths use means every registered integration (Polar, Garmin, …) gets
+     * them with no plan-specific coupling.
+     */
+    private void publishCreated(Iterable<ScheduledWorkout> saved) {
+        saved.forEach(sw -> eventPublisher.publishEvent(new WorkoutSyncCreatedEvent(
+                sw.getAthleteId(), WorkoutSyncSourceType.SCHEDULED_WORKOUT, sw.getId())));
+    }
+
+    private void publishCancelled(Iterable<ScheduledWorkout> removed) {
+        removed.forEach(sw -> eventPublisher.publishEvent(new WorkoutSyncCancelledEvent(
+                sw.getAthleteId(), WorkoutSyncSourceType.SCHEDULED_WORKOUT, sw.getId())));
     }
 
     /** Fetches every distinct training referenced by a plan in a single query. */
@@ -53,12 +76,12 @@ public class PlanScheduleSyncService {
     public void syncFutureScheduledWorkouts(TrainingPlan plan, String fallbackAthleteId) {
         LocalDate today = LocalDate.now();
 
-        List<String> futurePendingIds = scheduledWorkoutRepository.findByPlanId(plan.getId()).stream()
+        List<ScheduledWorkout> futurePending = scheduledWorkoutRepository.findByPlanId(plan.getId()).stream()
                 .filter(sw -> sw.getStatus() == ScheduleStatus.PENDING
                         && !sw.getScheduledDate().isBefore(today))
-                .map(ScheduledWorkout::getId)
                 .toList();
-        scheduledWorkoutRepository.deleteAllById(futurePendingIds);
+        scheduledWorkoutRepository.deleteAllById(futurePending.stream().map(ScheduledWorkout::getId).toList());
+        publishCancelled(futurePending);
 
         plan.getWeeks().forEach(week -> week.getDays().forEach(day -> {
             LocalDate date = computeDate(plan.getStartDate(), week.getWeekNumber(), day.getDayOfWeek());
@@ -108,6 +131,7 @@ public class PlanScheduleSyncService {
         for (int i = 0; i < pairs.size(); i++) {
             pairs.get(i).day().getScheduledWorkoutIds().add(saved.get(i).getId());
         }
+        publishCreated(saved);
     }
 
     /**
@@ -117,12 +141,12 @@ public class PlanScheduleSyncService {
     public void cancelFuturePendingForPlan(TrainingPlan plan) {
         LocalDate today = LocalDate.now();
 
-        List<String> futureIds = scheduledWorkoutRepository.findByPlanId(plan.getId()).stream()
+        List<ScheduledWorkout> future = scheduledWorkoutRepository.findByPlanId(plan.getId()).stream()
                 .filter(sw -> sw.getStatus() == ScheduleStatus.PENDING
                         && sw.getScheduledDate().isAfter(today))
-                .map(ScheduledWorkout::getId)
                 .toList();
-        scheduledWorkoutRepository.deleteAllById(futureIds);
+        scheduledWorkoutRepository.deleteAllById(future.stream().map(ScheduledWorkout::getId).toList());
+        publishCancelled(future);
 
         plan.getWeeks().forEach(week -> week.getDays().stream()
                 .filter(day -> !day.getScheduledWorkoutIds().isEmpty())
@@ -132,11 +156,11 @@ public class PlanScheduleSyncService {
 
     /** Delete only PENDING scheduled workouts for the plan; completed/skipped history is kept. */
     public void deletePendingForPlan(String planId) {
-        List<String> pendingIds = scheduledWorkoutRepository.findByPlanId(planId).stream()
+        List<ScheduledWorkout> pending = scheduledWorkoutRepository.findByPlanId(planId).stream()
                 .filter(sw -> sw.getStatus() == ScheduleStatus.PENDING)
-                .map(ScheduledWorkout::getId)
                 .toList();
-        scheduledWorkoutRepository.deleteAllById(pendingIds);
+        scheduledWorkoutRepository.deleteAllById(pending.stream().map(ScheduledWorkout::getId).toList());
+        publishCancelled(pending);
     }
 
     private static ScheduledWorkout newScheduledWorkout(String planId, String trainingId,

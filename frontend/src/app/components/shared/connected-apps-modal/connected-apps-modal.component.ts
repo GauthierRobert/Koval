@@ -169,15 +169,6 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
       });
   }
 
-  togglePolarAutoPush(enabled: boolean): void {
-    this.polarSync
-      .setAutoPush(enabled)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        error: (err) => this.reportConnectError(err, 'Polar auto-push'),
-      });
-  }
-
   connectSuunto(): void {
     this.suuntoSync
       .getAuthUrl()

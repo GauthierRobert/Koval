@@ -31,7 +31,9 @@ import java.util.Map;
  *   <li>{@link #commitExerciseTransaction} — marks them as consumed.</li>
  * </ol>
  *
- * <p>Write path: {@link #createTrainingTarget} pushes a planned workout to the user's Polar Flow.
+ * <p>The Polar AccessLink API is read-only for training data — it exposes no endpoint to create or
+ * schedule planned workouts (training targets). Auto-push to Polar is therefore not implemented; see
+ * the package note and {@code WorkoutSyncProvider} for the integrations that do support pushing.
  */
 @Component
 public class PolarApiClient {
@@ -144,43 +146,6 @@ public class PolarApiClient {
             restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(bearer(accessToken)), Void.class);
         } catch (RestClientException e) {
             log.warn("Polar commitExerciseTransaction failed: {}", e.getMessage());
-        }
-    }
-
-    // ── Training targets (write) ────────────────────────────────────────
-
-    /**
-     * POSTs a training target. Returns the Polar-assigned id (or empty on failure / unsupported response).
-     */
-    @SuppressWarnings("unchecked")
-    public java.util.Optional<String> createTrainingTarget(String accessToken, String polarUserId,
-                                                            Map<String, Object> payload) {
-        String url = BASE_URL + "/v3/users/" + polarUserId + "/training-targets";
-        HttpHeaders headers = bearer(accessToken);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        try {
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    url, HttpMethod.POST, new HttpEntity<>(payload, headers), Map.class);
-            if (response.getBody() == null) return java.util.Optional.empty();
-            Object id = response.getBody().getOrDefault("id", response.getBody().get("training-target-id"));
-            return java.util.Optional.ofNullable(id).map(String::valueOf);
-        } catch (HttpClientErrorException e) {
-            throw new ExternalServiceException("Polar",
-                    "createTrainingTarget failed: " + e.getStatusCode() + " " + e.getResponseBodyAsString(), e);
-        } catch (RestClientException e) {
-            throw new ExternalServiceException("Polar", "createTrainingTarget failed: " + e.getMessage(), e);
-        }
-    }
-
-    /** DELETEs a previously-created training target. Best-effort — 404 is treated as success. */
-    public void deleteTrainingTarget(String accessToken, String polarUserId, String trainingTargetId) {
-        String url = BASE_URL + "/v3/users/" + polarUserId + "/training-targets/" + trainingTargetId;
-        try {
-            restTemplate.exchange(url, HttpMethod.DELETE, new HttpEntity<>(bearer(accessToken)), Void.class);
-        } catch (HttpClientErrorException.NotFound e) {
-            // Already gone — fine.
-        } catch (RestClientException e) {
-            log.warn("Polar deleteTrainingTarget {} failed: {}", trainingTargetId, e.getMessage());
         }
     }
 

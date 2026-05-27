@@ -70,7 +70,6 @@ public class User {
     private String polarRefreshToken;
     private Long polarTokenExpiresAt;
     private LocalDateTime polarLastSyncAt;
-    private Boolean polarAutoPushWorkouts = false;
 
     // Suunto Cloud API (OAuth 2.0). suuntoUserId is the username returned by Suunto.
     @Indexed(unique = true, sparse = true)

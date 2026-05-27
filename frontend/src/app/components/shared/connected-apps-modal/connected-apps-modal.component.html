@@ -194,21 +194,8 @@
           }
         </div>
 
-        <!-- Polar auto-push toggle -->
-        @if (user.linkedAccounts?.polar) {
-          <div class="auto-sync-row">
-            <label class="toggle-label">
-              <input
-                type="checkbox"
-                class="toggle-input"
-                [checked]="user.polarAutoPushWorkouts"
-                (change)="togglePolarAutoPush($any($event.target).checked)"
-              />
-              <span class="toggle-switch"></span>
-              <span>{{ 'SETTINGS.POLAR_AUTO_PUSH_WORKOUTS' | translate }}</span>
-            </label>
-          </div>
-        }
+        <!-- Polar is import-only: the Polar AccessLink API has no endpoint to create planned
+             workouts, so there is no auto-push toggle here (unlike Garmin/Suunto). -->
 
         <!-- Suunto -->
         <div class="linked-app-row">

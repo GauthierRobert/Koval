@@ -44,7 +44,6 @@ export interface User {
   };
   authProvider?: string;
   zwiftAutoSyncWorkouts?: boolean;
-  polarAutoPushWorkouts?: boolean;
   suuntoAutoPushWorkouts?: boolean;
   garminAutoPushWorkouts?: boolean;
   nolioAutoSyncWorkouts?: boolean;

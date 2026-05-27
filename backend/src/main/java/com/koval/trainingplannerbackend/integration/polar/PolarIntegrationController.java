@@ -5,14 +5,11 @@ import com.koval.trainingplannerbackend.auth.SecurityUtils;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserRepository;
 import com.koval.trainingplannerbackend.auth.UserResponseMapper;
-import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,9 +23,12 @@ import java.util.Map;
  *   <li>{@code GET  /api/integration/polar/auth} — returns the Polar authorization URL.</li>
  *   <li>{@code POST /api/integration/polar/callback?code=...} — completes the OAuth flow.</li>
  *   <li>{@code POST /api/integration/polar/import-history} — pulls new completed exercises.</li>
- *   <li>{@code POST /api/integration/polar/push/{scheduledId}} — pushes one scheduled workout.</li>
  *   <li>{@code POST /api/integration/polar/webhook} — Polar AccessLink webhook receiver.</li>
  * </ul>
+ *
+ * <p>There is intentionally no workout-push endpoint: the Polar AccessLink API is read-only for
+ * training data and exposes no way to create planned workouts (training targets). Polar is an
+ * import-only integration.
  */
 @RestController
 @RequestMapping("/api/integration/polar")
@@ -39,7 +39,6 @@ public class PolarIntegrationController {
     private final PolarOAuthService oauthService;
     private final PolarApiClient apiClient;
     private final PolarActivitySyncService syncService;
-    private final PolarTrainingTargetService trainingTargetService;
     private final AccountLinkingService accountLinkingService;
     private final UserRepository userRepository;
     private final UserResponseMapper userResponseMapper;
@@ -47,14 +46,12 @@ public class PolarIntegrationController {
     public PolarIntegrationController(PolarOAuthService oauthService,
                                        PolarApiClient apiClient,
                                        PolarActivitySyncService syncService,
-                                       PolarTrainingTargetService trainingTargetService,
                                        AccountLinkingService accountLinkingService,
                                        UserRepository userRepository,
                                        UserResponseMapper userResponseMapper) {
         this.oauthService = oauthService;
         this.apiClient = apiClient;
         this.syncService = syncService;
-        this.trainingTargetService = trainingTargetService;
         this.accountLinkingService = accountLinkingService;
         this.userRepository = userRepository;
         this.userResponseMapper = userResponseMapper;
@@ -88,31 +85,6 @@ public class PolarIntegrationController {
     @PostMapping("/import-history")
     public PolarActivitySyncService.SyncResult importHistory() {
         return syncService.importNewExercises(SecurityUtils.getCurrentUserId());
-    }
-
-    @PostMapping("/push/{scheduledId}")
-    public ResponseEntity<Map<String, Object>> pushScheduledWorkout(@PathVariable String scheduledId) {
-        String trainingTargetId = trainingTargetService.pushScheduledWorkout(scheduledId);
-        return ResponseEntity.ok(Map.of(
-                "status", "ok",
-                "trainingTargetId", trainingTargetId != null ? trainingTargetId : ""));
-    }
-
-    /** Toggle auto-push of scheduled workouts to Polar Flow. */
-    @PutMapping("/auto-push")
-    public ResponseEntity<Map<String, Object>> setAutoPush(@RequestBody Map<String, Boolean> body) {
-        String userId = SecurityUtils.getCurrentUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        boolean enabled = Boolean.TRUE.equals(body.get("enabled"));
-        if (enabled && user.getPolarUserId() == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Polar is not connected for this user"));
-        }
-        user.setPolarAutoPushWorkouts(enabled);
-        userRepository.save(user);
-        return ResponseEntity.ok(userResponseMapper.userToMap(user));
     }
 
     /**

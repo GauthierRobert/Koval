@@ -196,7 +196,6 @@
     "APP_CONNECTED": "Connecté",
     "APP_NOT_CONNECTED": "Non connecté",
     "ZWIFT_AUTO_SYNC_WORKOUTS": "Envoyer automatiquement les nouveaux entraînements vélo vers Zwift",
-    "POLAR_AUTO_PUSH_WORKOUTS": "Envoyer automatiquement les entraînements planifiés vers Polar Flow",
     "POLAR_IMPORT_HISTORY": "IMPORTER",
     "POLAR_IMPORTING": "IMPORTATION...",
     "NOLIO_AUTO_SYNC_WORKOUTS": "Envoyer automatiquement les nouveaux entraînements vers Nolio",

@@ -203,7 +203,6 @@ public class AccountLinkingService {
         user.setPolarRefreshToken(null);
         user.setPolarTokenExpiresAt(null);
         user.setPolarLastSyncAt(null);
-        user.setPolarAutoPushWorkouts(false);
         return userRepository.save(user);
     }
 

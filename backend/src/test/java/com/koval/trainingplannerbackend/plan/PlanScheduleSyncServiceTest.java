@@ -3,6 +3,7 @@ package com.koval.trainingplannerbackend.plan;
 import com.koval.trainingplannerbackend.coach.ScheduleStatus;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkoutRepository;
+import com.koval.trainingplannerbackend.integration.sync.events.WorkoutSyncCreatedEvent;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
 import com.koval.trainingplannerbackend.training.model.CyclingTraining;
 import com.koval.trainingplannerbackend.training.model.SportType;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -38,12 +40,14 @@ class PlanScheduleSyncServiceTest {
     private ScheduledWorkoutRepository scheduledWorkoutRepository;
     @Mock
     private TrainingRepository trainingRepository;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private PlanScheduleSyncService service;
 
     @BeforeEach
     void setUp() {
-        service = new PlanScheduleSyncService(scheduledWorkoutRepository, trainingRepository);
+        service = new PlanScheduleSyncService(scheduledWorkoutRepository, trainingRepository, eventPublisher);
         // Most tests just want saveAll to round-trip with deterministic IDs.
         AtomicInteger counter = new AtomicInteger();
         lenient().when(scheduledWorkoutRepository.saveAll(anyIterable()))
@@ -122,6 +126,25 @@ class PlanScheduleSyncServiceTest {
         // Day's scheduledWorkoutIds list should hold every saved id (one per athlete per training).
         PlanDay monday = plan.getWeeks().getFirst().getDays().getFirst();
         assertEquals(6, monday.getScheduledWorkoutIds().size());
+    }
+
+    @Test
+    @DisplayName("buildAndPersistScheduledWorkouts publishes a WorkoutSyncCreatedEvent per saved workout")
+    void publishesSyncEventPerSavedWorkout() {
+        TrainingPlan plan = tripleTrainingDayPlan();
+        Map<String, Training> byId = Map.of(
+                "swim-1", swim("swim-1", 30),
+                "bike-1", bike("bike-1", 60, 0.8),
+                "run-1", bike("run-1", 45, 0.75));
+
+        service.buildAndPersistScheduledWorkouts(plan, List.of("athlete-A", "athlete-B"),
+                "coach-1", LocalDate.of(2030, 1, 1), byId);
+
+        // One created event per (training × athlete) = 6, each carrying the athlete + saved id.
+        ArgumentCaptor<WorkoutSyncCreatedEvent> captor = ArgumentCaptor.forClass(WorkoutSyncCreatedEvent.class);
+        verify(eventPublisher, org.mockito.Mockito.times(6)).publishEvent(captor.capture());
+        assertTrue(captor.getAllValues().stream().allMatch(e -> e.sourceId() != null));
+        assertEquals(6, captor.getAllValues().stream().map(WorkoutSyncCreatedEvent::sourceId).distinct().count());
     }
 
     @Test

@@ -73,7 +73,6 @@ public class UserResponseMapper {
         map.put("linkedAccounts", linkedAccounts);
         map.put("authProvider", Optional.ofNullable(user.getAuthProvider()).map(Enum::name).orElse(null));
         map.put("zwiftAutoSyncWorkouts", user.getZwiftAutoSyncWorkouts());
-        map.put("polarAutoPushWorkouts", Boolean.TRUE.equals(user.getPolarAutoPushWorkouts()));
         map.put("suuntoAutoPushWorkouts", Boolean.TRUE.equals(user.getSuuntoAutoPushWorkouts()));
         map.put("garminAutoPushWorkouts", Boolean.TRUE.equals(user.getGarminAutoPushWorkouts()));
         map.put("nolioAutoSyncWorkouts", Boolean.TRUE.equals(user.getNolioAutoSyncWorkouts()));

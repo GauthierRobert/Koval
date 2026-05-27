@@ -16,11 +16,8 @@ export interface PolarSyncResult {
   skippedErrors: number;
 }
 
-export interface PolarPushResult {
-  status: string;
-  trainingTargetId: string;
-}
-
+// Polar AccessLink is read-only for training data — it has no API to create planned workouts,
+// so there is no push / auto-push surface here. Polar is an import-only integration.
 @Injectable({ providedIn: 'root' })
 export class PolarSyncService {
   private readonly polarUrl = `${environment.apiUrl}/api/integration/polar`;
@@ -32,9 +29,6 @@ export class PolarSyncService {
 
   private importingSubject = new BehaviorSubject<boolean>(false);
   importing$ = this.importingSubject.asObservable();
-
-  private pushingSubject = new BehaviorSubject<string | null>(null);
-  pushing$ = this.pushingSubject.asObservable();
 
   getAuthUrl(): Observable<PolarAuthUrlResponse> {
     return this.http.get<PolarAuthUrlResponse>(`${this.polarUrl}/auth`);
@@ -61,23 +55,5 @@ export class PolarSyncService {
         error: () => this.ngZone.run(() => this.importingSubject.next(false)),
       }),
     );
-  }
-
-  pushScheduledWorkout(scheduledId: string): Observable<PolarPushResult> {
-    this.pushingSubject.next(scheduledId);
-    return this.http
-      .post<PolarPushResult>(`${this.polarUrl}/push/${scheduledId}`, {})
-      .pipe(
-        tap({
-          next: () => this.ngZone.run(() => this.pushingSubject.next(null)),
-          error: () => this.ngZone.run(() => this.pushingSubject.next(null)),
-        }),
-      );
-  }
-
-  setAutoPush(enabled: boolean): Observable<User> {
-    return this.http
-      .put<User>(`${this.polarUrl}/auto-push`, { enabled })
-      .pipe(tap((user) => this.ngZone.run(() => this.authService.updateUser(user))));
   }
 }
