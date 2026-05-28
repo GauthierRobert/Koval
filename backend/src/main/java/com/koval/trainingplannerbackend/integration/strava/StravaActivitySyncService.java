@@ -47,11 +47,13 @@ public class StravaActivitySyncService {
         this.fitFileStore = fitFileStore;
     }
 
+    private static final int MAX_LOOKBACK_DAYS = 90;
+
     /**
-     * Manual history import: imports activities from the last 30 days (max).
-     * Deduplicates against existing sessions.
+     * Manual history import: imports activities from the last {@code days} days
+     * (clamped to [1, 90]). Deduplicates against existing sessions.
      */
-    public SyncResult importHistory(String userId) {
+    public SyncResult importHistory(String userId, int days) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -59,10 +61,10 @@ public class StravaActivitySyncService {
             throw new IllegalStateException("Strava is not connected for this user");
         }
 
-        // Always look back max 30 days, but not before 7 days before account creation
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        int lookback = Math.min(Math.max(days, 1), MAX_LOOKBACK_DAYS);
+        LocalDateTime windowStart = LocalDateTime.now().minusDays(lookback);
         LocalDateTime earliest = user.getCreatedAt().minusDays(7);
-        LocalDateTime after = thirtyDaysAgo.isAfter(earliest) ? thirtyDaysAgo : earliest;
+        LocalDateTime after = windowStart.isAfter(earliest) ? windowStart : earliest;
         long afterEpoch = after.toEpochSecond(ZoneOffset.UTC);
 
         // Fetch activities from Strava

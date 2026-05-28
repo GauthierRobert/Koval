@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  HostListener,
   inject,
   OnInit,
   ViewChild,
@@ -576,8 +577,25 @@ export class WorkoutHistoryComponent implements OnInit {
     return this.metricsService.computeIF(session.avgPower, ftp);
   }
 
-  importStravaHistory(): void {
-    this.stravaSyncService.importHistory().subscribe();
+  stravaRangeMenuOpen = false;
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    if (this.stravaRangeMenuOpen) this.stravaRangeMenuOpen = false;
+  }
+
+  toggleStravaRangeMenu(event: Event): void {
+    event.stopPropagation();
+    this.stravaRangeMenuOpen = !this.stravaRangeMenuOpen;
+  }
+
+  closeStravaRangeMenu(): void {
+    this.stravaRangeMenuOpen = false;
+  }
+
+  importStravaHistory(days = 30): void {
+    this.stravaRangeMenuOpen = false;
+    this.stravaSyncService.importHistory(days).subscribe();
   }
 
   exportCsv(): void {

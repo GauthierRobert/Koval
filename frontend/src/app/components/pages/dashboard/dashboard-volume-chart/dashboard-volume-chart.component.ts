@@ -254,30 +254,87 @@ export class DashboardVolumeChartComponent implements OnChanges, AfterViewInit, 
     for (let si = 0; si < SPORT_STACK.length; si++) {
       const color = SPORT_COLORS[SPORT_STACK[si]];
 
-      ctx.beginPath();
+      const topPts: { x: number; y: number }[] = [];
+      const botPts: { x: number; y: number }[] = [];
       for (let i = 0; i < n; i++) {
         const x = toX(i);
-        const y = toY(stacks[i][si].top);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        topPts.push({ x, y: toY(stacks[i][si].top) });
+        botPts.push({ x, y: toY(stacks[i][si].bottom) });
       }
-      for (let i = n - 1; i >= 0; i--) {
-        ctx.lineTo(toX(i), toY(stacks[i][si].bottom));
-      }
+
+      ctx.beginPath();
+      this.traceMonotone(ctx, topPts, false);
+      this.traceMonotone(ctx, botPts.slice().reverse(), true);
       ctx.closePath();
       ctx.fillStyle = hexToRgba(color, 0.55);
       ctx.fill();
 
       ctx.beginPath();
-      for (let i = 0; i < n; i++) {
-        const x = toX(i);
-        const y = toY(stacks[i][si].top);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
+      this.traceMonotone(ctx, topPts, false);
       ctx.strokeStyle = hexToRgba(color, 0.7);
       ctx.lineWidth = 1;
       ctx.stroke();
+
+      ctx.fillStyle = color;
+      for (let i = 0; i < n; i++) {
+        ctx.beginPath();
+        ctx.arc(topPts[i].x, topPts[i].y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  private traceMonotone(
+    ctx: CanvasRenderingContext2D,
+    pts: { x: number; y: number }[],
+    continuePath: boolean,
+  ): void {
+    const n = pts.length;
+    if (n === 0) return;
+    if (continuePath) ctx.lineTo(pts[0].x, pts[0].y);
+    else ctx.moveTo(pts[0].x, pts[0].y);
+    if (n < 2) return;
+    if (n === 2) {
+      ctx.lineTo(pts[1].x, pts[1].y);
+      return;
+    }
+
+    const dx: number[] = [];
+    const m: number[] = [];
+    for (let i = 0; i < n - 1; i++) {
+      const d = pts[i + 1].x - pts[i].x;
+      dx.push(d);
+      m.push(d === 0 ? 0 : (pts[i + 1].y - pts[i].y) / d);
+    }
+
+    const t: number[] = new Array(n);
+    t[0] = m[0];
+    t[n - 1] = m[n - 2];
+    for (let i = 1; i < n - 1; i++) {
+      t[i] = m[i - 1] * m[i] <= 0 ? 0 : (m[i - 1] + m[i]) / 2;
+    }
+    for (let i = 0; i < n - 1; i++) {
+      if (m[i] === 0) {
+        t[i] = 0;
+        t[i + 1] = 0;
+      } else {
+        const a = t[i] / m[i];
+        const b = t[i + 1] / m[i];
+        const s = a * a + b * b;
+        if (s > 9) {
+          const tau = 3 / Math.sqrt(s);
+          t[i] = tau * a * m[i];
+          t[i + 1] = tau * b * m[i];
+        }
+      }
+    }
+
+    for (let i = 0; i < n - 1; i++) {
+      const cp1x = pts[i].x + dx[i] / 3;
+      const cp1y = pts[i].y + (t[i] * dx[i]) / 3;
+      const cp2x = pts[i + 1].x - dx[i] / 3;
+      const cp2y = pts[i + 1].y - (t[i + 1] * dx[i]) / 3;
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, pts[i + 1].x, pts[i + 1].y);
     }
   }
 

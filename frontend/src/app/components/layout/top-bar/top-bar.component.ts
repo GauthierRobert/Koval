@@ -11,7 +11,6 @@ import { Router, RouterModule } from '@angular/router';
 import { BluetoothService } from '../../../services/bluetooth.service';
 import { AuthService } from '../../../services/auth.service';
 import { ClubService, ClubSummary } from '../../../services/club.service';
-import { TrainingFilterService } from '../../../services/training-filter.service';
 import { combineLatest, filter, map } from 'rxjs';
 import { MembershipsModalComponent } from '../../shared/memberships-modal/memberships-modal.component';
 import { NotificationPreferencesComponent } from '../../shared/notification-preferences/notification-preferences.component';
@@ -46,7 +45,6 @@ export class TopBarComponent {
   private bluetoothService = inject(BluetoothService);
   private authService = inject(AuthService);
   clubService = inject(ClubService);
-  private filterService = inject(TrainingFilterService);
   private translateService = inject(TranslateService);
   themeService = inject(ThemeService);
   private responsive = inject(ResponsiveService);
@@ -176,7 +174,6 @@ export class TopBarComponent {
   selectClub(club: ClubSummary) {
     this.isClubsOpen = false;
     this.closeMobileMenu();
-    this.filterService.setContext(`club:${club.id}`);
     this.router.navigate(['/clubs', club.id]);
   }
 

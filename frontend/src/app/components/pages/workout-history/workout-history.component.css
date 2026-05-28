@@ -91,6 +91,55 @@
   border-color: color-mix(in oklch, var(--strava-color) 25%, transparent);
 }
 
+.strava-import-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.strava-range-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: var(--surface-color, var(--bg-elevated, #1c1f24));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 4px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.strava-range-item {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.strava-range-item:hover,
+.strava-range-item:focus-visible {
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+  outline: none;
+}
+
+@media (max-width: 640px) {
+  .strava-range-menu {
+    right: auto;
+    left: 0;
+    min-width: 180px;
+  }
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

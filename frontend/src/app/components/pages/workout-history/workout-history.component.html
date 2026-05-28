@@ -32,44 +32,76 @@
             <span class="filters-badge">{{ activeAdvancedFilterCount }}</span>
           }
         </button>
-        <button
-          data-testid="strava-sync-btn"
-          class="icon-btn strava-btn"
-          (click)="importStravaHistory()"
-          [disabled]="(syncing$ | async) === true"
-          [title]="
-            (syncing$ | async)
-              ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate)
-              : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)
-          "
-          [attr.aria-label]="
-            (syncing$ | async)
-              ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate)
-              : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)
-          "
-        >
-          @if ((syncing$ | async) === true) {
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#FC4C02"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="spin"
-            >
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
-          } @else {
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#FC4C02">
-              <path
-                d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"
-              />
-            </svg>
+        <div class="strava-import-wrapper" (click)="$event.stopPropagation()">
+          <button
+            data-testid="strava-sync-btn"
+            class="icon-btn strava-btn"
+            (click)="toggleStravaRangeMenu($event)"
+            [disabled]="(syncing$ | async) === true"
+            [title]="
+              (syncing$ | async)
+                ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate)
+                : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)
+            "
+            [attr.aria-label]="
+              (syncing$ | async)
+                ? ('WORKOUT_HISTORY.BTN_SYNCING' | translate)
+                : ('WORKOUT_HISTORY.BTN_STRAVA_SYNC' | translate)
+            "
+            [attr.aria-haspopup]="'menu'"
+            [attr.aria-expanded]="stravaRangeMenuOpen"
+          >
+            @if ((syncing$ | async) === true) {
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#FC4C02"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="spin"
+              >
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            } @else {
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#FC4C02">
+                <path
+                  d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"
+                />
+              </svg>
+            }
+          </button>
+          @if (stravaRangeMenuOpen) {
+            <div class="strava-range-menu" role="menu">
+              <button
+                type="button"
+                role="menuitem"
+                class="strava-range-item"
+                (click)="importStravaHistory(7)"
+              >
+                {{ 'WORKOUT_HISTORY.STRAVA_RANGE_1W' | translate }}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                class="strava-range-item"
+                (click)="importStravaHistory(30)"
+              >
+                {{ 'WORKOUT_HISTORY.STRAVA_RANGE_1M' | translate }}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                class="strava-range-item"
+                (click)="importStravaHistory(90)"
+              >
+                {{ 'WORKOUT_HISTORY.STRAVA_RANGE_3M' | translate }}
+              </button>
+            </div>
           }
-        </button>
+        </div>
         <button
           class="icon-btn"
           (click)="openManualModal()"
