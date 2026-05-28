@@ -41,6 +41,15 @@ public class User {
     private String profilePicture;
     private UserRole role = UserRole.ATHLETE;
 
+    /**
+     * Anonymous public handle (e.g. {@code SwiftOtter-42}) shown wherever this user is visible
+     * to others — coach dashboards listing athletes, club member lists, and every MCP tool
+     * response. Real name/email never leave the backend except in the user's own profile
+     * surface. Generated at account creation; backfilled lazily on first lookup for legacy users.
+     */
+    @Indexed(unique = true, sparse = true)
+    private String alias;
+
     private Integer ftp;
     private Integer weightKg;
     private Double ctl = 0.0;

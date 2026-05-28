@@ -1,16 +1,25 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, inject, signal} from '@angular/core';
-import {toObservable, toSignal} from '@angular/core/rxjs-interop';
-import {CommonModule} from '@angular/common';
-import {TranslateModule} from '@ngx-translate/core';
-import {of} from 'rxjs';
-import {catchError, switchMap} from 'rxjs/operators';
-import {ScheduledWorkout} from '../../../../services/coach.service';
-import {SportIconComponent} from '../../../shared/sport-icon/sport-icon.component';
-import {TrainingService} from '../../../../services/training.service';
-import {ZoneClassificationService} from '../../../../services/zone-classification.service';
-import {DurationEstimationService} from '../../../../services/duration-estimation.service';
-import {Training, WorkoutBlock, flattenElements} from '../../../../models/training.model';
-import {normalizeSport} from '../../../shared/block-helpers/block-helpers';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
+import { ScheduledWorkout } from '../../../../services/coach.service';
+import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
+import { TrainingService } from '../../../../services/training.service';
+import { ZoneClassificationService } from '../../../../services/zone-classification.service';
+import { DurationEstimationService } from '../../../../services/duration-estimation.service';
+import { Training, WorkoutBlock, flattenElements } from '../../../../models/training.model';
+import { normalizeSport } from '../../../shared/block-helpers/block-helpers';
 
 interface ZoneSlice {
   label: string;
@@ -37,19 +46,32 @@ export class DashboardFocusCardComponent {
   private readonly _ftp = signal<number | null>(null);
 
   @Input() userName = 'Athlete';
+  @Input() userAlias: string | null = null;
   @Input() todayDate: Date = new Date();
 
   @Input()
-  set upcomingWorkouts(v: ScheduledWorkout[]) { this._upcoming.set(v ?? []); }
-  get upcomingWorkouts() { return this._upcoming(); }
+  set upcomingWorkouts(v: ScheduledWorkout[]) {
+    this._upcoming.set(v ?? []);
+  }
+  get upcomingWorkouts() {
+    return this._upcoming();
+  }
 
   @Input()
-  set todayKey(v: string) { this._today.set(v ?? ''); }
-  get todayKey() { return this._today(); }
+  set todayKey(v: string) {
+    this._today.set(v ?? '');
+  }
+  get todayKey() {
+    return this._today();
+  }
 
   @Input()
-  set ftp(v: number | null) { this._ftp.set(v); }
-  get ftp() { return this._ftp(); }
+  set ftp(v: number | null) {
+    this._ftp.set(v);
+  }
+  get ftp() {
+    return this._ftp();
+  }
 
   @Output() openDetail = new EventEmitter<ScheduledWorkout>();
   @Output() startNow = new EventEmitter<ScheduledWorkout>();
@@ -64,10 +86,12 @@ export class DashboardFocusCardComponent {
     toObservable(this.todaysWorkout).pipe(
       switchMap((w) => {
         if (!w?.trainingId) return of(null as Training | null);
-        return this.trainingService.getTrainingById(w.trainingId).pipe(catchError(() => of(null as Training | null)));
+        return this.trainingService
+          .getTrainingById(w.trainingId)
+          .pipe(catchError(() => of(null as Training | null)));
       }),
     ),
-    {initialValue: null as Training | null},
+    { initialValue: null as Training | null },
   );
 
   readonly zoneDistribution = computed<ZoneSlice[]>(() => {
@@ -113,7 +137,7 @@ export class DashboardFocusCardComponent {
     if (!tss) return null;
     const durationHours = w.totalDurationSeconds / 3600;
     if (durationHours <= 0) return null;
-    const value = Math.sqrt((tss / 100) / durationHours);
+    const value = Math.sqrt(tss / 100 / durationHours);
     return Math.round(value * 100) / 100;
   });
 
@@ -133,13 +157,18 @@ export class DashboardFocusCardComponent {
   readonly powerTarget = computed(() => {
     const w = this.todaysWorkout();
     if (!w) return null;
-    const anyW = w as unknown as { powerMinWatts?: number; powerMaxWatts?: number; powerTargetPercent?: number };
-    if (anyW.powerMinWatts && anyW.powerMaxWatts) return { min: anyW.powerMinWatts, max: anyW.powerMaxWatts };
+    const anyW = w as unknown as {
+      powerMinWatts?: number;
+      powerMaxWatts?: number;
+      powerTargetPercent?: number;
+    };
+    if (anyW.powerMinWatts && anyW.powerMaxWatts)
+      return { min: anyW.powerMinWatts, max: anyW.powerMaxWatts };
     const ftp = this._ftp();
     const pct = anyW.powerTargetPercent;
     if (ftp && pct) {
-      const min = Math.round(ftp * (pct - 5) / 100);
-      const max = Math.round(ftp * (pct + 5) / 100);
+      const min = Math.round((ftp * (pct - 5)) / 100);
+      const max = Math.round((ftp * (pct + 5)) / 100);
       return { min, max };
     }
     return null;
@@ -174,12 +203,18 @@ export class DashboardFocusCardComponent {
 
   private sportColor(sport?: string): string {
     switch (sport) {
-      case 'CYCLING': return '#34d399';
-      case 'RUNNING': return '#f87171';
-      case 'SWIMMING': return '#00a0e9';
-      case 'BRICK':   return '#ff9d00';
-      case 'GYM':     return '#a78bfa';
-      default:        return 'var(--accent-color)';
+      case 'CYCLING':
+        return '#34d399';
+      case 'RUNNING':
+        return '#f87171';
+      case 'SWIMMING':
+        return '#00a0e9';
+      case 'BRICK':
+        return '#ff9d00';
+      case 'GYM':
+        return '#a78bfa';
+      default:
+        return 'var(--accent-color)';
     }
   }
 

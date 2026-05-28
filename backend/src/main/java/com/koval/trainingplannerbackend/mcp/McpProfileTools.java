@@ -46,14 +46,14 @@ public class McpProfileTools {
                 u.getCustomZoneReferenceValues(), u.getAiPrePrompt(), u.getAiPrePromptEnabled()));
     }
 
-    public record UserProfile(String id, String displayName, String role,
+    public record UserProfile(String id, String alias, String role,
                                Integer ftp, Integer weightKg,
                                Integer functionalThresholdPace, Integer criticalSwimSpeed,
                                Integer pace5k, Integer pace10k,
                                Double ctl, Double atl, Double tsb) {
         public static UserProfile from(User u) {
             return new UserProfile(
-                    u.getId(), u.getDisplayName(),
+                    u.getId(), u.getAlias(),
                     u.getRole() != null ? u.getRole().name() : null,
                     u.getFtp(), u.getWeightKg(),
                     u.getFunctionalThresholdPace(), u.getCriticalSwimSpeed(),

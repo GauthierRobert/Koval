@@ -84,14 +84,32 @@ public class McpClubTools {
         return "Session cancelled.";
     }
 
-    @Tool(description = "List active club members with their roles (OWNER, ADMIN, COACH, MEMBER). For very large clubs the list is truncated to the first 200 members; ask for a specific name or role if you need more.")
+    @Tool(description = "List active club members with their roles (OWNER, ADMIN, COACH, MEMBER). "
+            + "Each member is identified by an anonymous alias (e.g. SwiftOtter-42), never by real "
+            + "name. For very large clubs the list is truncated to the first 200 members; ask for a "
+            + "specific alias or role if you need more.")
     public Object listClubMembers(
             @ToolParam(description = "Club ID") String clubId) {
         if (clubId == null || clubId.isBlank()) return "Error: clubId is required.";
         String userId = SecurityUtils.getCurrentUserId();
         List<ClubMemberResponse> members = membershipService.getMembers(userId, clubId);
-        if (members.size() <= MAX_MEMBER_LIST_SIZE) return members;
-        return members.subList(0, MAX_MEMBER_LIST_SIZE);
+        List<ClubMemberResponse> capped = members.size() <= MAX_MEMBER_LIST_SIZE
+                ? members : members.subList(0, MAX_MEMBER_LIST_SIZE);
+        return capped.stream().map(ClubMemberSummary::from).toList();
+    }
+
+    /**
+     * MCP-only club member projection: alias only. Mirrors {@link ClubMemberResponse} minus
+     * the real name / avatar so the MCP tool cannot leak PII even if the REST DTO grows.
+     */
+    public record ClubMemberSummary(String membershipId, String userId, String alias,
+                                    String role, java.time.LocalDateTime joinedAt,
+                                    List<String> groups) {
+        public static ClubMemberSummary from(ClubMemberResponse m) {
+            return new ClubMemberSummary(m.membershipId(), m.userId(), m.alias(),
+                    m.role() != null ? m.role().name() : null,
+                    m.joinedAt(), m.groups());
+        }
     }
 
     @Tool(description = "Get full detail of a single club: name, description, location, logo, visibility, member count, owner, and the current user's membership status/role within it.")

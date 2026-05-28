@@ -1,0 +1,114 @@
+@if (open && anchor) {
+  <app-modal-shell
+    [title]="'SESSION_COMPARE.PICKER_TITLE' | translate"
+    size="lg"
+    (closed)="onClose()"
+  >
+    <p class="desc">
+      {{ 'SESSION_COMPARE.PICKER_DESC' | translate: { sport: anchor.sportType } }}
+    </p>
+
+    <div class="anchor">
+      <app-sport-icon [sport]="anchor.sportType" [size]="16" />
+      <div class="anchor-info">
+        <span class="anchor-title">{{ anchor.title }}</span>
+        <span class="anchor-meta">
+          {{ formatDate(anchor.date.toISOString()) }} · {{ formatDuration(anchor.totalDuration) }}
+        </span>
+      </div>
+      <span class="anchor-pin">{{ 'SESSION_COMPARE.PICKER_ANCHOR_TAG' | translate }}</span>
+    </div>
+
+    @if (view$ | async; as view) {
+      @if (view.similar.length > 0) {
+        <h4 class="section-label">⭐ {{ 'SESSION_COMPARE.PICKER_SIMILAR' | translate }}</h4>
+        <ul class="candidate-list">
+          @for (c of view.similar; track c.id) {
+            <li
+              class="candidate"
+              [class.selected]="selected.has(c.id)"
+              [class.disabled]="isAtCap(c.id)"
+              (click)="toggle(c.id)"
+            >
+              <span class="check" [class.checked]="selected.has(c.id)">
+                @if (selected.has(c.id)) {
+                  ✓
+                }
+              </span>
+              <app-sport-icon [sport]="$any(c.sportType)" [size]="14" />
+              <div class="candidate-info">
+                <span class="candidate-title">{{ c.title }}</span>
+                <span class="candidate-meta">
+                  {{ formatDate(c.completedAt) }} ·
+                  {{ formatDuration(c.totalDurationSeconds) }}
+                  @if (c.tss !== null) {
+                    · TSS {{ c.tss | number: '1.0-0' }}
+                  }
+                  @if (c.intensityFactor !== null) {
+                    · IF {{ c.intensityFactor | number: '1.2-2' }}
+                  }
+                </span>
+              </div>
+              <span class="sim-badge">{{ c.similarityPercent }}%</span>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (view.others.length > 0) {
+        <h4 class="section-label">
+          {{ 'SESSION_COMPARE.PICKER_OTHERS' | translate }}
+        </h4>
+        <ul class="candidate-list">
+          @for (c of view.others; track c.id) {
+            <li
+              class="candidate"
+              [class.selected]="selected.has(c.id)"
+              [class.disabled]="isAtCap(c.id)"
+              (click)="toggle(c.id)"
+            >
+              <span class="check" [class.checked]="selected.has(c.id)">
+                @if (selected.has(c.id)) {
+                  ✓
+                }
+              </span>
+              <app-sport-icon [sport]="$any(c.sportType)" [size]="14" />
+              <div class="candidate-info">
+                <span class="candidate-title">{{ c.title }}</span>
+                <span class="candidate-meta">
+                  {{ formatDate(c.completedAt) }} ·
+                  {{ formatDuration(c.totalDurationSeconds) }}
+                </span>
+              </div>
+              <span class="sim-badge muted">{{ c.similarityPercent }}%</span>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (view.similar.length === 0 && view.others.length === 0) {
+        <p class="empty">{{ 'SESSION_COMPARE.PICKER_EMPTY' | translate }}</p>
+      }
+    }
+
+    <div modal-footer class="footer">
+      <span class="counter">
+        {{
+          'SESSION_COMPARE.PICKER_SELECTED'
+            | translate: { count: selected.size, max: maxSelectable }
+        }}
+      </span>
+      <button type="button" class="btn ghost" (click)="onClose()">
+        {{ 'COMMON.CANCEL' | translate }}
+      </button>
+      <button
+        type="button"
+        class="btn primary"
+        (click)="onSubmit()"
+        [disabled]="selected.size === 0"
+      >
+        {{ 'SESSION_COMPARE.PICKER_CONFIRM' | translate }}
+      </button>
+    </div>
+  </app-modal-shell>
+}

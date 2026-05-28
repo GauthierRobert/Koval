@@ -1,0 +1,112 @@
+.metrics {
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) repeat(var(--col-count), minmax(120px, 1.4fr));
+  gap: 6px 16px;
+  align-items: center;
+}
+
+.metric-header {
+  /* empty corner cell */
+}
+
+.session-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--col-color);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.session-title-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.session-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.92rem;
+}
+
+.session-meta {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.metric-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding: 6px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.metric-cell {
+  font-size: 0.92rem;
+  padding: 6px 0;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.metric-cell.reference .metric-value {
+  font-weight: 600;
+}
+
+.metric-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-delta {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.metric-delta[data-polarity='positive'] {
+  color: var(--success-color);
+}
+
+.metric-delta[data-polarity='negative'] {
+  color: var(--danger-color);
+}
+
+.highlights {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.highlights-label {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+
+.highlight-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+}

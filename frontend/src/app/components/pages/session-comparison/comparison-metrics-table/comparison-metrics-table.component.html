@@ -1,0 +1,41 @@
+<div class="metrics glass">
+  <div class="metrics-grid" [style.--col-count]="sessions.length">
+    <div class="metric-header"></div>
+    @for (s of sessions; track s.id; let i = $index) {
+      <div class="session-header" [style.--col-color]="colors[i]">
+        <span class="dot" [style.background]="colors[i]"></span>
+        <div class="session-title-block">
+          <span class="session-title">{{ s.title }}</span>
+          <span class="session-meta">{{ formatDate(s.completedAt) }}</span>
+        </div>
+      </div>
+    }
+
+    @for (row of rows(); track row.key) {
+      <div class="metric-label">{{ row.labelKey | translate }}</div>
+      @for (s of sessions; track s.id; let i = $index) {
+        <div class="metric-cell" [class.reference]="i === 0">
+          <span class="metric-value">{{ formatCell(row, i) }}</span>
+          @if (i > 0) {
+            <span class="metric-delta" [attr.data-polarity]="deltaPolarity(row, i)">
+              {{ formatDelta(row, i) }}
+            </span>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  @if (biggestDeltas.length > 0) {
+    <div class="highlights">
+      <span class="highlights-label">
+        {{ 'SESSION_COMPARE.METRICS_HIGHLIGHTS' | translate }}:
+      </span>
+      @for (d of biggestDeltas; track d.sessionId; let i = $index) {
+        <span class="highlight-chip">
+          <strong>{{ d.metric }}</strong> {{ d.reason }}
+        </span>
+      }
+    </div>
+  }
+</div>

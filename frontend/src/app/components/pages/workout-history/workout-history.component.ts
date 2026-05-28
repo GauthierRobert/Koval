@@ -52,6 +52,7 @@ import {
   LinkSessionsModalComponent,
 } from './link-sessions-modal/link-sessions-modal.component';
 import { LinkToScheduleModalComponent } from './link-to-schedule-modal/link-to-schedule-modal.component';
+import { SessionPickerModalComponent } from '../../shared/session-picker-modal/session-picker-modal.component';
 import { SessionActionKind } from '../session-analysis/session-action-panel/session-action-panel.component';
 import { goalDate, RaceGoalService } from '../../../services/race-goal.service';
 import { forkJoin, of } from 'rxjs';
@@ -84,6 +85,7 @@ function toIsoDate(d: Date | string): string {
     ManualSessionModalComponent,
     LinkSessionsModalComponent,
     LinkToScheduleModalComponent,
+    SessionPickerModalComponent,
   ],
   templateUrl: './workout-history.component.html',
   styleUrl: './workout-history.component.css',
@@ -644,6 +646,24 @@ export class WorkoutHistoryComponent implements OnInit {
       this.linkCandidates = this.sameDayCandidates(session, all);
       this.linkModalOpen = true;
     });
+  }
+
+  /** Anchor session for the comparison picker. null = picker closed. */
+  compareAnchor: SavedSession | null = null;
+
+  onAnalysisCompareClicked(session: SavedSession): void {
+    this.compareAnchor = session;
+  }
+
+  onCompareApply(sessionIds: string[]): void {
+    this.compareAnchor = null;
+    this.router.navigate(['/sessions/compare'], {
+      queryParams: { ids: sessionIds.join(',') },
+    });
+  }
+
+  onCompareClose(): void {
+    this.compareAnchor = null;
   }
 
   onAnalysisDownloadClicked(session: SavedSession): void {

@@ -33,6 +33,10 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByAlias(String alias);
+
+    boolean existsByAlias(String alias);
+
     List<User> findByRole(UserRole role);
 
     List<User> findByIdIn(List<String> ids);

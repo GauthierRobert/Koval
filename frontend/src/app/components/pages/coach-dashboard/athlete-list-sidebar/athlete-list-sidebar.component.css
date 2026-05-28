@@ -6,10 +6,13 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100%;
+  min-height: 0;
 }
 
 .athlete-list {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: 1rem;
@@ -52,6 +55,7 @@
 
 .athletes {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -96,6 +100,21 @@
   font-weight: 700;
   font-size: var(--text-sm);
   color: var(--text-color);
+}
+
+.name-stack {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.name-stack .alias {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  font-family: var(--font-mono, monospace);
 }
 
 .mini-metrics {
@@ -211,7 +230,9 @@
   }
 }
 
-.section-header-actions { margin-left: auto; }
+.section-header-actions {
+  margin-left: auto;
+}
 .multi-select-toggle {
   background: transparent;
   border: 1px solid var(--glass-border);
@@ -220,7 +241,7 @@
   border-radius: 6px;
   font-size: 11px;
   cursor: pointer;
-  transition: background .15s;
+  transition: background 0.15s;
 }
 .multi-select-toggle.active,
 .multi-select-toggle:hover {

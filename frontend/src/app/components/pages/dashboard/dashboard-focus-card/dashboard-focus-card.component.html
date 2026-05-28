@@ -9,6 +9,9 @@
     </div>
     <div class="rail-greet">
       Hello, <b>{{ userName }}</b>
+      @if (userAlias) {
+        <div class="rail-greet-alias mono">{{ userAlias }}</div>
+      }
     </div>
 
     <div class="rail-focus-marker">

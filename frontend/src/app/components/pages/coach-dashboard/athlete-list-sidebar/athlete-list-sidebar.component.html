@@ -2,8 +2,18 @@
   <div class="section-header">
     <h3>{{ 'COACH_DASHBOARD.ATHLETES_HEADING' | translate }}</h3>
     <div class="section-header-actions">
-      <button class="multi-select-toggle" type="button" [class.active]="multiSelectMode" (click)="toggleMultiSelect.emit()" [attr.aria-pressed]="multiSelectMode">
-        {{ multiSelectMode ? ('COACH_DASHBOARD.BULK_CANCEL' | translate) : ('COACH_DASHBOARD.BULK_SELECT' | translate) }}
+      <button
+        class="multi-select-toggle"
+        type="button"
+        [class.active]="multiSelectMode"
+        (click)="toggleMultiSelect.emit()"
+        [attr.aria-pressed]="multiSelectMode"
+      >
+        {{
+          multiSelectMode
+            ? ('COACH_DASHBOARD.BULK_CANCEL' | translate)
+            : ('COACH_DASHBOARD.BULK_SELECT' | translate)
+        }}
       </button>
     </div>
   </div>
@@ -12,11 +22,28 @@
     <div class="bulk-action-bar">
       <div class="bulk-count">
         <span class="bulk-count-number">{{ multiSelectedIds.size }}</span>
-        <span class="bulk-count-label">{{ 'COACH_DASHBOARD.BULK_SELECTED_LABEL' | translate }}</span>
+        <span class="bulk-count-label">{{
+          'COACH_DASHBOARD.BULK_SELECTED_LABEL' | translate
+        }}</span>
       </div>
-      <button class="bulk-assign-btn btn-primary-gradient" type="button" (click)="bulkAssign.emit()">
-        <svg class="bulk-assign-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 5v14M5 12h14"/>
+      <button
+        class="bulk-assign-btn btn-primary-gradient"
+        type="button"
+        (click)="bulkAssign.emit()"
+      >
+        <svg
+          class="bulk-assign-icon"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 5v14M5 12h14" />
         </svg>
         <span>{{ 'COACH_DASHBOARD.BULK_ASSIGN_ACTION' | translate }}</span>
       </button>
@@ -25,10 +52,21 @@
 
   @if (allTags.length > 0) {
     <div class="tag-filters">
-      <span class="tag-filter-chip" data-testid="tag-filter-all" [class.active]="!activeTagFilter && !activeClubFilter" (click)="clearFilters.emit()">{{ 'COACH_DASHBOARD.ALL_FILTER' | translate: { count: totalAthleteCount } }}</span>
+      <span
+        class="tag-filter-chip"
+        data-testid="tag-filter-all"
+        [class.active]="!activeTagFilter && !activeClubFilter"
+        (click)="clearFilters.emit()"
+        >{{ 'COACH_DASHBOARD.ALL_FILTER' | translate: { count: totalAthleteCount } }}</span
+      >
       @for (tag of allTags; track trackTagByName(tag)) {
-        <span class="tag-filter-chip" data-testid="tag-filter-chip" [class.active]="activeTagFilter === tag.name"
-          (click)="toggleTagFilter.emit(tag.name)">{{ tag.name }} ({{ getTagCount(tag.name) }})</span>
+        <span
+          class="tag-filter-chip"
+          data-testid="tag-filter-chip"
+          [class.active]="activeTagFilter === tag.name"
+          (click)="toggleTagFilter.emit(tag.name)"
+          >{{ tag.name }} ({{ getTagCount(tag.name) }})</span
+        >
       }
     </div>
   }
@@ -38,9 +76,11 @@
       <div class="filter-section-label">{{ 'COACH_DASHBOARD.CLUBS_FILTER_LABEL' | translate }}</div>
       <div class="tag-filters">
         @for (entry of clubRoles; track entry) {
-          <span class="tag-filter-chip"
+          <span
+            class="tag-filter-chip"
             [class.active]="activeClubFilter === entry.clubName"
-            (click)="toggleClubFilter.emit(entry.clubName)">
+            (click)="toggleClubFilter.emit(entry.clubName)"
+          >
             {{ entry.clubName }} ({{ getClubCount(entry.clubName) }})
           </span>
         }
@@ -58,43 +98,69 @@
   @if (athletes.length > 0) {
     <div class="athletes">
       @for (athlete of athletes; track trackAthleteById(athlete)) {
-        <div class="athlete-row" data-testid="athlete-row"
-      [class.selected]="selectedAthlete?.id === athlete.id"
-      [class.multi-selected]="isSelected(athlete.id)"
-      (click)="onAthleteRowClick(athlete)">
-      @if (multiSelectMode) {
-        <input type="checkbox" class="athlete-multi-checkbox" [checked]="isSelected(athlete.id)" (click)="$event.stopPropagation()" (change)="toggleAthleteSelection.emit(athlete)" />
-      }
-      <div class="info">
-          <div class="info-header">
-            <span class="name">{{ athlete.displayName }}</span>
-            @if ((athlete.groups && athlete.groups.length > 0) || (athlete.clubs && athlete.clubs.length > 0)) {
-              <div class="tag-chips">
-                @for (tag of athlete.groups || []; track trackByValue(tag)) {
-                  <span class="chip tag">{{ tag }}</span>
+        <div
+          class="athlete-row"
+          data-testid="athlete-row"
+          [class.selected]="selectedAthlete?.id === athlete.id"
+          [class.multi-selected]="isSelected(athlete.id)"
+          (click)="onAthleteRowClick(athlete)"
+        >
+          @if (multiSelectMode) {
+            <input
+              type="checkbox"
+              class="athlete-multi-checkbox"
+              [checked]="isSelected(athlete.id)"
+              (click)="$event.stopPropagation()"
+              (change)="toggleAthleteSelection.emit(athlete)"
+            />
+          }
+          <div class="info">
+            <div class="info-header">
+              <span class="name-stack">
+                <span class="name">{{ athlete.displayName }}</span>
+                @if (athlete.alias) {
+                  <span class="alias">{{ athlete.alias }}</span>
                 }
-                @for (club of athlete.clubs || []; track trackByValue(club)) {
-                  <span class="chip club">{{ club }}</span>
-                }
+              </span>
+              @if (
+                (athlete.groups && athlete.groups.length > 0) ||
+                (athlete.clubs && athlete.clubs.length > 0)
+              ) {
+                <div class="tag-chips">
+                  @for (tag of athlete.groups || []; track trackByValue(tag)) {
+                    <span class="chip tag">{{ tag }}</span>
+                  }
+                  @for (club of athlete.clubs || []; track trackByValue(club)) {
+                    <span class="chip club">{{ club }}</span>
+                  }
+                </div>
+              }
+            </div>
+
+            @if (selectedAthlete?.id === athlete.id && (athleteMetrics$ | async); as m) {
+              <div class="mini-metrics">
+                <span class="chip fitness"
+                  >{{ 'COACH_DASHBOARD.CHIP_FITNESS' | translate }}
+                  {{ m.ctl | number: '1.0-0' }}</span
+                >
+                <span class="chip fatigue"
+                  >{{ 'COACH_DASHBOARD.CHIP_FATIGUE' | translate }}
+                  {{ m.atl | number: '1.0-0' }}</span
+                >
+                <span class="chip form" [class.positive]="m.tsb > 0"
+                  >{{ 'COACH_DASHBOARD.CHIP_FORM' | translate }} {{ m.tsb > 0 ? '+' : ''
+                  }}{{ m.tsb | number: '1.0-0' }}</span
+                >
+              </div>
+            } @else {
+              <div class="mini-metrics">
+                <span class="chip fitness">{{ 'COACH_DASHBOARD.CHIP_FITNESS' | translate }} —</span>
+                <span class="chip fatigue">{{ 'COACH_DASHBOARD.CHIP_FATIGUE' | translate }} —</span>
+                <span class="chip form">{{ 'COACH_DASHBOARD.CHIP_FORM' | translate }} —</span>
               </div>
             }
           </div>
-
-          @if (selectedAthlete?.id === athlete.id && (athleteMetrics$ | async); as m) {
-            <div class="mini-metrics">
-              <span class="chip fitness">{{ 'COACH_DASHBOARD.CHIP_FITNESS' | translate }} {{ m.ctl | number:'1.0-0' }}</span>
-              <span class="chip fatigue">{{ 'COACH_DASHBOARD.CHIP_FATIGUE' | translate }} {{ m.atl | number:'1.0-0' }}</span>
-              <span class="chip form" [class.positive]="m.tsb > 0">{{ 'COACH_DASHBOARD.CHIP_FORM' | translate }} {{ m.tsb > 0 ? '+' : '' }}{{ m.tsb | number:'1.0-0' }}</span>
-            </div>
-          } @else {
-            <div class="mini-metrics">
-              <span class="chip fitness">{{ 'COACH_DASHBOARD.CHIP_FITNESS' | translate }} —</span>
-              <span class="chip fatigue">{{ 'COACH_DASHBOARD.CHIP_FATIGUE' | translate }} —</span>
-              <span class="chip form">{{ 'COACH_DASHBOARD.CHIP_FORM' | translate }} —</span>
-            </div>
-          }
         </div>
-      </div>
       }
     </div>
   }

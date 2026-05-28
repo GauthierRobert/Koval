@@ -1,0 +1,38 @@
+<section class="zones glass">
+  <h3 class="section-label">{{ 'SESSION_COMPARE.SECTION_INTENSITY' | translate }}</h3>
+  <div class="cols" [style.--col-count]="sessions.length">
+    @for (s of sessions; track s.id; let i = $index) {
+      <div class="col">
+        <div class="col-header" [style.border-color]="colors[i]">
+          <span class="col-dot" [style.background]="colors[i]"></span>
+          <span class="col-title">{{ s.title }}</span>
+        </div>
+        @let dist = distribution(s);
+        @if (dist.length === 0) {
+          <p class="empty">{{ 'SESSION_COMPARE.NO_BLOCK_DATA' | translate }}</p>
+        } @else {
+          <div class="stack">
+            @for (e of dist; track e.type) {
+              <div
+                class="stack-bar"
+                [style.flex]="e.percentage"
+                [style.background]="colorFor(e.type)"
+                [title]="e.type + ': ' + formatDuration(e.seconds)"
+              ></div>
+            }
+          </div>
+          <ul class="legend-list">
+            @for (e of dist; track e.type) {
+              <li>
+                <span class="swatch" [style.background]="colorFor(e.type)"></span>
+                <span class="type-label">{{ e.type }}</span>
+                <span class="type-pct">{{ e.percentage }}%</span>
+                <span class="type-dur">{{ formatDuration(e.seconds) }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+  </div>
+</section>

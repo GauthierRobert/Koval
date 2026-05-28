@@ -1,7 +1,19 @@
 export interface User {
   id: string;
-  displayName: string;
-  profilePicture: string;
+  /**
+   * Anonymous public handle (e.g. SwiftOtter-42). Always present on users returned by
+   * coach-facing or MCP-shaped endpoints; the user's own /me payload has it too.
+   * This is what other coaches/athletes see — real names never leave the backend
+   * outside the user's own profile surface.
+   */
+  alias?: string;
+  /**
+   * Real display name. Only populated on the current user's own /me payload, NEVER
+   * on athletes a coach is viewing or on club member lists — those endpoints scrub
+   * it so the same payload is safe over MCP.
+   */
+  displayName?: string;
+  profilePicture?: string;
   role: 'ATHLETE' | 'COACH';
   hasCoach: boolean;
   ftp?: number;

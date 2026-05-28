@@ -1,0 +1,114 @@
+@if (report$ | async; as state) {
+  @if (isError(state)) {
+    <div class="empty-tab">{{ 'EFFECTIVENESS.LOAD_ERROR' | translate }}</div>
+  } @else if (asReport(state); as report) {
+    <div class="eff-controls">
+      <span class="control-label">{{ 'EFFECTIVENESS.WINDOW_LABEL' | translate }}</span>
+      @for (d of windowOptions; track d) {
+        <button
+          class="window-btn"
+          [class.active]="windowDays === d"
+          (click)="setWindow(d)"
+          type="button"
+        >
+          {{ d }}d
+        </button>
+      }
+    </div>
+
+    @if (report.sessionCount === 0) {
+      <div class="empty-tab">{{ 'EFFECTIVENESS.NO_SESSIONS' | translate }}</div>
+    } @else {
+      <div class="eff-summary glass">
+        <div class="section-title">{{ 'EFFECTIVENESS.SUMMARY_TITLE' | translate }}</div>
+        <p class="summary-text">{{ report.summary }}</p>
+        <div class="summary-meta">
+          <span
+            >{{ 'EFFECTIVENESS.SESSIONS' | translate }}:
+            <strong>{{ report.sessionCount }}</strong></span
+          >
+          <span
+            >{{ 'EFFECTIVENESS.TOTAL_TSS' | translate }}:
+            <strong>{{ report.totalTss | number: '1.0-0' }}</strong></span
+          >
+          <span
+            >{{ 'EFFECTIVENESS.SPLIT_AT' | translate }}:
+            <strong>{{ report.splitDate | date: 'MMM d' }}</strong></span
+          >
+        </div>
+      </div>
+
+      <div class="eff-gains glass">
+        <div class="section-title">{{ 'EFFECTIVENESS.GAINS_TITLE' | translate }}</div>
+        <div class="gains-grid">
+          @for (d of reportedDurations; track trackDuration($index, d)) {
+            <div class="gain-cell">
+              <div class="gain-label">{{ durationLabels[d] }}</div>
+              <div class="gain-row">
+                <span class="gain-before">{{ report.firstHalfCurve[d] | number: '1.0-0' }} W</span>
+                <span class="arrow">→</span>
+                <span class="gain-after">{{ report.secondHalfCurve[d] | number: '1.0-0' }} W</span>
+              </div>
+              <div
+                class="gain-delta"
+                [class.positive]="report.curveGains[d] > 0"
+                [class.negative]="report.curveGains[d] < 0"
+              >
+                {{ report.curveGains[d] > 0 ? '+' : ''
+                }}{{ report.curveGains[d] | number: '1.0-0' }} W
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="eff-ranking glass">
+        <div class="section-title">{{ 'EFFECTIVENESS.RANKING_TITLE' | translate }}</div>
+        <div class="ranking-head">
+          <span>#</span>
+          <span>{{ 'EFFECTIVENESS.COL_FAMILY' | translate }}</span>
+          <span>{{ 'EFFECTIVENESS.COL_SESSIONS' | translate }}</span>
+          <span>{{ 'EFFECTIVENESS.COL_TSS' | translate }}</span>
+          <span>{{ 'EFFECTIVENESS.COL_IF' | translate }}</span>
+          <span>{{ 'EFFECTIVENESS.COL_ALIGN' | translate }}</span>
+          <span>{{ 'EFFECTIVENESS.COL_RPE' | translate }}</span>
+          <span class="col-eff">{{ 'EFFECTIVENESS.COL_RETURN' | translate }}</span>
+        </div>
+        @for (f of report.families; track trackFamily($index, f)) {
+          <div class="ranking-row">
+            <span class="rank-num">{{ f.rank }}</span>
+            <span class="family-cell">
+              <span class="family-tag tag-{{ f.family | lowercase }}">{{
+                'EFFECTIVENESS.FAMILY_' + f.family | translate
+              }}</span>
+              <span class="share">{{ f.tssShare * 100 | number: '1.0-0' }}%</span>
+            </span>
+            <span>{{ f.sessionCount }}</span>
+            <span>{{ f.totalTss | number: '1.0-0' }}</span>
+            <span>{{
+              f.avgIntensityFactor !== null ? (f.avgIntensityFactor | number: '1.2-2') : '—'
+            }}</span>
+            <span>{{
+              f.avgAlignment !== null ? (f.avgAlignment | number: '1.0-0') + '%' : '—'
+            }}</span>
+            <span>{{ f.avgRpe !== null ? (f.avgRpe | number: '1.1-1') : '—' }}</span>
+            <span class="col-eff {{ effectivenessClass(f.estimatedWattsPer1000Tss) }}">
+              {{
+                f.estimatedWattsPer1000Tss !== null
+                  ? (f.estimatedWattsPer1000Tss | number: '1.1-1') + ' W'
+                  : '—'
+              }}
+            </span>
+          </div>
+        }
+        <p class="caveat">{{ 'EFFECTIVENESS.CAVEAT' | translate }}</p>
+      </div>
+    }
+  } @else {
+    <div
+      class="skeleton skeleton-block skeleton-block--xl"
+      aria-busy="true"
+      aria-hidden="true"
+    ></div>
+  }
+}

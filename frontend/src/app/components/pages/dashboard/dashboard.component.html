@@ -37,6 +37,7 @@
             [upcomingWorkouts]="vm.upcoming"
             [todayKey]="todayKey"
             [userName]="vm.user?.displayName ?? 'Athlete'"
+            [userAlias]="vm.user?.alias ?? null"
             [todayDate]="todayDate"
             [ftp]="vm.form.ftp ?? null"
             (openDetail)="openDetail($event)"

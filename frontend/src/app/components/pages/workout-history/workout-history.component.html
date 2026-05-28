@@ -553,6 +553,7 @@
         (navTo)="onSelectById($event)"
         (linkClicked)="onAnalysisLinkClicked($event)"
         (downloadClicked)="onAnalysisDownloadClicked($event)"
+        (compareClicked)="onAnalysisCompareClicked($event)"
       />
     } @else {
       <div class="empty-main">
@@ -581,6 +582,13 @@
     }
   </main>
 </div>
+
+<app-session-picker-modal
+  [open]="!!compareAnchor"
+  [anchor]="compareAnchor"
+  (apply)="onCompareApply($event)"
+  (closed)="onCompareClose()"
+/>
 
 @if (filtersOpen) {
   <app-modal-shell

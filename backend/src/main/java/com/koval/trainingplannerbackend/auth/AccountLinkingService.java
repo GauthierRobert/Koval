@@ -12,13 +12,22 @@ public class AccountLinkingService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final TerraApiClient terraApiClient;
+    private final AliasGenerator aliasGenerator;
 
     public AccountLinkingService(UserRepository userRepository,
                                  UserService userService,
-                                 TerraApiClient terraApiClient) {
+                                 TerraApiClient terraApiClient,
+                                 AliasGenerator aliasGenerator) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.terraApiClient = terraApiClient;
+        this.aliasGenerator = aliasGenerator;
+    }
+
+    private void assignAliasIfMissing(User user) {
+        if (user.getAlias() == null || user.getAlias().isBlank()) {
+            user.setAlias(aliasGenerator.generate());
+        }
     }
 
     public User findOrCreateFromStrava(String stravaId, String displayName, String profilePicture,
@@ -31,6 +40,7 @@ public class AccountLinkingService {
             user.setStravaRefreshToken(refreshToken);
             user.setStravaTokenExpiresAt(expiresAt);
             user.setLastLogin(LocalDateTime.now());
+            assignAliasIfMissing(user);
             return userRepository.save(user);
         }
 
@@ -44,6 +54,7 @@ public class AccountLinkingService {
                 user.setStravaRefreshToken(refreshToken);
                 user.setStravaTokenExpiresAt(expiresAt);
                 user.setLastLogin(LocalDateTime.now());
+                assignAliasIfMissing(user);
                 return userRepository.save(user);
             }
         }
@@ -60,6 +71,7 @@ public class AccountLinkingService {
         newUser.setRole(UserRole.ATHLETE);
         newUser.setLastLogin(LocalDateTime.now());
         newUser.setNeedsOnboarding(true);
+        assignAliasIfMissing(newUser);
 
         return userRepository.save(newUser);
     }
@@ -73,6 +85,7 @@ public class AccountLinkingService {
             user.setEmail(email);
             user.setProfilePicture(profilePicture);
             user.setLastLogin(LocalDateTime.now());
+            assignAliasIfMissing(user);
             return userRepository.save(user);
         }
 
@@ -85,6 +98,7 @@ public class AccountLinkingService {
                 user.setDisplayName(displayName);
                 user.setProfilePicture(profilePicture);
                 user.setLastLogin(LocalDateTime.now());
+                assignAliasIfMissing(user);
                 return userRepository.save(user);
             }
         }
@@ -98,6 +112,7 @@ public class AccountLinkingService {
         newUser.setRole(UserRole.ATHLETE);
         newUser.setLastLogin(LocalDateTime.now());
         newUser.setNeedsOnboarding(true);
+        assignAliasIfMissing(newUser);
 
         return userRepository.save(newUser);
     }
@@ -112,6 +127,7 @@ public class AccountLinkingService {
             if (refreshToken != null) user.setPolarRefreshToken(refreshToken);
             if (expiresAt != null) user.setPolarTokenExpiresAt(expiresAt);
             user.setLastLogin(LocalDateTime.now());
+            assignAliasIfMissing(user);
             return userRepository.save(user);
         }
 
@@ -125,6 +141,7 @@ public class AccountLinkingService {
         newUser.setRole(UserRole.ATHLETE);
         newUser.setLastLogin(LocalDateTime.now());
         newUser.setNeedsOnboarding(true);
+        assignAliasIfMissing(newUser);
 
         return userRepository.save(newUser);
     }
@@ -216,6 +233,7 @@ public class AccountLinkingService {
             if (refreshToken != null) user.setSuuntoRefreshToken(refreshToken);
             if (expiresAt != null) user.setSuuntoTokenExpiresAt(expiresAt);
             user.setLastLogin(LocalDateTime.now());
+            assignAliasIfMissing(user);
             return userRepository.save(user);
         }
 
@@ -229,6 +247,7 @@ public class AccountLinkingService {
         newUser.setRole(UserRole.ATHLETE);
         newUser.setLastLogin(LocalDateTime.now());
         newUser.setNeedsOnboarding(true);
+        assignAliasIfMissing(newUser);
 
         return userRepository.save(newUser);
     }

@@ -94,6 +94,27 @@
       <button
         type="button"
         class="tool-btn"
+        (click)="compareClicked.emit()"
+        [title]="'SESSION_COMPARE.BTN_COMPARE' | translate"
+        [attr.aria-label]="'SESSION_COMPARE.BTN_COMPARE' | translate"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 3v18h18" />
+          <path d="M7 14l4-4 4 4 5-5" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="tool-btn"
         (click)="downloadClicked.emit()"
         [title]="'SESSION_ANALYSIS.BTN_DOWNLOAD_FIT' | translate"
         [attr.aria-label]="'SESSION_ANALYSIS.BTN_DOWNLOAD_FIT' | translate"

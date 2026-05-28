@@ -144,6 +144,7 @@ export class SessionAnalysisComponent implements OnDestroy {
   @Output() navTo = new EventEmitter<string>();
   @Output() linkClicked = new EventEmitter<SavedSession>();
   @Output() downloadClicked = new EventEmitter<SavedSession>();
+  @Output() compareClicked = new EventEmitter<SavedSession>();
 
   session$ = this.sessionSubject.asObservable();
   ftp$ = this.authService.user$.pipe(map((u) => u?.ftp ?? null));

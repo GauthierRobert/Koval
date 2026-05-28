@@ -11,7 +11,6 @@
 
 /* ── Header Bar ── */
 
-
 .header-left {
   display: flex;
   align-items: center;
@@ -156,6 +155,15 @@
   color: var(--text-color);
   line-height: 1;
   font-family: var(--font-display);
+}
+
+.profile-alias {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  font-family: var(--font-mono, monospace);
+  margin-top: 2px;
 }
 
 .detail-tags-row {

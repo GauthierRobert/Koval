@@ -175,6 +175,7 @@ public class ClubMembershipService {
             return new ClubMemberResponse(
                     m.getId(), m.getUserId(),
                     uOpt.map(User::getDisplayName).orElse(m.getUserId()),
+                    uOpt.map(User::getAlias).orElse(null),
                     uOpt.map(User::getProfilePicture).orElse(null),
                     m.getRole(), m.getJoinedAt(),
                     userGroupsMap.getOrDefault(m.getUserId(), List.of()));
@@ -195,6 +196,7 @@ public class ClubMembershipService {
             return new ClubMemberResponse(
                     m.getId(), m.getUserId(),
                     uOpt.map(User::getDisplayName).orElse(m.getUserId()),
+                    uOpt.map(User::getAlias).orElse(null),
                     uOpt.map(User::getProfilePicture).orElse(null),
                     m.getRole(), m.getRequestedAt(), List.of());
         }).toList();

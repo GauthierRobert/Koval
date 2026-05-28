@@ -7,6 +7,7 @@ import com.koval.trainingplannerbackend.coach.CoachService;
 import com.koval.trainingplannerbackend.coach.ScheduledWorkout;
 import com.koval.trainingplannerbackend.coach.dto.AthleteResponse;
 import com.koval.trainingplannerbackend.config.Provenance;
+import java.util.Map;
 import com.koval.trainingplannerbackend.training.TrainingService;
 import com.koval.trainingplannerbackend.training.history.AlignmentScore;
 import com.koval.trainingplannerbackend.training.history.SessionAlignmentService;
@@ -42,11 +43,42 @@ public class McpCoachTools {
         this.alignmentService = alignmentService;
     }
 
-    @Tool(description = "List all athletes coached by the current user. Returns athlete profiles with FTP, weight, and performance metrics. Requires COACH role.")
-    public List<AthleteResponse> listAthletes() {
+    @Tool(description = "List all athletes coached by the current user. Returns each athlete's "
+            + "anonymous alias (e.g. SwiftOtter-42) plus their FTP, weight, and performance metrics. "
+            + "Real names are never returned — use the alias to refer to athletes back to the coach. "
+            + "Requires COACH role.")
+    public List<AthleteSummary> listAthletes() {
         SecurityUtils.requireCoach();
         String coachId = SecurityUtils.getCurrentUserId();
-        return coachService.getAthletes(coachId);
+        return coachService.getAthletes(coachId).stream()
+                .map(AthleteSummary::from)
+                .toList();
+    }
+
+    /**
+     * MCP-only athlete projection: alias and metrics, no real name / email / avatar.
+     * Mirrors {@link AthleteResponse} minus the identifying fields so the same MCP tool
+     * cannot leak PII even if the REST DTO grows new identity fields later.
+     */
+    public record AthleteSummary(String id, String alias, String role,
+                                 Integer ftp, Integer weightKg,
+                                 Integer functionalThresholdPace, Integer criticalSwimSpeed,
+                                 Integer pace5k, Integer pace10k,
+                                 Integer paceHalfMarathon, Integer paceMarathon,
+                                 Integer vo2maxPower, Integer vo2maxPace,
+                                 Map<String, Integer> customZoneReferenceValues,
+                                 List<String> groups, List<String> clubs, boolean hasCoach) {
+        public static AthleteSummary from(AthleteResponse a) {
+            return new AthleteSummary(
+                    a.id(), a.alias(), a.role(),
+                    a.ftp(), a.weightKg(),
+                    a.functionalThresholdPace(), a.criticalSwimSpeed(),
+                    a.pace5k(), a.pace10k(),
+                    a.paceHalfMarathon(), a.paceMarathon(),
+                    a.vo2maxPower(), a.vo2maxPace(),
+                    a.customZoneReferenceValues(),
+                    a.groups(), a.clubs(), a.hasCoach());
+        }
     }
 
     @Tool(description = "Assign a training workout to one or more athletes on a specific date. Requires COACH role.")

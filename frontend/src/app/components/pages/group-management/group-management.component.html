@@ -141,7 +141,9 @@
                     (click)="navigateToCoach(athlete.id)"
                     [title]="'GROUP_MANAGEMENT.ATHLETE_ROW_TITLE' | translate"
                   >
-                    <div class="avatar-sm">{{ athlete.displayName[0].toUpperCase() }}</div>
+                    <div class="avatar-sm">
+                      {{ (athlete.displayName || athlete.alias || '?')[0].toUpperCase() }}
+                    </div>
                     <span class="athlete-name">{{ athlete.displayName }}</span>
                     <button
                       class="remove-btn"

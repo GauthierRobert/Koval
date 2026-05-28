@@ -36,6 +36,7 @@ import { CoachHistoryTabComponent } from './coach-history-tab/coach-history-tab.
 import { CoachPlansTabComponent } from './coach-plans-tab/coach-plans-tab.component';
 import { CoachContextTabComponent } from './coach-context-tab/coach-context-tab.component';
 import { CoachAlignmentTabComponent } from './coach-alignment-tab/coach-alignment-tab.component';
+import { CoachEffectivenessTabComponent } from './coach-effectiveness-tab/coach-effectiveness-tab.component';
 import { ChartPanelSkeletonComponent } from '../../shared/skeleton/chart-panel-skeleton/chart-panel-skeleton.component';
 import {
   PMC_WINDOW_DAYS,
@@ -72,6 +73,7 @@ import {
     CoachPlansTabComponent,
     CoachContextTabComponent,
     CoachAlignmentTabComponent,
+    CoachEffectivenessTabComponent,
     ChartPanelSkeletonComponent,
   ],
   templateUrl: './coach-dashboard.component.html',
@@ -96,7 +98,8 @@ export class CoachDashboardComponent implements OnInit {
     | 'goals'
     | 'plans'
     | 'context'
-    | 'alignment' = 'performance';
+    | 'alignment'
+    | 'effectiveness' = 'performance';
 
   scheduleWeekStart: Date = getMondayOfWeek(new Date());
   scheduleWeekEnd: Date = getSundayOfWeek(new Date());

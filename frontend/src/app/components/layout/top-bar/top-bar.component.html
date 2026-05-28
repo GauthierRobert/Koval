@@ -734,7 +734,7 @@
             [alt]="'TOP_BAR.PROFILE_PICTURE_ALT' | translate"
           />
         } @else {
-          <div class="avatar">{{ u.displayName.charAt(0).toUpperCase() }}</div>
+          <div class="avatar">{{ (u.displayName || u.alias || '?').charAt(0).toUpperCase() }}</div>
         }
         <div class="user-info desktop-only">
           <span class="name">{{ u.displayName }}</span>

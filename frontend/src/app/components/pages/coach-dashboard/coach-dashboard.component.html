@@ -57,9 +57,18 @@
         <div class="detail-header">
           <div class="profile-banner">
             <div class="profile-left">
-              <div class="profile-avatar">{{ selectedAthlete.displayName[0].toUpperCase() }}</div>
+              <div class="profile-avatar">
+                {{
+                  (selectedAthlete.displayName ||
+                    selectedAthlete.alias ||
+                    selectedAthlete.id)[0].toUpperCase()
+                }}
+              </div>
               <div class="profile-identity">
-                <h2>{{ selectedAthlete.displayName }}</h2>
+                <h2>{{ selectedAthlete.displayName || selectedAthlete.alias }}</h2>
+                @if (selectedAthlete.alias && selectedAthlete.displayName) {
+                  <div class="profile-alias">{{ selectedAthlete.alias }}</div>
+                }
                 <div class="detail-tags-row">
                   @for (tag of selectedAthlete.groups || []; track trackByValue(tag)) {
                     <span class="editable-tag">
@@ -188,6 +197,19 @@
             >
               {{ 'COACH_DASHBOARD.TAB_ALIGNMENT' | translate }}
             </div>
+            <div
+              class="tab"
+              role="tab"
+              id="coach-tab-effectiveness"
+              data-testid="tab-effectiveness"
+              [attr.aria-selected]="activeTab === 'effectiveness'"
+              [class.active]="activeTab === 'effectiveness'"
+              (click)="activeTab = 'effectiveness'"
+              tabindex="0"
+              (keydown.enter)="activeTab = 'effectiveness'"
+            >
+              {{ 'COACH_DASHBOARD.TAB_EFFECTIVENESS' | translate }}
+            </div>
           </div>
         </div>
 
@@ -260,6 +282,10 @@
 
         @if (activeTab === 'alignment') {
           <app-coach-alignment-tab [athleteId]="selectedAthlete!.id" />
+        }
+
+        @if (activeTab === 'effectiveness') {
+          <app-coach-effectiveness-tab [athleteId]="selectedAthlete!.id" />
         }
       </div>
     } @else {

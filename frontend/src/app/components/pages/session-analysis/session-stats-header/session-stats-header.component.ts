@@ -33,6 +33,7 @@ export class SessionStatsHeaderComponent {
   @Output() navTo = new EventEmitter<string>();
   @Output() linkClicked = new EventEmitter<void>();
   @Output() downloadClicked = new EventEmitter<void>();
+  @Output() compareClicked = new EventEmitter<void>();
   @Output() alignmentChanged = new EventEmitter<AlignmentScore>();
 
   rpeValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];

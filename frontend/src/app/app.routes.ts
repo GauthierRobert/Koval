@@ -144,6 +144,14 @@ export const routes: Routes = [
     redirectTo: ({ params }) => `/history/${params['sessionId']}`,
   },
   {
+    path: 'sessions/compare',
+    loadComponent: () =>
+      import('./components/pages/session-comparison/session-comparison.page').then(
+        (m) => m.SessionComparisonPageComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'pmc',
     loadComponent: () =>
       import('./components/pages/pmc-page/pmc-page.component').then((m) => m.PmcPageComponent),

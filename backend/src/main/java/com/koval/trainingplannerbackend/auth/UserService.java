@@ -12,14 +12,30 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final AliasGenerator aliasGenerator;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, AliasGenerator aliasGenerator) {
         this.userRepository = userRepository;
+        this.aliasGenerator = aliasGenerator;
     }
 
     public User getUserById(String userId) {
-        return userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+        return ensureAlias(user);
+    }
+
+    /**
+     * Lazy backfill: any legacy user without an alias gets one assigned on first lookup
+     * after this feature ships. New users already have an alias set by
+     * {@link AccountLinkingService} at creation time, so this is a one-time per-user cost.
+     */
+    public User ensureAlias(User user) {
+        if (user.getAlias() == null || user.getAlias().isBlank()) {
+            user.setAlias(aliasGenerator.generate());
+            return userRepository.save(user);
+        }
+        return user;
     }
 
     public Optional<User> findById(String userId) {

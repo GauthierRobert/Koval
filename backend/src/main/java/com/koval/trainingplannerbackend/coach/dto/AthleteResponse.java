@@ -5,9 +5,17 @@ import com.koval.trainingplannerbackend.auth.User;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Coach-facing athlete summary returned over REST to the coach's own UI. Carries both the
+ * real {@code displayName} (rendered above the alias so the coach recognises the person)
+ * and the anonymous {@code alias} (rendered below, and the only handle they should use when
+ * referring to the athlete with any AI client). MCP responses use a separate alias-only DTO
+ * so the real name never crosses that boundary — see {@code McpCoachTools.AthleteSummary}.
+ */
 public record AthleteResponse(
     String id,
     String displayName,
+    String alias,
     String profilePicture,
     String role,
     Integer ftp,
@@ -29,6 +37,7 @@ public record AthleteResponse(
         return new AthleteResponse(
                 athlete.getId(),
                 athlete.getDisplayName(),
+                athlete.getAlias(),
                 athlete.getProfilePicture(),
                 athlete.getRole().name(),
                 athlete.getFtp(),

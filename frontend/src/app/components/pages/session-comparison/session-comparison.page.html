@@ -1,0 +1,62 @@
+@if (state$ | async; as state) {
+  <div class="compare-page">
+    <header class="page-header glass">
+      <a routerLink="/history" class="back-link">← {{ 'COMMON.BACK' | translate }}</a>
+      @if (state.report) {
+        <h1 class="title">
+          {{
+            'SESSION_COMPARE.HEADER_TITLE'
+              | translate
+                : {
+                    count: state.report.sessions.length,
+                    sport: state.report.sportType,
+                  }
+          }}
+        </h1>
+        @if (state.report.sessions.length < 4) {
+          <button class="add-btn" (click)="openPicker(state.report)">
+            + {{ 'SESSION_COMPARE.HEADER_ADD' | translate }}
+          </button>
+        }
+      }
+    </header>
+
+    @if (state.error) {
+      <div class="empty-state glass">
+        <h2>{{ 'SESSION_COMPARE.ERROR_TITLE' | translate }}</h2>
+        <p>{{ 'SESSION_COMPARE.ERROR_DESC' | translate }}</p>
+      </div>
+    } @else if (state.report; as report) {
+      <app-comparison-metrics-table
+        [sessions]="report.sessions"
+        [biggestDeltas]="report.biggestDeltas"
+        [colors]="colorsArray(report)"
+      />
+
+      @if (report.sportType === 'CYCLING') {
+        <section class="chart-section glass">
+          <h3 class="section-label">{{ 'SESSION_COMPARE.SECTION_POWER_CURVE' | translate }}</h3>
+          <app-comparison-power-curve [sessions]="report.sessions" [colors]="colorsArray(report)" />
+        </section>
+      }
+
+      <app-comparison-zone-sidebyside [sessions]="report.sessions" [colors]="colorsArray(report)" />
+
+      @if (report.alignedBlocks.length > 0) {
+        <app-comparison-block-alignment
+          [sessions]="report.sessions"
+          [alignedBlocks]="report.alignedBlocks"
+          [colors]="colorsArray(report)"
+        />
+      }
+    }
+
+    <app-session-picker-modal
+      [open]="!!pickerAnchor"
+      [anchor]="pickerAnchor"
+      [maxSelectable]="state.report ? 4 - state.report.sessions.length : 1"
+      (apply)="state.report && onPickerApply(state.report, $event)"
+      (closed)="closePicker()"
+    />
+  </div>
+}
