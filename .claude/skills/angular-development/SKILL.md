@@ -159,6 +159,30 @@ Each service owns **one domain**:
 
 Never add methods to a service that don't belong to its domain. Create a new service instead.
 
+## Error Handling — No Mock Fallbacks
+
+There is **no fake/mock data** when the backend is unreachable. The pattern:
+
+1. Services issue real HTTP via `HttpClient`.
+2. Failures bubble through `interceptors/error.interceptor.ts`.
+3. `ErrorToastService` surfaces them to the user.
+4. The UI renders the **empty state** for the affected list/card — never invented placeholder data.
+
+```typescript
+// Good — fail through to the interceptor; render empty when no data
+this.trainings$ = this.trainingService.list();
+// template: @if (trainings$ | async; as list) { ... } @else { <empty-state /> }
+```
+
+```typescript
+// Wrong — silently hides backend issues and shows fake data
+this.trainings$ = this.trainingService.list().pipe(
+  catchError(() => of(FAKE_TRAININGS))
+);
+```
+
+The only legitimate `catchError` is one that maps the error to `EMPTY` / empty list **and** emits to `ErrorToastService`. Do not wrap calls in try/catch just to silence errors.
+
 ## Component Conventions
 
 ### Always Use
