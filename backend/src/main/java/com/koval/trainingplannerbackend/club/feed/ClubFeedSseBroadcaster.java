@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -96,6 +97,30 @@ public class ClubFeedSseBroadcaster {
                 }
             });
         }
+    }
+
+    /**
+     * Periodic heartbeat + empty-list reap. The heartbeat send forces a TCP write,
+     * which is what surfaces silent client disconnects (close on the network rather
+     * than via the browser) — failure routes through {@code removeEmitter} via the
+     * onError callback. The trailing pass drops any club entries whose list went
+     * empty between heartbeats so the map cannot grow unbounded over a long uptime.
+     */
+    @Scheduled(fixedRate = 60_000)
+    public void heartbeatAndReap() {
+        emitters.forEach((clubId, list) -> {
+            for (SseEmitter emitter : list) {
+                sseExecutor.execute(() -> {
+                    try {
+                        emitter.send(SseEmitter.event().name("heartbeat").data(""));
+                    } catch (Exception e) {
+                        removeEmitter(clubId, emitter);
+                        try { emitter.completeWithError(e); } catch (Exception ignored) {}
+                    }
+                });
+            }
+        });
+        emitters.entrySet().removeIf(e -> e.getValue().isEmpty());
     }
 
     private void removeEmitter(String clubId, SseEmitter emitter) {

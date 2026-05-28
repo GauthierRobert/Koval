@@ -25,6 +25,9 @@ public class CacheConfig {
         manager.setCaches(List.of(
                 // Per-race cached document — high read fan-out, evicted on race mutation.
                 build("races", 5_000, Duration.ofHours(1)),
+                // Web-search race lookups (Anthropic + web_search tool). Same query repeated
+                // during onboarding / search burns tokens; TTL bounds staleness for race dates.
+                build("raceSearch", 2_000, Duration.ofHours(24)),
                 // Aggregated facets — recomputed by allEntries evict on race mutation; TTL bounds the rebuild storm.
                 build("raceSportFacets", 16, Duration.ofMinutes(15)),
                 build("raceCountryFacets", 64, Duration.ofMinutes(15)),

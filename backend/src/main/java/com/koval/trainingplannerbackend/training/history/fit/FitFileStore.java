@@ -10,14 +10,18 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 
 /**
  * Storage façade for FIT files. Owns the dual MongoDB-GridFS / GCS layout and
@@ -38,15 +42,21 @@ public class FitFileStore {
     private final ObjectProvider<Storage> storageProvider;
     private final FitStorageProperties fitProperties;
     private final MediaStorageProperties mediaProperties;
+    private final Executor asyncExecutor;
+    private final MongoTemplate mongoTemplate;
 
     public FitFileStore(GridFsOperations gridFsOperations,
                         ObjectProvider<Storage> storageProvider,
                         FitStorageProperties fitProperties,
-                        MediaStorageProperties mediaProperties) {
+                        MediaStorageProperties mediaProperties,
+                        @Qualifier("taskExecutor") Executor asyncExecutor,
+                        MongoTemplate mongoTemplate) {
         this.gridFsOperations = gridFsOperations;
         this.storageProvider = storageProvider;
         this.fitProperties = fitProperties;
         this.mediaProperties = mediaProperties;
+        this.asyncExecutor = asyncExecutor;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public FitStorageMode mode() {
@@ -72,15 +82,38 @@ public class FitFileStore {
         }
         if (mode.writesGcs() && isGcsAvailable()) {
             String objectName = objectName(session);
-            try {
+            if (mode == FitStorageMode.GCS_ONLY) {
+                // Only copy — write synchronously so the caller knows it landed.
                 writeToGcs(objectName, bytes);
                 session.setFitGcsObject(objectName);
-            } catch (RuntimeException e) {
-                if (mode == FitStorageMode.GCS_ONLY) throw e;
-                // Dual-write: GCS failure must not block the upload. Mongo copy is the safety net.
-                log.warn("GCS write failed for session {} (object={}); continuing with Mongo only: {}",
-                        session.getId(), objectName, e.getMessage());
+            } else {
+                // Dual mode: GCS is a copy of Mongo. Defer it so request latency
+                // and tail-jitter from GCS don't block the athlete's upload.
+                // The pointer is persisted by the async task on success.
+                String sessionId = session.getId();
+                asyncExecutor.execute(() -> writeToGcsAsync(sessionId, objectName, bytes));
             }
+        }
+    }
+
+    private void writeToGcsAsync(String sessionId, String objectName, byte[] bytes) {
+        try {
+            writeToGcs(objectName, bytes);
+        } catch (RuntimeException e) {
+            log.warn("Async GCS write failed for session {} (object={}); Mongo copy remains: {}",
+                    sessionId, objectName, e.getMessage());
+            return;
+        }
+        try {
+            // Partial update on the pointer field only — avoids races with the
+            // caller's full-document save of the same session.
+            mongoTemplate.updateFirst(
+                    Query.query(Criteria.where("_id").is(sessionId)),
+                    Update.update("fitGcsObject", objectName),
+                    CompletedSession.class);
+        } catch (RuntimeException e) {
+            log.warn("Async GCS pointer update failed for session {} (object={}): {}",
+                    sessionId, objectName, e.getMessage());
         }
     }
 

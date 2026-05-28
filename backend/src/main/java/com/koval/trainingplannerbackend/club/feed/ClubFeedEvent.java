@@ -21,6 +21,7 @@ import java.util.Set;
 @Document(collection = "club_feed_events")
 @CompoundIndexes({
         @CompoundIndex(name = "club_pinned_idx", def = "{'clubId': 1, 'pinned': 1, 'createdAt': -1}"),
+        @CompoundIndex(name = "club_type_pinned_idx", def = "{'clubId': 1, 'type': 1, 'pinned': 1, 'createdAt': -1}"),
         @CompoundIndex(name = "club_session_type_idx", def = "{'clubSessionId': 1, 'type': 1}"),
         @CompoundIndex(name = "club_spotlight_expiry_idx", def = "{'type': 1, 'spotlightExpiresAt': 1}")
 })

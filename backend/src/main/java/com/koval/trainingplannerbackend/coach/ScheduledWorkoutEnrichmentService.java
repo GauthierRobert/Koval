@@ -164,8 +164,16 @@ public class ScheduledWorkoutEnrichmentService {
                 : trainingRepository.findAllById(linkedTrainingIds).stream()
                         .collect(Collectors.toMap(Training::getId, Function.identity()));
 
-        Map<String, String> groupNameMap = clubGroupRepository.findByClubIdIn(clubIds).stream()
-                .collect(Collectors.toMap(g -> g.getId(), g -> g.getName()));
+        // Resolve group names for only the groups actually referenced by relevant sessions,
+        // not every group across every club the athlete belongs to.
+        List<String> referencedGroupIds = relevantSessions.stream()
+                .map(ClubTrainingSession::getClubGroupId)
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .toList();
+        Map<String, String> groupNameMap = referencedGroupIds.isEmpty() ? Map.of()
+                : clubGroupRepository.findAllById(referencedGroupIds).stream()
+                        .collect(Collectors.toMap(g -> g.getId(), g -> g.getName()));
 
         for (ClubTrainingSession s : relevantSessions) {
             Club club = clubMap.get(s.getClubId());

@@ -24,6 +24,7 @@ public class CompletedSession {
     @Id
     private String id;
 
+    @Indexed
     private String userId;
 
     private String trainingId;

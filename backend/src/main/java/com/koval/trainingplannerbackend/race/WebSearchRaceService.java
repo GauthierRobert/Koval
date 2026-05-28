@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -97,6 +98,12 @@ public class WebSearchRaceService {
      * @param query search query, typically a race name (e.g. "Ironman Nice 2026")
      * @return Race with fields populated from web search, or a minimal Race if search fails
      */
+    /**
+     * Result is cached by normalized query. The error fallback (title-only Race) is
+     * skipped via {@code unless} so transient failures don't poison the cache.
+     */
+    @Cacheable(value = "raceSearch", key = "#query?.trim()?.toLowerCase()",
+            unless = "#result == null || (#result.location == null && #result.scheduledDate == null)")
     public Race searchRaceDetails(String query) {
         try {
             AnthropicResponse response = callAnthropicWithWebSearch(query);
