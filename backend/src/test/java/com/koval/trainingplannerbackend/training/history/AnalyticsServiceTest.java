@@ -122,7 +122,9 @@ class AnalyticsServiceTest {
             s.setRpe(7);
             service.computeAndAttachMetrics(s, userWithFtp(0));
 
-            assertEquals(0.7, s.getIntensityFactor(), 0.001);
+            // RPE 7 maps to IF 0.85 via the Coggan/Allen perceived-exertion table
+            // (TssCalculator#intensityFactorFromRpe), not the old linear rpe/10.
+            assertEquals(0.85, s.getIntensityFactor(), 0.001);
             assertNotNull(s.getTss());
         }
 
