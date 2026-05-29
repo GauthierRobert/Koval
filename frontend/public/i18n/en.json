@@ -1087,6 +1087,7 @@
   },
   "WORKOUT_HISTORY": {
     "SIDEBAR_TITLE": "ACTIVITIES",
+    "BTN_COMPARE": "Compare",
     "BTN_LINK_SESSIONS": "Link sessions",
     "BTN_DOWNLOAD_FIT": "Download .FIT",
     "BTN_STRAVA_SYNC": "STRAVA IMPORT",

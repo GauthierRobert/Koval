@@ -676,37 +676,54 @@
 
 /* ─── Row hover actions (link / download FIT) ─────────────────── */
 .item-actions {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   flex-shrink: 0;
-  margin-left: auto;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklch, var(--bg-color) 80%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: var(--shadow-sm);
+  z-index: 2;
+}
+
+.item-actions {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s;
+}
+
+.session-item:hover .item-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .row-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   border-radius: var(--radius-sm);
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-dim);
   cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
   transition:
-    opacity 0.18s,
     background 0.18s,
     border-color 0.18s,
     color 0.18s;
 }
 
-.session-item:hover .row-action-btn,
-.session-item.active .row-action-btn {
-  opacity: 1;
-  pointer-events: auto;
+.row-action-btn svg {
+  width: 15px;
+  height: 15px;
 }
 
 .row-action-btn:hover {
@@ -1066,6 +1083,23 @@
 
   .filter-bar {
     border-bottom: none;
+  }
+
+  /* Touch has no hover: surface the row actions permanently so they stay
+     reachable on mobile. Larger tap targets too. */
+  .item-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .row-action-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .row-action-btn svg {
+    width: 17px;
+    height: 17px;
   }
 }
 

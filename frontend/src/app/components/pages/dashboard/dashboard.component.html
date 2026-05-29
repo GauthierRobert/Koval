@@ -97,7 +97,7 @@
                   —
                 }
               </span>
-              <span class="kpi-delta kpi-delta--form mono">{{
+              <span class="kpi-delta kpi-delta--form mono" [ngClass]="tsbClass(vm.form.tsb)">{{
                 tsbLabel(vm.form.tsb) | translate
               }}</span>
             </div>

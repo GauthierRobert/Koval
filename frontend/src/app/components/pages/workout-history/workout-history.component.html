@@ -431,6 +431,27 @@
                       <button
                         type="button"
                         class="row-action-btn"
+                        (click)="onAnalysisCompareClicked(row.session); $event.stopPropagation()"
+                        [title]="'WORKOUT_HISTORY.BTN_COMPARE' | translate"
+                        [attr.aria-label]="'WORKOUT_HISTORY.BTN_COMPARE' | translate"
+                      >
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M3 3v18h18" />
+                          <path d="M7 14l4-4 4 4 5-5" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="row-action-btn"
                         (click)="openLinkScheduleModal(row.session, $event)"
                         [title]="'WORKOUT_HISTORY.BTN_LINK_TO_PLAN' | translate"
                         [attr.aria-label]="'WORKOUT_HISTORY.BTN_LINK_TO_PLAN' | translate"

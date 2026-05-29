@@ -184,8 +184,20 @@
   color: var(--danger-color);
 }
 .kpi-delta--form {
-  color: var(--accent-color);
   font-weight: 600;
+}
+/* Match the form label color to the TSB value above it. */
+.kpi-delta--form.tsb-fresh {
+  color: var(--success-color);
+}
+.kpi-delta--form.tsb-productive {
+  color: var(--accent-color);
+}
+.kpi-delta--form.tsb-neutral {
+  color: var(--text-color);
+}
+.kpi-delta--form.tsb-stressed {
+  color: var(--danger-color);
 }
 
 /* ═══════════════════════════════════════════════════════════════
