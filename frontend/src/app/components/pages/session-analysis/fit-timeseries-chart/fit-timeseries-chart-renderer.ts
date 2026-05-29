@@ -36,6 +36,8 @@ export interface RenderInput {
   sportType: string;
   ftp: number | null;
   zoneBlocks: ZoneBlock[];
+  /** When non-empty, zones not in this set render dimmed. Empty/null = no filter. */
+  zoneFilters: Set<string> | null;
   blockSummaries: BlockSummary[];
   blockColors: string[];
   showBlocks: boolean;
@@ -229,6 +231,8 @@ function fillSteppedArea(
   ctx.fill();
 }
 
+const DIM_RGB: [number, number, number] = [140, 148, 158];
+
 function drawSteppedLine(
   ctx: CanvasRenderingContext2D,
   xOf: (i: number) => number,
@@ -243,8 +247,8 @@ function drawSteppedLine(
     y: yOf(b.v),
   }));
   if (fill) fillSteppedArea(ctx, pts, fill);
-  ctx.strokeStyle = color;
   ctx.lineWidth = 1;
+  ctx.strokeStyle = color;
   ctx.beginPath();
   pts.forEach((p, i) => {
     if (i === 0) ctx.moveTo(p.x1, p.y);
@@ -404,17 +408,21 @@ function drawPrimary(
 
   if (useZoneBlocks(input)) {
     const zBlocks = input.zoneBlocks;
+    const filter = input.zoneFilters;
+    const hasFilter = !!filter && filter.size > 0;
     for (let bi = 0; bi < zBlocks.length; bi++) {
       const b = zBlocks[bi];
       const x1 = xOf(b.startIndex);
       const x2 = bi + 1 < zBlocks.length ? xOf(zBlocks[bi + 1].startIndex) : xOf(b.endIndex);
       const val = cycling ? b.avgPower : plotValue(b.avgSpeed);
       const y = yOf(val);
-      const [br, bg, bb] = cssToRgb(b.color);
-      const hb = `rgb(${br},${bg},${bb})`;
-      ctx.fillStyle = `rgba(${br},${bg},${bb},0.25)`;
+      const active = !hasFilter || filter!.has(b.zoneLabel);
+      const [br, bg, bb] = active ? cssToRgb(b.color) : DIM_RGB;
+      const fillAlpha = active ? 0.25 : 0.08;
+      const strokeAlpha = active ? 1 : 0.45;
+      ctx.fillStyle = `rgba(${br},${bg},${bb},${fillAlpha})`;
       ctx.fillRect(x1, y, x2 - x1, bottom - y);
-      ctx.strokeStyle = hb;
+      ctx.strokeStyle = `rgba(${br},${bg},${bb},${strokeAlpha})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x1, y);

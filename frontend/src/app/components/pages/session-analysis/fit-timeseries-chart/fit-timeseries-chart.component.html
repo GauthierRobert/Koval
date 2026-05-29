@@ -73,6 +73,17 @@
       }
     </div>
   }
+  <div class="chart-input-hint-row" aria-hidden="true">
+    <div class="chart-input-hint">
+      <span><kbd>Ctrl</kbd>+Wheel zoom</span>
+      <span class="hint-sep">·</span>
+      <span><kbd>Ctrl</kbd>+Drag pan</span>
+      @if (enableBrush) {
+        <span class="hint-sep">·</span>
+        <span>Drag select</span>
+      }
+    </div>
+  </div>
   <div class="charts-stack" #stack (mouseleave)="onMouseLeave()">
     @if (isZoomed) {
       <button

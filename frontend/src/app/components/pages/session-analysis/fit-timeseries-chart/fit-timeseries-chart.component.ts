@@ -5,11 +5,13 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  EventEmitter,
   inject,
   Input,
   NgZone,
   OnChanges,
   OnDestroy,
+  Output,
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
@@ -58,6 +60,8 @@ export class FitTimeseriesChartComponent
   @Input() blockSummaries: BlockSummary[] = [];
   @Input() blockColors: string[] = [];
   @Input() zoneBlocks: ZoneBlock[] = [];
+  /** When non-empty, zones not in this set render dimmed (grey). Empty/null = no filter. */
+  @Input() zoneFilters: Set<string> | null = null;
   @Input() showToggles = true;
   @Input() showXAxis = true;
   @Input() compact = false;
@@ -73,6 +77,9 @@ export class FitTimeseriesChartComponent
   @Input() showSpeedWithPower = true;
   /** Enable mouse drag-to-select range stats (desktop only). Off by default. */
   @Input() enableBrush = false;
+
+  /** Emits when the brush selection settles (mouse up after drag) or is cleared. */
+  @Output() selectionChange = new EventEmitter<{ startIdx: number; endIdx: number } | null>();
 
   @ViewChild('stack') stackRef!: ElementRef<HTMLDivElement>;
   @ViewChild('primaryCanvas') pRef?: ElementRef<HTMLCanvasElement>;
@@ -123,6 +130,12 @@ export class FitTimeseriesChartComponent
     startSpanSec: number;
     anchorSec: number;
   } | null = null;
+
+  // ── Pan (Ctrl/⌘ + click-drag, desktop only) ───────────────────────────
+  private panning = false;
+  private panStartClientX = 0;
+  private panStartViewStart = 0;
+  private panStartViewEnd = 0;
 
   _hasElevation = false;
   _hasPower = false;
@@ -176,9 +189,12 @@ export class FitTimeseriesChartComponent
     });
     this.syncObservedCanvases();
     this.registerTouchMoveListeners();
-    if (this.enableBrush && this.isDesktop) {
+    if (this.isDesktop) {
+      // mouseup also ends a Ctrl-drag pan, which is enabled independently of brush.
       window.addEventListener('mouseup', this.windowMouseUpListener);
-      window.addEventListener('keydown', this.keyDownListener);
+      if (this.enableBrush) {
+        window.addEventListener('keydown', this.keyDownListener);
+      }
     }
     // Wheel zoom must be a non-passive listener so we can preventDefault the
     // browser's ctrl+wheel page zoom / scroll. Register outside Angular.
@@ -219,9 +235,11 @@ export class FitTimeseriesChartComponent
     this.unregisterTouchMoveListeners();
     this.stackRef?.nativeElement.removeEventListener('wheel', this.wheelListener);
     if (this.ttShiftRaf !== null) cancelAnimationFrame(this.ttShiftRaf);
-    if (this.enableBrush && this.isDesktop) {
+    if (this.isDesktop) {
       window.removeEventListener('mouseup', this.windowMouseUpListener);
-      window.removeEventListener('keydown', this.keyDownListener);
+      if (this.enableBrush) {
+        window.removeEventListener('keydown', this.keyDownListener);
+      }
     }
   }
 
@@ -276,6 +294,12 @@ export class FitTimeseriesChartComponent
   onHover(event: MouseEvent): void {
     const canvas = event.target as HTMLCanvasElement;
     this.isTouchHover = false;
+    if (this.panning) {
+      this.applyPanFromClientX(event.clientX);
+      this.hoverIdx = null;
+      this.ttRows = [];
+      return;
+    }
     if (this.dragging) {
       // Drag-to-select: extend the range; suppress tooltip while drag is active.
       this.computeHoverAt(canvas, event.clientX, event.clientY, /*silent*/ true);
@@ -294,9 +318,23 @@ export class FitTimeseriesChartComponent
   }
 
   onMouseDown(event: MouseEvent): void {
-    if (!this.enableBrush || !this.isDesktop) return;
+    if (!this.isDesktop) return;
     if (event.button !== 0) return;
     if (!this.records.length) return;
+    // Ctrl/⌘ + drag = pan the visible window (independent of brush mode).
+    if (event.ctrlKey || event.metaKey) {
+      const full = this.fullDurationSec();
+      if (full <= 0) return;
+      this.panning = true;
+      this.panStartClientX = event.clientX;
+      this.panStartViewStart = this.viewStartSec ?? 0;
+      this.panStartViewEnd = this.viewEndSec ?? full;
+      this.hoverIdx = null;
+      this.ttRows = [];
+      event.preventDefault();
+      return;
+    }
+    if (!this.enableBrush) return;
     const canvas = event.currentTarget as HTMLCanvasElement;
     this.computeHoverAt(canvas, event.clientX, event.clientY, /*silent*/ true);
     if (this.hoverIdx === null) return;
@@ -313,7 +351,22 @@ export class FitTimeseriesChartComponent
     event.preventDefault();
   }
 
+  private applyPanFromClientX(clientX: number): void {
+    const geom = this.plotGeometry();
+    if (!geom || geom.cW <= 0) return;
+    const span = this.panStartViewEnd - this.panStartViewStart;
+    if (span <= 0) return;
+    const dxPx = clientX - this.panStartClientX;
+    const shift = -(dxPx / geom.cW) * span;
+    this.applyView(this.panStartViewStart + shift, this.panStartViewEnd + shift);
+    this.zone.run(() => this.cdr.detectChanges());
+  }
+
   private onWindowMouseUp(): void {
+    if (this.panning) {
+      this.panning = false;
+      return;
+    }
     if (!this.dragging) return;
     this.dragging = false;
     const moved = Math.abs((this.selectionEndIdx ?? 0) - (this.selectionStartIdx ?? 0));
@@ -326,15 +379,21 @@ export class FitTimeseriesChartComponent
     }
     this.updateSelectionStats();
     this.recomputeSelectionRect();
+    this.selectionChange.emit({
+      startIdx: Math.min(this.selectionStartIdx!, this.selectionEndIdx!),
+      endIdx: Math.max(this.selectionStartIdx!, this.selectionEndIdx!),
+    });
     this.cdr.detectChanges();
   }
 
   clearSelection(): void {
+    const had = this.selectionStartIdx !== null;
     this.selectionStartIdx = null;
     this.selectionEndIdx = null;
     this.selectionStats = null;
     this.selectionLeftPx = 0;
     this.selectionWidthPx = 0;
+    if (had) this.selectionChange.emit(null);
   }
 
   private updateSelectionStats(): void {
@@ -748,6 +807,7 @@ export class FitTimeseriesChartComponent
         sportType: this.sportType,
         ftp: this.ftp,
         zoneBlocks: this.zoneBlocks,
+        zoneFilters: this.zoneFilters,
         blockSummaries: this.blockSummaries,
         blockColors: this.blockColors,
         showBlocks: this.showBlocks,

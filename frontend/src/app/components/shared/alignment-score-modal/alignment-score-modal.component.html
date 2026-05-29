@@ -28,7 +28,7 @@
     }
 
     <!-- In coach mode, show the athlete's own rating to validate or override -->
-    @if (mode === 'coach' && athleteScore != null) {
+    @if (mode === 'coach' && athleteScore !== null) {
       <div class="athlete-rating">
         <div>
           <span class="section-label">{{ 'ALIGNMENT.ATHLETE_RATED' | translate }}</span>

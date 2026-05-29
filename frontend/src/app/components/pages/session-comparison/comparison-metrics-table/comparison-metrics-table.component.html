@@ -1,41 +1,46 @@
-<div class="metrics glass">
-  <div class="metrics-grid" [style.--col-count]="sessions.length">
-    <div class="metric-header"></div>
+<section class="metrics glass" [style.--col-count]="sessions.length">
+  <header class="metrics-head">
+    <h3 class="metrics-title">{{ 'SESSION_COMPARE.SECTION_METRICS_COMPARISON' | translate }}</h3>
+    <p class="metrics-hint">{{ 'SESSION_COMPARE.METRICS_COMPARISON_HINT' | translate }}</p>
+  </header>
+
+  <div class="metrics-grid">
     @for (s of sessions; track s.id; let i = $index) {
       <div class="session-header" [style.--col-color]="colors[i]">
-        <span class="dot" [style.background]="colors[i]"></span>
-        <div class="session-title-block">
-          <span class="session-title">{{ s.title }}</span>
-          <span class="session-meta">{{ formatDate(s.completedAt) }}</span>
-        </div>
+        <span class="session-dot" [style.background]="colors[i]"></span>
+        <span class="session-title" [title]="s.title">{{ s.title }}</span>
       </div>
     }
 
     @for (row of rows(); track row.key) {
-      <div class="metric-label">{{ row.labelKey | translate }}</div>
       @for (s of sessions; track s.id; let i = $index) {
-        <div class="metric-cell" [class.reference]="i === 0">
-          <span class="metric-value">{{ formatCell(row, i) }}</span>
-          @if (i > 0) {
-            <span class="metric-delta" [attr.data-polarity]="deltaPolarity(row, i)">
-              {{ formatDelta(row, i) }}
+        <div class="metric-cell" [class.leader]="isLeader(row, i)">
+          <div class="cell-row">
+            <span class="metric-label">
+              {{ row.labelKey | translate }}
             </span>
-          }
+            <span class="metric-value-wrap">
+              @if (isLeader(row, i)) {
+                <span class="leader-dot" [style.background]="colors[i]"></span>
+              }
+              <span class="metric-value">{{ formatCell(row, i) }}</span>
+              @if (row.unit) {
+                <span class="metric-unit">{{ row.unit }}</span>
+              }
+              @if (diffFromMax(row, i); as delta) {
+                <span class="metric-delta">{{ delta }}{{ row.unit ? ' ' + row.unit : '' }}</span>
+              }
+            </span>
+          </div>
+          <div class="bar-track">
+            <span
+              class="bar-fill"
+              [style.width.%]="barPct(row, i)"
+              [style.background]="colors[i]"
+            ></span>
+          </div>
         </div>
       }
     }
   </div>
-
-  @if (biggestDeltas.length > 0) {
-    <div class="highlights">
-      <span class="highlights-label">
-        {{ 'SESSION_COMPARE.METRICS_HIGHLIGHTS' | translate }}:
-      </span>
-      @for (d of biggestDeltas; track d.sessionId; let i = $index) {
-        <span class="highlight-chip">
-          <strong>{{ d.metric }}</strong> {{ d.reason }}
-        </span>
-      }
-    </div>
-  }
-</div>
+</section>

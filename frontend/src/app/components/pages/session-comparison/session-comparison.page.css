@@ -5,6 +5,8 @@
   padding: 16px;
   max-width: 1400px;
   margin: 0 auto;
+  --cmp-label-w: 120px;
+  --cmp-gap: 12px;
 }
 
 .page-header {
@@ -72,4 +74,158 @@
 .empty-state p {
   color: var(--text-muted);
   margin: 0;
+}
+
+.cmp-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+.cmp-view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--overlay-5);
+  border-radius: 999px;
+}
+.cmp-vt-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cmp-vt-btn.active {
+  background: var(--accent-color, #ff9d00);
+  color: var(--button-text-on-accent, #1a1a1a);
+}
+.cmp-zone-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 240px;
+}
+.cmp-controls-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cmp-chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+.cmp-chart-controls .chart-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 0;
+}
+.cmp-chart-controls .toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--overlay-5);
+  border: none;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cmp-chart-controls .toggle-btn.active {
+  background: var(--overlay-10, rgba(0, 0, 0, 0.1));
+  color: var(--text-color);
+}
+.cmp-chart-controls .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.cmp-chart-controls .dot.power {
+  background: var(--accent-color, #ff9d00);
+}
+.cmp-chart-controls .dot.hr {
+  background: #e74c3c;
+}
+.cmp-chart-controls .dot.cad {
+  background: #3b82f6;
+}
+.cmp-chart-controls .dot.speed {
+  background: #22d3ee;
+}
+.cmp-chart-controls .toggle-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--overlay-10, rgba(255, 255, 255, 0.1));
+  margin: 0 2px;
+}
+.cmp-chart-controls .smooth-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 220px;
+  flex: 1;
+}
+.cmp-chart-controls .smooth-slider {
+  flex: 1;
+  accent-color: var(--accent-color, #ff9d00);
+}
+.cmp-chart-controls .smooth-value {
+  font-weight: 700;
+  color: var(--text-color);
+  min-width: 20px;
+  text-align: right;
+}
+
+.cmp-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cmp-cols, 2), minmax(0, 1fr));
+  gap: var(--cmp-gap);
+  align-items: stretch;
+  padding: 0 16px;
+}
+@media (max-width: 980px) {
+  .cmp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cmp-dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+.cmp-dual > * {
+  min-width: 0;
+}
+@media (max-width: 980px) {
+  .cmp-dual {
+    grid-template-columns: 1fr;
+  }
 }

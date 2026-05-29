@@ -79,6 +79,18 @@
           </div>
         </div>
         @if (!fit.loading && !fit.error && fit.records.length > 0) {
+          @let zoneChips = (availableZoneChips$ | async) ?? [];
+          @if (zoneChips.length > 1) {
+            <div class="chart-zone-filter">
+              <app-zone-filter-chips
+                [chips]="zoneChips"
+                [active]="zoneFilters$.value"
+                [dense]="true"
+                (toggled)="toggleZoneFilter($event)"
+                (cleared)="clearZoneFilters()"
+              />
+            </div>
+          }
           <app-fit-timeseries-chart
             [records]="fit.records"
             [ftp]="ftp"
@@ -86,8 +98,12 @@
             [blockSummaries]="displayBlocks"
             [blockColors]="(blockColors$ | async) ?? []"
             [zoneBlocks]="(blockView === 'interpolated' ? (zoneBlocks$ | async) : null) ?? []"
+            [zoneFilters]="zoneFilters$ | async"
             [enableBrush]="true"
           />
+          @if (zoneAverages$ | async; as averages) {
+            <app-zone-averages-panel [averages]="averages" [sportType]="session.sportType" />
+          }
         }
         @if (!fit.loading && !fit.error && fit.records.length === 0) {
           @if (displayBlocks.length > 0) {

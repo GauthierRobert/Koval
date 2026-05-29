@@ -36,4 +36,17 @@ export class ComparisonBlockAlignmentComponent {
     if (!ref || !ref.present || !cell || !cell.present) return null;
     return Math.round(cell.actualPower - ref.actualPower);
   }
+
+  /** Index of the session leading the block by actual power. -1 when none. */
+  rowLeader(block: ComparisonAlignedBlock): number {
+    let max = 0;
+    let leader = -1;
+    block.perSession.forEach((c, i) => {
+      if (c.present && c.actualPower > max) {
+        max = c.actualPower;
+        leader = i;
+      }
+    });
+    return leader;
+  }
 }

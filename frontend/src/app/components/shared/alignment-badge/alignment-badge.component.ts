@@ -15,13 +15,13 @@ import { alignmentZone } from '../../../models/alignment.model';
   template: `
     <span
       class="align-badge"
-      [class.zone-green]="score != null && zone === 'green'"
-      [class.zone-red]="score != null && zone === 'red'"
-      [class.zone-none]="score == null"
+      [class.zone-green]="score !== null && zone === 'green'"
+      [class.zone-red]="score !== null && zone === 'red'"
+      [class.zone-none]="score === null"
       [attr.title]="title"
       [attr.aria-label]="title"
     >
-      {{ score != null ? score + '%' : '—' }}
+      {{ score !== null ? score + '%' : '—' }}
     </span>
   `,
   styles: [

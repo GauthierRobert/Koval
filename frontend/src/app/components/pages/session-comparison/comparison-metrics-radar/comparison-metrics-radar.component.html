@@ -1,0 +1,17 @@
+<section class="radar glass">
+  <header class="radar-header">
+    <h3 class="section-label">{{ 'SESSION_COMPARE.SECTION_METRICS_RADAR' | translate }}</h3>
+    <p class="radar-hint">{{ 'SESSION_COMPARE.RADAR_HINT' | translate }}</p>
+  </header>
+
+  <div class="legend">
+    @for (s of sessions; track s.id; let i = $index) {
+      <span class="legend-item">
+        <span class="swatch" [style.background]="colors[i]"></span>
+        {{ s.title }}
+      </span>
+    }
+  </div>
+
+  <canvas #canvas class="radar-canvas"></canvas>
+</section>

@@ -1,4 +1,6 @@
 @if (state$ | async; as state) {
+  @let zoneFilters = (zoneFilters$ | async) ?? emptyFilters;
+  @let viewMode = (viewMode$ | async) ?? 'block';
   <div class="compare-page">
     <header class="page-header glass">
       <a routerLink="/history" class="back-link">← {{ 'COMMON.BACK' | translate }}</a>
@@ -27,10 +29,140 @@
         <p>{{ 'SESSION_COMPARE.ERROR_DESC' | translate }}</p>
       </div>
     } @else if (state.report; as report) {
+      @let showPrimary = (showPrimary$ | async) ?? true;
+      @let showSpeed = (showSpeed$ | async) ?? true;
+      @let showHR = (showHR$ | async) ?? true;
+      @let showCadence = (showCadence$ | async) ?? false;
+      @let blockView = (blockView$ | async) ?? 'interpolated';
+      @let smoothFactor = (smoothFactor$ | async) ?? 10;
+      <!-- Shared controls: view mode + zone filter + chart-display toggles + smooth -->
+      <div class="cmp-controls glass">
+        <div class="cmp-view-toggle" role="group" aria-label="View mode">
+          <button
+            type="button"
+            class="cmp-vt-btn"
+            [class.active]="viewMode === 'block'"
+            (click)="setViewMode('block')"
+          >
+            {{ 'SESSION_COMPARE.VIEW_BLOCK' | translate }}
+          </button>
+          <button
+            type="button"
+            class="cmp-vt-btn"
+            [class.active]="viewMode === 'all'"
+            (click)="setViewMode('all')"
+          >
+            {{ 'SESSION_COMPARE.VIEW_ALL' | translate }}
+          </button>
+        </div>
+        @let chips = (zoneChips$ | async) ?? [];
+        @if (chips.length > 1) {
+          <div class="cmp-zone-filter">
+            <span class="cmp-controls-label">{{
+              'SESSION_COMPARE.ZONE_FILTER_LABEL' | translate
+            }}</span>
+            <app-zone-filter-chips
+              [chips]="chips"
+              [active]="zoneFilters"
+              [dense]="true"
+              (toggled)="toggleZone($event)"
+              (cleared)="clearZones()"
+            />
+          </div>
+        }
+      </div>
+
+      <!-- Shared chart-display toggles (reuses single-session styling) -->
+      <div class="cmp-chart-controls glass">
+        <div class="chart-toggles">
+          @if (report.sportType === 'CYCLING') {
+            <button
+              type="button"
+              class="toggle-btn"
+              [class.active]="showPrimary"
+              (click)="togglePrimary()"
+            >
+              <span class="dot power"></span> Power
+            </button>
+          }
+          <button
+            type="button"
+            class="toggle-btn"
+            [class.active]="showSpeed"
+            (click)="toggleSpeed()"
+          >
+            <span class="dot speed"></span> Speed
+          </button>
+          <button type="button" class="toggle-btn" [class.active]="showHR" (click)="toggleHR()">
+            <span class="dot hr"></span> Heart Rate
+          </button>
+          <button
+            type="button"
+            class="toggle-btn"
+            [class.active]="showCadence"
+            (click)="toggleCadence()"
+          >
+            <span class="dot cad"></span> Cadence
+          </button>
+          <span class="toggle-sep"></span>
+          <button
+            type="button"
+            class="toggle-btn"
+            [class.active]="blockView === 'planned'"
+            (click)="setBlockView('planned')"
+          >
+            {{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}
+          </button>
+          <button
+            type="button"
+            class="toggle-btn"
+            [class.active]="blockView === 'interpolated'"
+            (click)="setBlockView('interpolated')"
+          >
+            {{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}
+          </button>
+        </div>
+        @if (blockView === 'interpolated') {
+          <div class="smooth-control">
+            <span class="smooth-label">{{ 'SESSION_ANALYSIS.SMOOTH_LABEL' | translate }}</span>
+            <input
+              type="range"
+              min="1"
+              max="30"
+              step="1"
+              class="smooth-slider"
+              [value]="smoothFactor"
+              (input)="setSmooth(+$any($event.target).value)"
+            />
+            <span class="smooth-value">{{ smoothFactor }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Equal-width column grid, one per session -->
+      <div class="cmp-grid" [style.--cmp-cols]="report.sessions.length">
+        @for (s of report.sessions; track s.id; let i = $index) {
+          <app-comparison-column
+            [session]="s"
+            [sportType]="report.sportType"
+            [color]="colorsArray(report)[i]"
+            [zoneFilters]="zoneFilters"
+            [viewMode]="viewMode"
+            [showPrimary]="showPrimary"
+            [showSpeed]="showSpeed"
+            [showHR]="showHR"
+            [showCadence]="showCadence"
+            [blockView]="blockView"
+            [smoothFactor]="smoothFactor"
+            (metricsChange)="onColumnMetrics(s.id, $event)"
+          />
+        }
+      </div>
+
       <app-comparison-metrics-table
         [sessions]="report.sessions"
-        [biggestDeltas]="report.biggestDeltas"
         [colors]="colorsArray(report)"
+        [metricsOverrides]="(metricsOverrides$ | async) ?? []"
       />
 
       @if (report.sportType === 'CYCLING') {
@@ -40,7 +172,14 @@
         </section>
       }
 
-      <app-comparison-zone-sidebyside [sessions]="report.sessions" [colors]="colorsArray(report)" />
+      <div class="cmp-dual">
+        <app-comparison-metrics-radar [sessions]="report.sessions" [colors]="colorsArray(report)" />
+        <app-comparison-efficiency-scatter
+          [sessions]="report.sessions"
+          [colors]="colorsArray(report)"
+          [sportType]="report.sportType"
+        />
+      </div>
 
       @if (report.alignedBlocks.length > 0) {
         <app-comparison-block-alignment

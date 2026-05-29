@@ -1,0 +1,51 @@
+@let fit = fitState$ | async;
+@let metrics = metrics$ | async;
+@let zoneBlocks = (zoneBlocks$ | async) ?? [];
+@let blockView = (blockView$ | async) ?? 'interpolated';
+@let zoneFilters = (zoneFilters$ | async) ?? emptyFilters;
+<div class="cmp-col glass" [style.--col-accent]="color">
+  <header class="cmp-col-header">
+    <div class="cmp-col-title">
+      <span class="cmp-col-dot" [style.background]="color"></span>
+      <div class="cmp-col-headtext">
+        <div class="cmp-col-name">{{ session.title }}</div>
+        <div class="cmp-col-date">{{ formatDate(session.completedAt) }}</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="cmp-col-chart">
+    @if (!fit || fit.loading) {
+      <div class="cmp-col-loading">…</div>
+    } @else if (fit.error || !fit.records.length) {
+      <div class="cmp-col-empty">{{ 'SESSION_ANALYSIS.NO_FIT_DATA' | translate }}</div>
+    } @else {
+      <app-fit-timeseries-chart
+        [records]="fit.records"
+        [sportType]="sportType"
+        [zoneBlocks]="blockView === 'interpolated' ? zoneBlocks : []"
+        [zoneFilters]="zoneFilters"
+        [enableBrush]="true"
+        [showToggles]="false"
+        [showPrimary]="showPrimary"
+        [showSpeed]="showSpeed"
+        [showHR]="showHR"
+        [showCadence]="showCadence"
+        [showElevation]="false"
+        [showDrift]="false"
+        [showTooltip]="true"
+        [compact]="true"
+        (selectionChange)="onSelectionChange($event)"
+      />
+    }
+  </div>
+
+  @if (metrics && metrics.scope !== 'full') {
+    <div class="cmp-col-scope">
+      {{ 'SESSION_COMPARE.SCOPE_LABEL_' + metrics.scope.toUpperCase() | translate }}
+      @if (metrics.scopeLabel) {
+        <span class="cmp-col-scope-tag">{{ metrics.scopeLabel }}</span>
+      }
+    </div>
+  }
+</div>

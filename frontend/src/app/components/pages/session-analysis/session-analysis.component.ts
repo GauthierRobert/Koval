@@ -53,6 +53,11 @@ import {
   SessionActionKind,
   SessionActionPanelComponent,
 } from './session-action-panel/session-action-panel.component';
+import { ZoneFilterChipsComponent } from '../../shared/zone-filter-chips/zone-filter-chips.component';
+import {
+  ZoneAverages,
+  ZoneAveragesPanelComponent,
+} from '../../shared/zone-averages-panel/zone-averages-panel.component';
 import {
   formatBlockDistance,
   formatLongDate,
@@ -94,6 +99,8 @@ interface FitState {
     ChartPanelSkeletonComponent,
     AiFeedbackPanelComponent,
     SessionActionPanelComponent,
+    ZoneFilterChipsComponent,
+    ZoneAveragesPanelComponent,
   ],
   templateUrl: './session-analysis.component.html',
   styleUrl: './session-analysis.component.css',
@@ -396,6 +403,82 @@ export class SessionAnalysisComponent implements OnDestroy {
     map(([blocks, filters]) =>
       filters.size === 0 ? blocks : blocks.filter((b) => filters.has(b.zoneLabel)),
     ),
+  );
+
+  // ── Zone-scoped averages (active when zone filter is applied) ────────
+
+  zoneAverages$: Observable<ZoneAverages | null> = combineLatest([
+    this.fitState$,
+    this.authService.user$,
+    this.sessionSubject,
+    this.selectedZoneSystemId$,
+    this.userZoneSystems$,
+    this.zoneFilters$,
+  ]).pipe(
+    map(([fit, user, session, selectedId, userSystems, filters]) => {
+      if (filters.size === 0) return null;
+      if (!fit || fit.loading || fit.error || !fit.records.length || !session?.sportType) {
+        return null;
+      }
+      const sport = session.sportType as SportType;
+      const resolved = this.zoneCls.resolveZonesAndReference(sport, user, selectedId, userSystems);
+      if (!resolved) return null;
+      const { zones, referenceValue } = resolved;
+      const records = fit.records;
+
+      let durSec = 0;
+      let powerSum = 0;
+      let powerN = 0;
+      let hrSum = 0;
+      let hrN = 0;
+      let cadSum = 0;
+      let cadN = 0;
+      let speedSum = 0;
+      let speedN = 0;
+      let dist = 0;
+
+      for (let i = 0; i < records.length; i++) {
+        const r = records[i];
+        const zi = this.zoneCls.classifyRecord(r.power, r.speed, sport, referenceValue, zones);
+        const label =
+          zi === this.zoneCls.WALKING_ZONE_INDEX
+            ? this.zoneCls.WALKING_LABEL
+            : this.zoneCls.getZoneLabel(zi, zones);
+        if (!filters.has(label)) continue;
+        const dt =
+          i + 1 < records.length ? Math.min(records[i + 1].timestamp - r.timestamp, 30) : 1;
+        if (dt <= 0) continue;
+        durSec += dt;
+        if (r.power > 0) {
+          powerSum += r.power * dt;
+          powerN += dt;
+        }
+        if (r.heartRate > 0) {
+          hrSum += r.heartRate * dt;
+          hrN += dt;
+        }
+        if (r.cadence > 0) {
+          cadSum += r.cadence * dt;
+          cadN += dt;
+        }
+        if (r.speed > 0) {
+          speedSum += r.speed * dt;
+          speedN += dt;
+          dist += r.speed * dt;
+        }
+      }
+      if (durSec <= 0) return null;
+      return {
+        zoneLabels: Array.from(filters),
+        durationSec: durSec,
+        avgPower: powerN > 0 ? powerSum / powerN : 0,
+        avgHR: hrN > 0 ? hrSum / hrN : 0,
+        avgCadence: cadN > 0 ? cadSum / cadN : 0,
+        avgSpeedKmh: speedN > 0 ? (speedSum / speedN) * 3.6 : 0,
+        distanceMeters: dist,
+      };
+    }),
+    shareReplay(1),
   );
 
   filteredPlannedBlocks$: Observable<

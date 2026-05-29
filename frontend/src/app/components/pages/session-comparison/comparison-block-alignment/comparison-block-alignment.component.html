@@ -1,49 +1,55 @@
-<section class="blocks glass">
-  <h3 class="section-label">{{ 'SESSION_COMPARE.SECTION_BLOCKS' | translate }}</h3>
-  <div class="table-wrap">
-    <table class="block-table">
-      <thead>
-        <tr>
-          <th class="block-col">{{ 'SESSION_COMPARE.BLOCK_LABEL' | translate }}</th>
-          @for (s of sessions; track s.id; let i = $index) {
-            <th class="session-col" [style.border-color]="colors[i]">
-              <span class="dot" [style.background]="colors[i]"></span>
-              {{ s.title }}
-            </th>
-          }
-        </tr>
-      </thead>
-      <tbody>
-        @for (block of alignedBlocks; track block.label) {
-          <tr>
-            <td class="block-col">
-              <span class="block-label">{{ block.label }}</span>
+<section class="blocks glass" [style.--col-count]="sessions.length">
+  <header class="blocks-head">
+    <h3 class="blocks-title">{{ 'SESSION_COMPARE.SECTION_BLOCKS' | translate }}</h3>
+    <p class="blocks-hint">{{ 'SESSION_COMPARE.METRICS_COMPARISON_HINT' | translate }}</p>
+  </header>
+
+  <div class="blocks-grid">
+    @for (s of sessions; track s.id; let i = $index) {
+      <div class="session-header" [style.--col-color]="colors[i]">
+        <span class="session-dot" [style.background]="colors[i]"></span>
+        <span class="session-title" [title]="s.title">{{ s.title }}</span>
+      </div>
+    }
+
+    @for (block of alignedBlocks; track block.label; let bi = $index) {
+      @let leader = rowLeader(block);
+      @for (cell of block.perSession; track cell.sessionId; let i = $index) {
+        <div
+          class="block-cell"
+          [class.leader]="cell.present && i === leader"
+          [class.absent]="!cell.present"
+        >
+          <div class="cell-row">
+            <span class="block-label">
+              <span class="block-name">{{ block.label }}</span>
               <span class="block-type">{{ block.type }}</span>
-            </td>
-            @for (cell of block.perSession; track cell.sessionId; let i = $index) {
-              <td class="session-col">
-                @if (cell.present) {
-                  <div class="cell-line">
-                    <span class="power">{{ cell.actualPower | number: '1.0-0' }}W</span>
-                    @let pd = powerDelta(block, i);
-                    @if (pd !== null) {
-                      <span class="delta" [class.up]="pd > 0" [class.down]="pd < 0">
-                        {{ pd > 0 ? '+' : '' }}{{ pd }}W
-                      </span>
-                    }
-                  </div>
-                  <div class="cell-meta">
-                    {{ formatDuration(cell.durationSeconds) }} ·
-                    {{ cell.actualHR | number: '1.0-0' }} bpm
-                  </div>
-                } @else {
-                  <span class="absent">—</span>
+            </span>
+            <span class="block-value-wrap">
+              @if (cell.present) {
+                @if (i === leader) {
+                  <span class="leader-dot" [style.background]="colors[i]"></span>
                 }
-              </td>
-            }
-          </tr>
-        }
-      </tbody>
-    </table>
+                <span class="block-value">{{ cell.actualPower | number: '1.0-0' }}</span>
+                <span class="block-unit">W</span>
+                @let pd = powerDelta(block, i);
+                @if (pd !== null) {
+                  <span class="delta" [class.up]="pd > 0" [class.down]="pd < 0">
+                    {{ pd > 0 ? '+' : '' }}{{ pd }}
+                  </span>
+                }
+              } @else {
+                <span class="absent-mark">—</span>
+              }
+            </span>
+          </div>
+          @if (cell.present) {
+            <div class="cell-meta">
+              {{ formatDuration(cell.durationSeconds) }} · {{ cell.actualHR | number: '1.0-0' }} bpm
+            </div>
+          }
+        </div>
+      }
+    }
   </div>
 </section>
