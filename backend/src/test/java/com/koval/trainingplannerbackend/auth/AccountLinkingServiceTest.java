@@ -24,12 +24,14 @@ class AccountLinkingServiceTest {
     private UserService userService;
     @Mock
     private TerraApiClient terraApiClient;
+    @Mock
+    private AliasGenerator aliasGenerator;
 
     private AccountLinkingService service;
 
     @BeforeEach
     void setUp() {
-        service = new AccountLinkingService(userRepository, userService, terraApiClient);
+        service = new AccountLinkingService(userRepository, userService, terraApiClient, aliasGenerator);
         lenient().when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 

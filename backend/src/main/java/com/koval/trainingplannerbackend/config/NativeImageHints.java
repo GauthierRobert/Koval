@@ -18,6 +18,7 @@ import com.koval.trainingplannerbackend.training.metrics.PowerCurveService;
 import com.koval.trainingplannerbackend.mcp.McpClubTools;
 import com.koval.trainingplannerbackend.mcp.McpCoachTools;
 import com.koval.trainingplannerbackend.mcp.McpContextTools;
+import com.koval.trainingplannerbackend.mcp.McpEffectivenessTools;
 import com.koval.trainingplannerbackend.mcp.McpGoalTools;
 import com.koval.trainingplannerbackend.mcp.McpHistoryTools;
 import com.koval.trainingplannerbackend.mcp.McpPlanTools;
@@ -100,7 +101,8 @@ public class NativeImageHints {
                     McpClubTools.class,
                     McpRaceTools.class,
                     McpProfileTools.class,
-                    McpContextTools.class
+                    McpContextTools.class,
+                    McpEffectivenessTools.class
             };
 
             for (Class<?> toolService : toolServices) {

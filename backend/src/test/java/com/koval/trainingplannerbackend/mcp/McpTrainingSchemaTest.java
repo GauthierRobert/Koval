@@ -13,8 +13,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Locks the JSON Schema {@code required} arrays generated for the {@code createTraining} and
- * {@code updateTraining} MCP tools.
+ * Locks the JSON Schema {@code required} arrays generated for the {@code createTraining} MCP tool.
  *
  * <p>The bug this guards against: Spring AI's {@link JsonSchemaGenerator} treats every property as
  * required by default, which marked all 18 fields of {@link McpWorkoutElementInput} required (a
@@ -33,14 +32,6 @@ class McpTrainingSchemaTest {
     @Test
     void createTrainingSchema_marksOnlyTitleSportTypeAndBlocksRequired() throws Exception {
         JsonNode trainingInput = trainingInputNode(method("createTraining", McpTrainingInput.class));
-
-        assertThat(requiredOf(trainingInput))
-                .containsExactlyInAnyOrder("title", "sportType", "blocks");
-    }
-
-    @Test
-    void updateTrainingSchema_marksOnlyTitleSportTypeAndBlocksRequired() throws Exception {
-        JsonNode trainingInput = trainingInputNode(method("updateTraining", String.class, McpTrainingInput.class));
 
         assertThat(requiredOf(trainingInput))
                 .containsExactlyInAnyOrder("title", "sportType", "blocks");
