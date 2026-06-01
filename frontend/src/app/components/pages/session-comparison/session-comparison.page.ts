@@ -70,6 +70,9 @@ export class SessionComparisonPageComponent {
   pickerAnchor: SavedSession | null = null;
   readonly emptyFilters: Set<string> = new Set();
 
+  /** Mobile-only: zone + graph filters are collapsed into a dropdown menu, toggled by this flag. */
+  filtersMenuOpen = false;
+
   /** Shared zone-filter state across all columns. */
   zoneFilters$ = new BehaviorSubject<Set<string>>(new Set());
 

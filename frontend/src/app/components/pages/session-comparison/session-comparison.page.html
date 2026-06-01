@@ -111,6 +111,68 @@
             (metricToggled)="toggleMetric($event)"
           />
         </div>
+        <!-- Mobile: zone + graph filters collapse into this dropdown (hidden on desktop). -->
+        <div class="filters-dropdown">
+          <button
+            type="button"
+            class="filters-trigger"
+            [class.active]="filtersMenuOpen"
+            [attr.aria-expanded]="filtersMenuOpen"
+            aria-haspopup="true"
+            (click)="filtersMenuOpen = !filtersMenuOpen"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              aria-hidden="true"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 5h18l-7 8v6l-4 2v-8z" />
+            </svg>
+            {{ 'SESSION_ANALYSIS.FILTERS' | translate }}
+          </button>
+          @if (filtersMenuOpen) {
+            <div class="filters-backdrop" (click)="filtersMenuOpen = false"></div>
+            <div class="filters-menu" role="menu">
+              @if (chips.length > 1) {
+                <div class="filters-menu-section">
+                  <span class="filters-menu-label">
+                    {{ 'SESSION_ANALYSIS.FILTER_ZONES' | translate }}
+                  </span>
+                  <app-zone-filter-chips
+                    [chips]="chips"
+                    [active]="zoneFilters"
+                    (toggled)="toggleZone($event)"
+                    (cleared)="clearZones()"
+                  />
+                </div>
+              }
+              <div class="filters-menu-section">
+                <span class="filters-menu-label">
+                  {{ 'SESSION_ANALYSIS.FILTER_GRAPHS' | translate }}
+                </span>
+                <app-metric-toggles
+                  [sportType]="report.sportType"
+                  [hasPower]="report.sportType === 'CYCLING'"
+                  [hasSpeed]="report.sportType === 'CYCLING'"
+                  [hasCadence]="true"
+                  [hasDrift]="report.sportType !== 'SWIMMING'"
+                  [showPrimary]="showPrimary"
+                  [showSpeed]="showSpeed"
+                  [showHR]="showHR"
+                  [showCadence]="showCadence"
+                  [showDrift]="showDrift"
+                  (metricToggled)="toggleMetric($event)"
+                />
+              </div>
+            </div>
+          }
+        </div>
       </div>
 
       <!-- Equal-width column grid, one per session -->
