@@ -100,55 +100,44 @@
   white-space: nowrap;
 }
 
+/* Icon metric toggles + the block-mode pill stay together on a single line. */
 .cmp-controls .chart-toggles {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 12px;
   align-items: center;
   padding: 0;
 }
-.cmp-controls .toggle-btn {
+.cmp-controls .view-toggle {
   display: flex;
+  align-items: stretch;
+  height: 32px;
+  box-sizing: border-box;
+  background: var(--surface-elevated);
+  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+.cmp-controls .toggle-pill {
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: var(--overlay-5);
+  background: transparent;
   border: none;
   color: var(--text-muted);
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0 12px;
   cursor: pointer;
-  transition: all 0.15s;
+  white-space: nowrap;
+  transition: all 0.25s var(--ease-spring-gentle);
 }
-.cmp-controls .toggle-btn.active {
-  background: var(--overlay-10, rgba(0, 0, 0, 0.1));
+.cmp-controls .toggle-pill.active {
+  background: var(--overlay-10);
   color: var(--text-color);
 }
-.cmp-controls .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-}
-.cmp-controls .dot.power {
-  background: var(--accent-color, #ff9d00);
-}
-.cmp-controls .dot.hr {
-  background: #e74c3c;
-}
-.cmp-controls .dot.cad {
-  background: #3b82f6;
-}
-.cmp-controls .dot.speed {
-  background: #22d3ee;
-}
-.cmp-controls .toggle-sep {
-  width: 1px;
-  height: 16px;
-  background: var(--overlay-10, rgba(255, 255, 255, 0.1));
-  margin: 0 2px;
+.cmp-controls .toggle-pill:hover:not(.active) {
+  background: var(--surface-elevated);
 }
 .cmp-controls .smooth-control {
   display: flex;

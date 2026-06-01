@@ -52,53 +52,38 @@
             />
           </div>
         }
+        <!-- Same icon-only metric toggles + segmented block-mode pill as single-session analysis. -->
         <div class="chart-toggles">
-          @if (report.sportType === 'CYCLING') {
+          <app-metric-toggles
+            [sportType]="report.sportType"
+            [hasPower]="report.sportType === 'CYCLING'"
+            [hasSpeed]="report.sportType === 'CYCLING'"
+            [hasCadence]="true"
+            [hasDrift]="false"
+            [showPrimary]="showPrimary"
+            [showSpeed]="showSpeed"
+            [showHR]="showHR"
+            [showCadence]="showCadence"
+            (metricToggled)="toggleMetric($event)"
+          />
+          <div class="view-toggle" role="group" aria-label="Block overlay mode">
             <button
               type="button"
-              class="toggle-btn"
-              [class.active]="showPrimary"
-              (click)="togglePrimary()"
+              class="toggle-pill"
+              [class.active]="blockView === 'planned'"
+              (click)="setBlockView('planned')"
             >
-              <span class="dot power"></span> Power
+              {{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}
             </button>
-          }
-          <button
-            type="button"
-            class="toggle-btn"
-            [class.active]="showSpeed"
-            (click)="toggleSpeed()"
-          >
-            <span class="dot speed"></span> Speed
-          </button>
-          <button type="button" class="toggle-btn" [class.active]="showHR" (click)="toggleHR()">
-            <span class="dot hr"></span> Heart Rate
-          </button>
-          <button
-            type="button"
-            class="toggle-btn"
-            [class.active]="showCadence"
-            (click)="toggleCadence()"
-          >
-            <span class="dot cad"></span> Cadence
-          </button>
-          <span class="toggle-sep"></span>
-          <button
-            type="button"
-            class="toggle-btn"
-            [class.active]="blockView === 'planned'"
-            (click)="setBlockView('planned')"
-          >
-            {{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}
-          </button>
-          <button
-            type="button"
-            class="toggle-btn"
-            [class.active]="blockView === 'interpolated'"
-            (click)="setBlockView('interpolated')"
-          >
-            {{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}
-          </button>
+            <button
+              type="button"
+              class="toggle-pill"
+              [class.active]="blockView === 'interpolated'"
+              (click)="setBlockView('interpolated')"
+            >
+              {{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}
+            </button>
+          </div>
         </div>
         @if (blockView === 'interpolated') {
           <div class="smooth-control">

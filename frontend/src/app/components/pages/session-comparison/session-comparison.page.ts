@@ -23,6 +23,10 @@ import {
   ZoneChip,
   ZoneFilterChipsComponent,
 } from '../../shared/zone-filter-chips/zone-filter-chips.component';
+import {
+  MetricToggleKey,
+  MetricTogglesComponent,
+} from '../session-analysis/metric-toggles/metric-toggles.component';
 import { AuthService } from '../../../services/auth.service';
 import { ZoneService } from '../../../services/zone.service';
 import { ZoneClassificationService } from '../../../services/zone-classification.service';
@@ -49,6 +53,7 @@ interface PageState {
     ComparisonBlockAlignmentComponent,
     ComparisonColumnComponent,
     ZoneFilterChipsComponent,
+    MetricTogglesComponent,
   ],
   templateUrl: './session-comparison.page.html',
   styleUrl: './session-comparison.page.css',
@@ -87,6 +92,25 @@ export class SessionComparisonPageComponent {
   }
   toggleCadence(): void {
     this.showCadence$.next(!this.showCadence$.value);
+  }
+  /** Map the shared metric-toggle strip's intents onto the comparison display state. */
+  toggleMetric(key: MetricToggleKey): void {
+    switch (key) {
+      case 'showPrimary':
+        this.togglePrimary();
+        break;
+      case 'showSpeed':
+        this.toggleSpeed();
+        break;
+      case 'showHR':
+        this.toggleHR();
+        break;
+      case 'showCadence':
+        this.toggleCadence();
+        break;
+      case 'showDrift':
+        break; // cardiac drift isn't shown in comparison columns
+    }
   }
   setBlockView(v: 'planned' | 'interpolated'): void {
     this.blockView$.next(v);
