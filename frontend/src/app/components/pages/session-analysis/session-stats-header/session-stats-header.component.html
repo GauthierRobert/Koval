@@ -93,7 +93,7 @@
       </button>
       <button
         type="button"
-        class="tool-btn"
+        class="tool-btn tool-btn-labeled"
         (click)="compareClicked.emit()"
         [title]="'SESSION_COMPARE.BTN_COMPARE' | translate"
         [attr.aria-label]="'SESSION_COMPARE.BTN_COMPARE' | translate"
@@ -108,9 +108,11 @@
           stroke-linecap="round"
           stroke-linejoin="round"
         >
-          <path d="M3 3v18h18" />
-          <path d="M7 14l4-4 4 4 5-5" />
+          <rect x="3" y="4" width="7" height="16" rx="1.5" />
+          <rect x="14" y="4" width="7" height="16" rx="1.5" />
+          <path d="M12 2v20" />
         </svg>
+        <span class="tool-btn-text">{{ 'SESSION_COMPARE.BTN_COMPARE' | translate }}</span>
       </button>
       <button
         type="button"

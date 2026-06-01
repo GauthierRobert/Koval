@@ -46,8 +46,9 @@
 .top-bar-actions {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 /* View tabs ─ Résumé / Analyse / Carte / Comparer */
@@ -244,6 +245,21 @@
   cursor: not-allowed;
 }
 
+/* Compare carries a visible label so it reads as "compare", not another chart
+ * icon — but keeps the same muted tool-btn styling as its neighbours. */
+.tool-btn-labeled {
+  width: auto;
+  gap: 6px;
+  padding: 0 12px;
+}
+
+.tool-btn-text {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
 /* ─── Linked-sessions toggle panel (sits between top bar & stats)
  * Segmented control: each tab is a full activity summary with its
  * own POWERED BY STRAVA badge. Replaces the old inline pill row. */
@@ -352,11 +368,12 @@
 .rpe-block {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: var(--space-sm) 12px;
+  gap: 6px;
+  padding: var(--space-sm) 0;
   border-radius: var(--radius-md);
   border: none;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .rpe-label {
@@ -371,7 +388,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  width: 160px;
+  width: 120px;
 }
 
 .rpe-slider {
@@ -428,10 +445,10 @@
 }
 
 .rpe-value {
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   font-weight: 900;
   color: var(--text-dim);
-  min-width: 20px;
+  min-width: 14px;
   text-align: center;
 }
 
@@ -527,10 +544,13 @@
   .controls-row {
     flex: 0 0 auto;
     width: auto;
+    /* RPE slider and the action buttons stay on one line. */
+    flex-wrap: nowrap;
+    gap: 10px;
   }
 
   .controls-row .rpe-block {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
   }
 }
 

@@ -1364,7 +1364,7 @@
     "WPRIME_GENERIC": "Generic"
   },
   "SESSION_COMPARE": {
-    "BTN_COMPARE": "Compare with…",
+    "BTN_COMPARE": "Compare",
     "PICKER_TITLE": "Compare with…",
     "PICKER_DESC": "Pick up to 3 other {{ sport }} sessions to compare.",
     "PICKER_ANCHOR_TAG": "Reference",
