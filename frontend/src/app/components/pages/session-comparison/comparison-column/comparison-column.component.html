@@ -1,7 +1,7 @@
 @let fit = fitState$ | async;
 @let metrics = metrics$ | async;
 @let zoneBlocks = (zoneBlocks$ | async) ?? [];
-@let blockView = (blockView$ | async) ?? 'interpolated';
+@let blockMode = (blockMode$ | async) ?? 'interpolated';
 @let zoneFilters = (zoneFilters$ | async) ?? emptyFilters;
 <div class="cmp-col glass" [style.--col-accent]="color">
   <header class="cmp-col-header">
@@ -23,7 +23,9 @@
       <app-fit-timeseries-chart
         [records]="fit.records"
         [sportType]="sportType"
-        [zoneBlocks]="blockView === 'interpolated' ? zoneBlocks : []"
+        [zoneBlocks]="blockMode === 'interpolated' ? zoneBlocks : []"
+        [blockSummaries]="displayBlocks"
+        [showBlocks]="blockMode !== 'raw'"
         [zoneFilters]="zoneFilters"
         [enableBrush]="true"
         [showToggles]="false"
@@ -32,7 +34,7 @@
         [showHR]="showHR"
         [showCadence]="showCadence"
         [showElevation]="false"
-        [showDrift]="false"
+        [showDrift]="showDrift"
         [showTooltip]="true"
         [compact]="true"
         (selectionChange)="onSelectionChange($event)"

@@ -145,11 +145,9 @@
   gap: 8px;
   font-size: 11px;
   color: var(--text-muted);
-  min-width: 220px;
-  flex: 1;
 }
 .cmp-controls .smooth-slider {
-  flex: 1;
+  width: 120px;
   accent-color: var(--accent-color, #ff9d00);
 }
 .cmp-controls .smooth-value {

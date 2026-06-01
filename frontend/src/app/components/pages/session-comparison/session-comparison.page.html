@@ -32,7 +32,8 @@
       @let showSpeed = (showSpeed$ | async) ?? true;
       @let showHR = (showHR$ | async) ?? true;
       @let showCadence = (showCadence$ | async) ?? false;
-      @let blockView = (blockView$ | async) ?? 'interpolated';
+      @let showDrift = (showDrift$ | async) ?? true;
+      @let blockMode = (blockMode$ | async) ?? 'interpolated';
       @let smoothFactor = (smoothFactor$ | async) ?? 10;
       <!-- Shared controls — zone filter + chart-display toggles + smooth.
            Aligned with the single-session analysis controls (no view-mode toggle). -->
@@ -52,54 +53,64 @@
             />
           </div>
         }
-        <!-- Same icon-only metric toggles + segmented block-mode pill as single-session analysis. -->
+        <!-- Smooth + block-mode pill sit to the LEFT of the icon-only metric toggles,
+             with the smooth slider left of the mode toggle — same as single-session analysis. -->
         <div class="chart-toggles">
+          @if (blockMode === 'interpolated') {
+            <div class="smooth-control">
+              <span class="smooth-label">{{ 'SESSION_ANALYSIS.SMOOTH_LABEL' | translate }}</span>
+              <input
+                type="range"
+                min="1"
+                max="30"
+                step="1"
+                class="smooth-slider"
+                [value]="smoothFactor"
+                (input)="setSmooth(+$any($event.target).value)"
+              />
+              <span class="smooth-value">{{ smoothFactor }}</span>
+            </div>
+          }
+          <div class="view-toggle" role="group" aria-label="Block overlay mode">
+            <button
+              type="button"
+              class="toggle-pill"
+              [class.active]="blockMode === 'raw'"
+              (click)="setBlockMode('raw')"
+            >
+              {{ 'SESSION_ANALYSIS.TOGGLE_RAW' | translate }}
+            </button>
+            <button
+              type="button"
+              class="toggle-pill"
+              [class.active]="blockMode === 'laps'"
+              (click)="setBlockMode('laps')"
+            >
+              {{ 'SESSION_ANALYSIS.TOGGLE_LAPS' | translate }}
+            </button>
+            <button
+              type="button"
+              class="toggle-pill"
+              [class.active]="blockMode === 'interpolated'"
+              (click)="setBlockMode('interpolated')"
+            >
+              {{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}
+            </button>
+          </div>
           <app-metric-toggles
             [sportType]="report.sportType"
             [hasPower]="report.sportType === 'CYCLING'"
             [hasSpeed]="report.sportType === 'CYCLING'"
             [hasCadence]="true"
-            [hasDrift]="false"
+            [hasDrift]="report.sportType !== 'SWIMMING'"
             [showPrimary]="showPrimary"
             [showSpeed]="showSpeed"
             [showHR]="showHR"
             [showCadence]="showCadence"
+            [showDrift]="showDrift"
             (metricToggled)="toggleMetric($event)"
           />
-          <div class="view-toggle" role="group" aria-label="Block overlay mode">
-            <button
-              type="button"
-              class="toggle-pill"
-              [class.active]="blockView === 'planned'"
-              (click)="setBlockView('planned')"
-            >
-              {{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}
-            </button>
-            <button
-              type="button"
-              class="toggle-pill"
-              [class.active]="blockView === 'interpolated'"
-              (click)="setBlockView('interpolated')"
-            >
-              {{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}
-            </button>
-          </div>
         </div>
-        @if (blockView === 'interpolated') {
-          <div class="smooth-control">
-            <span class="smooth-label">{{ 'SESSION_ANALYSIS.SMOOTH_LABEL' | translate }}</span>
-            <input
-              type="range"
-              min="1"
-              max="30"
-              step="1"
-              class="smooth-slider"
-              [value]="smoothFactor"
-              (input)="setSmooth(+$any($event.target).value)"
-            />
-            <span class="smooth-value">{{ smoothFactor }}</span>
-          </div>
-        }
       </div>
 
       <!-- Equal-width column grid, one per session -->
@@ -114,7 +125,8 @@
             [showSpeed]="showSpeed"
             [showHR]="showHR"
             [showCadence]="showCadence"
-            [blockView]="blockView"
+            [showDrift]="showDrift"
+            [blockMode]="blockMode"
             [smoothFactor]="smoothFactor"
             (metricsChange)="onColumnMetrics(s.id, $event)"
           />

@@ -78,7 +78,8 @@ export class SessionComparisonPageComponent {
   showSpeed$ = new BehaviorSubject<boolean>(true);
   showHR$ = new BehaviorSubject<boolean>(true);
   showCadence$ = new BehaviorSubject<boolean>(false);
-  blockView$ = new BehaviorSubject<'planned' | 'interpolated'>('interpolated');
+  showDrift$ = new BehaviorSubject<boolean>(true);
+  blockMode$ = new BehaviorSubject<'raw' | 'laps' | 'interpolated'>('interpolated');
   smoothFactor$ = new BehaviorSubject<number>(10);
 
   togglePrimary(): void {
@@ -92,6 +93,9 @@ export class SessionComparisonPageComponent {
   }
   toggleCadence(): void {
     this.showCadence$.next(!this.showCadence$.value);
+  }
+  toggleDrift(): void {
+    this.showDrift$.next(!this.showDrift$.value);
   }
   /** Map the shared metric-toggle strip's intents onto the comparison display state. */
   toggleMetric(key: MetricToggleKey): void {
@@ -109,11 +113,12 @@ export class SessionComparisonPageComponent {
         this.toggleCadence();
         break;
       case 'showDrift':
-        break; // cardiac drift isn't shown in comparison columns
+        this.toggleDrift();
+        break;
     }
   }
-  setBlockView(v: 'planned' | 'interpolated'): void {
-    this.blockView$.next(v);
+  setBlockMode(v: 'raw' | 'laps' | 'interpolated'): void {
+    this.blockMode$.next(v);
   }
   setSmooth(v: number): void {
     this.smoothFactor$.next(v);

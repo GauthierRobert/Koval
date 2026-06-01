@@ -27,6 +27,7 @@ import { ZoneSystem, SportType, ZoneBlock, Zone } from '../../../../services/zon
 import { ZoneClassificationService } from '../../../../services/zone-classification.service';
 import { ZoneInterpolationService } from '../../../../services/zone-interpolation.service';
 import { FitTimeseriesChartComponent } from '../../session-analysis/fit-timeseries-chart/fit-timeseries-chart.component';
+import { BlockSummary } from '../../../../services/workout-execution.service';
 import { ComparisonSessionEntry } from '../../../../services/session-comparison.service';
 import { stripPauses } from '../../session-analysis/session-analysis.utils';
 
@@ -65,8 +66,8 @@ export class ComparisonColumnComponent implements OnChanges {
   @Input() set zoneFilters(v: Set<string>) {
     this.zoneFilters$.next(v ?? new Set());
   }
-  @Input() set blockView(v: 'planned' | 'interpolated') {
-    this.blockView$.next(v ?? 'interpolated');
+  @Input() set blockMode(v: 'raw' | 'laps' | 'interpolated') {
+    this.blockMode$.next(v ?? 'interpolated');
   }
   @Input() set smoothFactor(v: number) {
     this.smoothFactor$.next(v ?? 10);
@@ -75,6 +76,10 @@ export class ComparisonColumnComponent implements OnChanges {
   @Input() showSpeed = true;
   @Input() showHR = true;
   @Input() showCadence = false;
+  @Input() showDrift = false;
+
+  /** Stored lap/planned blocks for this session, used by the Laps overlay mode. */
+  displayBlocks: BlockSummary[] = [];
 
   @Output() metricsChange = new EventEmitter<ColumnMetrics>();
 
@@ -90,7 +95,7 @@ export class ComparisonColumnComponent implements OnChanges {
   zoneFilters$ = new BehaviorSubject<Set<string>>(new Set());
   selection$ = new BehaviorSubject<{ startIdx: number; endIdx: number } | null>(null);
   smoothFactor$ = new BehaviorSubject<number>(10);
-  blockView$ = new BehaviorSubject<'planned' | 'interpolated'>('interpolated');
+  blockMode$ = new BehaviorSubject<'raw' | 'laps' | 'interpolated'>('interpolated');
 
   fitState$: Observable<LoadState> = this.sessionId$.pipe(
     distinctUntilChanged(),
@@ -166,6 +171,12 @@ export class ComparisonColumnComponent implements OnChanges {
     if (changes['session']) {
       this.selection$.next(null);
       this.sessionId$.next(this.session.id);
+      // ComparisonBlockSummary widens distanceMeters to number | null; normalize to
+      // the chart's BlockSummary shape (number | undefined) for the Laps overlay.
+      this.displayBlocks = (this.session.blockSummaries ?? []).map((b) => ({
+        ...b,
+        distanceMeters: b.distanceMeters ?? undefined,
+      }));
     }
   }
 
