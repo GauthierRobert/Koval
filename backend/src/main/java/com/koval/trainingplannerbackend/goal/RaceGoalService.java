@@ -116,6 +116,15 @@ public class RaceGoalService {
         return repository.existsByAthleteIdAndRaceId(athleteId, raceId);
     }
 
+    /**
+     * The race the athlete has set as a goal, or {@code null} if absent / not one of their goals.
+     * Used by session classification to derive a session title from the event on RACE classification.
+     */
+    public Race findGoalRace(String athleteId, String raceId) {
+        if (raceId == null || raceId.isBlank() || !isRaceInGoals(athleteId, raceId)) return null;
+        return loadRaceQuietly(raceId);
+    }
+
     private Race loadRaceQuietly(String raceId) {
         try {
             return raceService.getRaceById(raceId);

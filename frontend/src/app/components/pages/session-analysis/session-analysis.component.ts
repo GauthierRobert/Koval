@@ -35,6 +35,12 @@ import { ZoneInterpolationService } from '../../../services/zone-interpolation.s
 import { BlockSummary } from '../../../services/workout-execution.service';
 import { formatTimeHMS } from '../../shared/format/format.utils';
 import { FitTimeseriesChartComponent } from './fit-timeseries-chart/fit-timeseries-chart.component';
+import {
+  computeDriftCurves,
+  SelectionStats,
+} from './fit-timeseries-chart/fit-timeseries-chart.utils';
+import { SelectionStatsPanelComponent } from './selection-stats-panel/selection-stats-panel.component';
+import { MetricToggleKey, MetricTogglesComponent } from './metric-toggles/metric-toggles.component';
 import { SessionStatsHeaderComponent } from './session-stats-header/session-stats-header.component';
 import {
   ZoneDistributionPanelComponent,
@@ -58,6 +64,7 @@ import {
   ZoneAverages,
   ZoneAveragesPanelComponent,
 } from '../../shared/zone-averages-panel/zone-averages-panel.component';
+import { SessionRouteMapComponent } from './session-route-map/session-route-map.component';
 import {
   formatBlockDistance,
   formatLongDate,
@@ -78,6 +85,8 @@ interface FitState {
   records: FitRecord[];
   laps: FitLap[];
   movingTime: number;
+  /** True when the records carry a GPS track — gates the route map beside the chart. */
+  hasGps: boolean;
 }
 
 @Component({
@@ -87,6 +96,7 @@ interface FitState {
     CommonModule,
     TranslateModule,
     FitTimeseriesChartComponent,
+    MetricTogglesComponent,
     SessionStatsHeaderComponent,
     ZoneDistributionPanelComponent,
     BlockBreakdownTableComponent,
@@ -101,6 +111,8 @@ interface FitState {
     SessionActionPanelComponent,
     ZoneFilterChipsComponent,
     ZoneAveragesPanelComponent,
+    SelectionStatsPanelComponent,
+    SessionRouteMapComponent,
   ],
   templateUrl: './session-analysis.component.html',
   styleUrl: './session-analysis.component.css',
@@ -168,6 +180,7 @@ export class SessionAnalysisComponent implements OnDestroy {
           records: [] as FitRecord[],
           laps: [] as FitLap[],
           movingTime: 0,
+          hasGps: false,
         });
       }
       return this.metricsService.downloadStoredFit(session.id).pipe(
@@ -183,6 +196,7 @@ export class SessionAnalysisComponent implements OnDestroy {
             records: stripped.records,
             laps: result.laps,
             movingTime,
+            hasGps: stripped.records.some((r) => r.lat != null && r.lng != null),
           };
         }),
         catchError(() =>
@@ -192,6 +206,7 @@ export class SessionAnalysisComponent implements OnDestroy {
             records: [] as FitRecord[],
             laps: [] as FitLap[],
             movingTime: 0,
+            hasGps: false,
           }),
         ),
         startWith({
@@ -200,6 +215,7 @@ export class SessionAnalysisComponent implements OnDestroy {
           records: [] as FitRecord[],
           laps: [] as FitLap[],
           movingTime: 0,
+          hasGps: false,
         }),
       );
     }),
@@ -231,6 +247,63 @@ export class SessionAnalysisComponent implements OnDestroy {
   blockView: 'planned' | 'interpolated' = 'interpolated';
   smoothFactor$ = new BehaviorSubject<number>(10);
   zoneFilters$ = new BehaviorSubject<Set<string>>(new Set());
+
+  /** Shared cursor index between the chart and the route map (bidirectional hover sync). */
+  syncHoverIdx: number | null = null;
+
+  /** Live stats for the chart's drag-to-select range, shown in its own panel below the chart. */
+  selectionStats: SelectionStats | null = null;
+
+  /** Block overlay state, set via the Raw / Laps / Interpolated control. */
+  showBlocks = true;
+
+  /** Mobile-only: zone + graph filters are collapsed into a dropdown menu, toggled by this flag. */
+  filtersMenuOpen = false;
+
+  // ── Metric visibility toggles (driven from the header toggle strip) ──
+  // Plain UI state: flipped from a template event handler, so OnPush re-renders
+  // and the new value flows into both the toggle strip and the chart as inputs.
+  showPrimary = true;
+  showHR = true;
+  showCadence = false;
+  showSpeed = true;
+  showDrift = true;
+
+  toggleMetric(key: MetricToggleKey): void {
+    this[key] = !this[key];
+  }
+
+  /** Data-availability flags for the metric toggle strip — gates which buttons appear. */
+  metricFlags$: Observable<{
+    sportType: string;
+    hasPower: boolean;
+    hasSpeed: boolean;
+    hasCadence: boolean;
+    hasDrift: boolean;
+  }> = combineLatest([this.fitState$, this.sessionSubject]).pipe(
+    map(([fit, session]) => {
+      const records = fit.records;
+      const sportType = session?.sportType ?? 'CYCLING';
+      return {
+        sportType,
+        hasPower: records.some((r) => r.power > 0),
+        hasSpeed: records.some((r) => r.speed > 0),
+        hasCadence: records.some((r) => r.cadence > 0),
+        hasDrift: computeDriftCurves(records, sportType) !== null,
+      };
+    }),
+    shareReplay(1),
+  );
+
+  /** Single 3-way block control: Raw (overlay off), Laps (planned/lap blocks), Interpolated (zone blocks). */
+  setBlockMode(mode: 'raw' | 'laps' | 'interpolated'): void {
+    if (mode === 'raw') {
+      this.showBlocks = false;
+      return;
+    }
+    this.showBlocks = true;
+    this.blockView = mode === 'interpolated' ? 'interpolated' : 'planned';
+  }
 
   // ── Zone distribution ────────────────────────────────────────────────
 
@@ -301,6 +374,34 @@ export class SessionAnalysisComponent implements OnDestroy {
 
       return result;
     }),
+  );
+
+  // ── Route map: per-record zone colors ────────────────────────────────
+  // Power zones for cycling-with-power, speed/pace zones otherwise. Empty when zones can't be
+  // resolved (or cycling without power) — the map then draws a single accent-colored track.
+
+  recordColors$: Observable<string[]> = combineLatest([
+    this.fitState$,
+    this.authService.user$,
+    this.sessionSubject,
+    this.selectedZoneSystemId$,
+    this.userZoneSystems$,
+  ]).pipe(
+    map(([fit, user, session, selectedId, userSystems]) => {
+      if (!fit || fit.loading || fit.error || !fit.records.length || !session?.sportType) return [];
+      const sport = session.sportType as SportType;
+      if (sport === 'CYCLING' && !fit.records.some((r) => r.power > 0)) return [];
+      const resolved = this.zoneCls.resolveZonesAndReference(sport, user, selectedId, userSystems);
+      if (!resolved) return [];
+      const { zones, referenceValue } = resolved;
+      return fit.records.map((r) => {
+        const zi = this.zoneCls.classifyRecord(r.power, r.speed, sport, referenceValue, zones);
+        return zi === this.zoneCls.WALKING_ZONE_INDEX
+          ? this.zoneCls.WALKING_COLOR
+          : this.zoneCls.getZoneColor(zi, zones, sport);
+      });
+    }),
+    shareReplay(1),
   );
 
   // ── Zone blocks (interpolated) ───────────────────────────────────────

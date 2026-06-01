@@ -1,6 +1,5 @@
 @if (state$ | async; as state) {
   @let zoneFilters = (zoneFilters$ | async) ?? emptyFilters;
-  @let viewMode = (viewMode$ | async) ?? 'block';
   <div class="compare-page">
     <header class="page-header glass">
       <a routerLink="/history" class="back-link">← {{ 'COMMON.BACK' | translate }}</a>
@@ -35,26 +34,9 @@
       @let showCadence = (showCadence$ | async) ?? false;
       @let blockView = (blockView$ | async) ?? 'interpolated';
       @let smoothFactor = (smoothFactor$ | async) ?? 10;
-      <!-- Shared controls: view mode + zone filter + chart-display toggles + smooth -->
+      <!-- Shared controls — zone filter + chart-display toggles + smooth.
+           Aligned with the single-session analysis controls (no view-mode toggle). -->
       <div class="cmp-controls glass">
-        <div class="cmp-view-toggle" role="group" aria-label="View mode">
-          <button
-            type="button"
-            class="cmp-vt-btn"
-            [class.active]="viewMode === 'block'"
-            (click)="setViewMode('block')"
-          >
-            {{ 'SESSION_COMPARE.VIEW_BLOCK' | translate }}
-          </button>
-          <button
-            type="button"
-            class="cmp-vt-btn"
-            [class.active]="viewMode === 'all'"
-            (click)="setViewMode('all')"
-          >
-            {{ 'SESSION_COMPARE.VIEW_ALL' | translate }}
-          </button>
-        </div>
         @let chips = (zoneChips$ | async) ?? [];
         @if (chips.length > 1) {
           <div class="cmp-zone-filter">
@@ -70,10 +52,6 @@
             />
           </div>
         }
-      </div>
-
-      <!-- Shared chart-display toggles (reuses single-session styling) -->
-      <div class="cmp-chart-controls glass">
         <div class="chart-toggles">
           @if (report.sportType === 'CYCLING') {
             <button
@@ -147,7 +125,6 @@
             [sportType]="report.sportType"
             [color]="colorsArray(report)[i]"
             [zoneFilters]="zoneFilters"
-            [viewMode]="viewMode"
             [showPrimary]="showPrimary"
             [showSpeed]="showSpeed"
             [showHR]="showHR"

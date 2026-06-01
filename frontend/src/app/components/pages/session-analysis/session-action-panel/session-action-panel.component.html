@@ -1,4 +1,6 @@
 @if (session && kind) {
+  @let isEditing = (editing$ | async) === true;
+  @let linkedView = kind === 'race' && isLinkedRace(session) && !isEditing;
   <section
     class="action-panel glass"
     [class.race]="kind === 'race'"
@@ -15,25 +17,74 @@
       <span class="action-dot" aria-hidden="true"></span>
       <div class="action-copy">
         <span class="action-title">
-          {{
-            (kind === 'race'
-              ? 'WORKOUT_HISTORY.ACTION_PANEL_RACE_TITLE'
-              : 'WORKOUT_HISTORY.ACTION_PANEL_LINK_TITLE'
-            ) | translate
-          }}
+          @if (linkedView) {
+            {{ 'WORKOUT_HISTORY.RACE_LINKED_TITLE' | translate }}
+          } @else {
+            {{
+              (kind === 'race'
+                ? 'WORKOUT_HISTORY.ACTION_PANEL_RACE_TITLE'
+                : 'WORKOUT_HISTORY.ACTION_PANEL_LINK_TITLE'
+              ) | translate
+            }}
+          }
         </span>
         <span class="action-desc">
-          {{
-            (kind === 'race'
-              ? 'WORKOUT_HISTORY.CLASSIFY_RACE_DESC'
-              : 'WORKOUT_HISTORY.LINK_SCHEDULE_DESC'
-            ) | translate
-          }}
+          @if (linkedView) {
+            {{ 'WORKOUT_HISTORY.RACE_LINKED_DESC' | translate }}
+          } @else {
+            {{
+              (kind === 'race'
+                ? 'WORKOUT_HISTORY.CLASSIFY_RACE_DESC'
+                : 'WORKOUT_HISTORY.LINK_SCHEDULE_DESC'
+              ) | translate
+            }}
+          }
         </span>
       </div>
     </div>
 
-    @if (loading$ | async) {
+    @if (linkedView) {
+      @let linked = linkedRace$ | async;
+      <div class="single-race-card linked-race-card">
+        <app-sport-icon [sport]="session.sportType" [size]="16" />
+        <div class="race-info">
+          <span class="race-title">{{ linked?.title ?? session.title }}</span>
+          <span class="race-meta">
+            <span class="role-badge" [class.warmup]="session.raceRole === 'WARMUP'">
+              {{ roleLabelKey(session.raceRole) | translate }}
+            </span>
+            @if (linked?.distance) {
+              <span aria-hidden="true">·</span>
+              <span>{{ linked?.distance }}</span>
+            }
+            @if (linked?.location) {
+              <span aria-hidden="true">·</span>
+              <span>{{ linked?.location }}</span>
+            }
+          </span>
+        </div>
+      </div>
+      @if (canEdit) {
+        <div class="action-footer">
+          <button
+            type="button"
+            class="btn-ghost"
+            (click)="unlink()"
+            [disabled]="(submitting$ | async) === true"
+          >
+            {{ 'WORKOUT_HISTORY.RACE_LINKED_BTN_UNLINK' | translate }}
+          </button>
+          <button
+            type="button"
+            class="btn-ghost-neutral"
+            (click)="startEditing()"
+            [disabled]="(submitting$ | async) === true"
+          >
+            {{ 'WORKOUT_HISTORY.RACE_LINKED_BTN_CHANGE' | translate }}
+          </button>
+        </div>
+      }
+    } @else if (loading$ | async) {
       <div class="action-loading">
         {{
           (kind === 'race'
@@ -130,14 +181,26 @@
                 {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_NO_CANDIDATES' | translate }}
               </div>
               <div class="action-footer">
-                <button
-                  type="button"
-                  class="btn-ghost-neutral"
-                  (click)="classify('NONE')"
-                  [disabled]="(submitting$ | async) === true"
-                >
-                  {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_NONE' | translate }}
-                </button>
+                <div class="action-footer-left">
+                  @if (isEditing) {
+                    <button
+                      type="button"
+                      class="btn-ghost-neutral"
+                      (click)="cancelEditing()"
+                      [disabled]="(submitting$ | async) === true"
+                    >
+                      {{ 'WORKOUT_HISTORY.RACE_LINKED_BTN_CANCEL' | translate }}
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="btn-ghost-neutral"
+                    (click)="classify('NONE')"
+                    [disabled]="(submitting$ | async) === true"
+                  >
+                    {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_NONE' | translate }}
+                  </button>
+                </div>
               </div>
             } @else {
               @if (races.length === 1) {
@@ -199,14 +262,26 @@
                 </ul>
               }
               <div class="action-footer">
-                <button
-                  type="button"
-                  class="btn-ghost-neutral"
-                  (click)="classify('NONE')"
-                  [disabled]="(submitting$ | async) === true"
-                >
-                  {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_NONE' | translate }}
-                </button>
+                <div class="action-footer-left">
+                  @if (isEditing) {
+                    <button
+                      type="button"
+                      class="btn-ghost-neutral"
+                      (click)="cancelEditing()"
+                      [disabled]="(submitting$ | async) === true"
+                    >
+                      {{ 'WORKOUT_HISTORY.RACE_LINKED_BTN_CANCEL' | translate }}
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    class="btn-ghost-neutral"
+                    (click)="classify('NONE')"
+                    [disabled]="(submitting$ | async) === true"
+                  >
+                    {{ 'WORKOUT_HISTORY.CLASSIFY_RACE_BTN_NONE' | translate }}
+                  </button>
+                </div>
                 <div class="action-footer-right">
                   <button
                     type="button"

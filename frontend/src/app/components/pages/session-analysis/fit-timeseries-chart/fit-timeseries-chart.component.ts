@@ -16,7 +16,6 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { formatPaceWithUnit, formatTimeHMS } from '../../../shared/format/format.utils';
 import { FitRecord } from '../../../../services/metrics.service';
 import { BlockSummary } from '../../../../services/workout-execution.service';
 import { ZoneBlock } from '../../../../services/zone';
@@ -78,8 +77,30 @@ export class FitTimeseriesChartComponent
   /** Enable mouse drag-to-select range stats (desktop only). Off by default. */
   @Input() enableBrush = false;
 
+  /** Drives the crosshair from an outside source (e.g. hovering the route map). */
+  private _externalHoverIdx: number | null = null;
+  @Input() set externalHoverIdx(v: number | null) {
+    const n = v ?? null;
+    if (n === this._externalHoverIdx) return;
+    this._externalHoverIdx = n;
+    // Only redraw for externally-driven hovers; internal hover redraws on its own.
+    if (this.ready && this.hoverIdx === null) this.drawAll();
+  }
+
   /** Emits when the brush selection settles (mouse up after drag) or is cleared. */
   @Output() selectionChange = new EventEmitter<{ startIdx: number; endIdx: number } | null>();
+
+  /** Emits the live selection stats so a sibling panel can render them outside the chart. */
+  @Output() selectionStatsChange = new EventEmitter<SelectionStats | null>();
+
+  /** Emits the hovered record index (or null) so a sibling view can mirror the cursor. */
+  @Output() hoverIndexChange = new EventEmitter<number | null>();
+  private lastEmittedHoverIdx: number | null = null;
+  private emitHoverIdx(idx: number | null): void {
+    if (idx === this.lastEmittedHoverIdx) return;
+    this.lastEmittedHoverIdx = idx;
+    this.hoverIndexChange.emit(idx);
+  }
 
   @ViewChild('stack') stackRef!: ElementRef<HTMLDivElement>;
   @ViewChild('primaryCanvas') pRef?: ElementRef<HTMLCanvasElement>;
@@ -90,8 +111,6 @@ export class FitTimeseriesChartComponent
   @ViewChild('elevCanvas') elRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('xCanvas') xRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('ttEl') ttElRef?: ElementRef<HTMLDivElement>;
-
-  private blocksDefaultApplied = false;
 
   hoverIdx: number | null = null;
   ttX = 0;
@@ -244,10 +263,12 @@ export class FitTimeseriesChartComponent
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // New session loaded: drop any zoom window so the new ride shows in full.
+    // New session loaded: drop any zoom window so the new ride shows in full,
+    // and discard any stale brush selection from the previous session.
     if (changes['records']) {
       this.viewStartSec = null;
       this.viewEndSec = null;
+      if (this.selectionStartIdx !== null) this.clearSelection();
     }
     this.updateHasElevation();
     this.updateHasPower();
@@ -264,16 +285,6 @@ export class FitTimeseriesChartComponent
     if (!this._hasCadence) {
       this.showCadence = false;
     }
-    if (
-      !this.blocksDefaultApplied &&
-      (this.zoneBlocks.length > 0 || this.blockSummaries.length > 0) &&
-      !(this.isCycling && !this._hasPower)
-    ) {
-      this.showBlocks = true;
-      this.blocksDefaultApplied = true;
-    }
-    // Drop any stale selection when the session changes.
-    if (this.selectionStartIdx !== null) this.clearSelection();
     if (this.ready) setTimeout(() => this.drawAll(), 0);
   }
 
@@ -282,13 +293,6 @@ export class FitTimeseriesChartComponent
     const durationSec = records[records.length - 1].timestamp - records[0].timestamp;
     const hours = Math.floor(durationSec / 3600);
     return Math.min(30, Math.max(1, hours));
-  }
-
-  toggle(
-    prop: 'showPrimary' | 'showHR' | 'showCadence' | 'showBlocks' | 'showSpeed' | 'showDrift',
-  ): void {
-    this[prop] = !this[prop];
-    setTimeout(() => this.drawAll(), 0);
   }
 
   onHover(event: MouseEvent): void {
@@ -393,19 +397,23 @@ export class FitTimeseriesChartComponent
     this.selectionStats = null;
     this.selectionLeftPx = 0;
     this.selectionWidthPx = 0;
-    if (had) this.selectionChange.emit(null);
+    if (had) {
+      this.selectionChange.emit(null);
+      this.selectionStatsChange.emit(null);
+    }
   }
 
   private updateSelectionStats(): void {
     if (this.selectionStartIdx === null || this.selectionEndIdx === null) {
       this.selectionStats = null;
-      return;
+    } else {
+      this.selectionStats = computeSelectionStats(
+        this.records,
+        this.selectionStartIdx,
+        this.selectionEndIdx,
+      );
     }
-    this.selectionStats = computeSelectionStats(
-      this.records,
-      this.selectionStartIdx,
-      this.selectionEndIdx,
-    );
+    this.selectionStatsChange.emit(this.selectionStats);
   }
 
   private recomputeSelectionRect(): void {
@@ -723,10 +731,12 @@ export class FitTimeseriesChartComponent
     this.buildTooltip();
     this.drawAll();
     this.scheduleTooltipShiftUpdate();
+    this.emitHoverIdx(this.hoverIdx);
   }
 
   onMouseLeave(): void {
     this.hoverIdx = null;
+    this.emitHoverIdx(null);
     this.ttRows = [];
     this.ttShift = 0;
     if (this.ttShiftRaf !== null) {
@@ -818,7 +828,7 @@ export class FitTimeseriesChartComponent
         showDrift: this._hasDrift && this.showDrift,
         hasElevation: this._hasElevation && this.showElevation,
         driftCurves: this._driftCurves,
-        hoverIdx: this.hoverIdx,
+        hoverIdx: this.hoverIdx ?? this._externalHoverIdx,
         theme: this.theme,
         viewStartSec: this.viewStartSec,
         viewEndSec: this.viewEndSec,
@@ -849,35 +859,6 @@ export class FitTimeseriesChartComponent
       accentHex: this.theme.accentHex,
       hoverIdx: this.hoverIdx,
     };
-  }
-
-  // ── Brush selection formatters ────────────────────────────────────────
-
-  formatBrushTime(sec: number): string {
-    return formatTimeHMS(Math.max(0, Math.round(sec)));
-  }
-
-  formatBrushDuration(sec: number): string {
-    return formatTimeHMS(Math.max(0, Math.round(sec)));
-  }
-
-  formatBrushDistance(meters: number): string {
-    if (meters >= 1000) return `${(meters / 1000).toFixed(meters >= 10000 ? 1 : 2)} km`;
-    return `${Math.round(meters)} m`;
-  }
-
-  formatBrushPace(kmh: number): string {
-    if (kmh <= 0.5) return '—';
-    if (this.sportType === 'SWIMMING') {
-      const secPer100 = 360 / kmh;
-      return formatPaceWithUnit(secPer100, 'SWIMMING');
-    }
-    const secPerKm = 3600 / kmh;
-    return formatPaceWithUnit(secPerKm, this.sportType);
-  }
-
-  brushCadenceDisplay(c: number): number {
-    return this.sportType === 'RUNNING' ? c * 2 : c;
   }
 
   private buildTooltip(): void {

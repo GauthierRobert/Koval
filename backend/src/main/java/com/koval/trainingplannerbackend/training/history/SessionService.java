@@ -175,11 +175,40 @@ public class SessionService {
 
         if (role == RaceRole.RACE) {
             session.setGroupId(RACE_GROUP_ID_PREFIX + raceId);
+            applyRaceTitle(session, userId, raceId);
         } else if (isRaceDerivedGroupId(session.getGroupId())) {
             // Demoting to WARMUP / NONE — undo any race-derived bundling we previously set.
             session.setGroupId(null);
         }
 
+        return repository.save(session);
+    }
+
+    /**
+     * Rename the session to the race it was classified as, so the history list and detail header
+     * read as the event (e.g. "Ironman Nice") rather than the recorded activity title. Only applied
+     * for the RACE role — warm-ups and dismissals keep their original title.
+     */
+    private void applyRaceTitle(CompletedSession session, String userId, String raceId) {
+        Race race = raceGoalService.findGoalRace(userId, raceId);
+        if (race != null && race.getTitle() != null && !race.getTitle().isBlank()) {
+            session.setTitle(race.getTitle());
+        }
+    }
+
+    /**
+     * Remove a session's race classification entirely (raceId + role + any race-derived bundle),
+     * returning it to the unclassified state so the race-day prompt can resurface. The title is left
+     * unchanged — a prior RACE classification may have renamed it to the event, and that is kept.
+     */
+    public CompletedSession unclassifyRace(String sessionId, String userId) {
+        CompletedSession session = findOwnedSession(sessionId, userId);
+        if (session == null) return null;
+        session.setRaceId(null);
+        session.setRaceRole(null);
+        if (isRaceDerivedGroupId(session.getGroupId())) {
+            session.setGroupId(null);
+        }
         return repository.save(session);
     }
 

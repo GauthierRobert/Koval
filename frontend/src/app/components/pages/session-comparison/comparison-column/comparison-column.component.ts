@@ -30,8 +30,6 @@ import { FitTimeseriesChartComponent } from '../../session-analysis/fit-timeseri
 import { ComparisonSessionEntry } from '../../../../services/session-comparison.service';
 import { stripPauses } from '../../session-analysis/session-analysis.utils';
 
-export type ComparisonViewMode = 'block' | 'all';
-
 export interface ColumnMetrics {
   durationSec: number;
   avgPower: number;
@@ -67,9 +65,6 @@ export class ComparisonColumnComponent implements OnChanges {
   @Input() set zoneFilters(v: Set<string>) {
     this.zoneFilters$.next(v ?? new Set());
   }
-  @Input() set viewMode(v: ComparisonViewMode) {
-    this.viewMode$.next(v ?? 'block');
-  }
   @Input() set blockView(v: 'planned' | 'interpolated') {
     this.blockView$.next(v ?? 'interpolated');
   }
@@ -93,7 +88,6 @@ export class ComparisonColumnComponent implements OnChanges {
 
   private sessionId$ = new BehaviorSubject<string>('');
   zoneFilters$ = new BehaviorSubject<Set<string>>(new Set());
-  viewMode$ = new BehaviorSubject<ComparisonViewMode>('block');
   selection$ = new BehaviorSubject<{ startIdx: number; endIdx: number } | null>(null);
   smoothFactor$ = new BehaviorSubject<number>(10);
   blockView$ = new BehaviorSubject<'planned' | 'interpolated'>('interpolated');

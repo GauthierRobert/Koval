@@ -157,14 +157,17 @@ public class StravaApiClient {
 
     /**
      * Fetch per-second streams for a single activity.
-     * Returns a map keyed by stream type (time, watts, heartrate, cadence, velocity_smooth, distance, altitude).
+     * Returns a map keyed by stream type (time, watts, heartrate, cadence, velocity_smooth,
+     * distance, altitude). The {@code latlng} stream — Strava returns it as a list of
+     * {@code [lat, lng]} pairs — is split into two parallel scalar streams keyed "lat" and
+     * "lng" so it flows through the same {@code Number}-typed pipeline as the rest.
      * Each value is a List of Numbers.
      */
     @SuppressWarnings("unchecked")
     public Map<String, List<? extends Number>> fetchStreams(User user, String activityId) {
         String token = ensureValidToken(user);
         String url = "https://www.strava.com/api/v3/activities/" + activityId
-                + "/streams?keys=time,watts,heartrate,cadence,velocity_smooth,distance,altitude&key_by_type=true";
+                + "/streams?keys=time,watts,heartrate,cadence,velocity_smooth,distance,altitude,latlng&key_by_type=true";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
@@ -182,7 +185,11 @@ public class StravaApiClient {
                 if (entry.getValue() instanceof Map<?, ?> streamObj) {
                     Object data = ((Map<String, Object>) streamObj).get("data");
                     if (data instanceof List<?> list) {
-                        result.put(entry.getKey(), (List<? extends Number>) list);
+                        if ("latlng".equals(entry.getKey())) {
+                            addLatLngStreams(result, list);
+                        } else {
+                            result.put(entry.getKey(), (List<? extends Number>) list);
+                        }
                     }
                 }
             }
@@ -193,5 +200,28 @@ public class StravaApiClient {
             log.warn("Failed to fetch streams for activity {}: {}", activityId, e.getMessage());
             return Map.of();
         }
+    }
+
+    /**
+     * Split Strava's {@code latlng} stream (a list of {@code [lat, lng]} pairs) into two
+     * index-aligned scalar streams "lat" and "lng". Samples that are missing or malformed
+     * become {@code null} so the lists stay aligned with the other per-second streams;
+     * {@link FitFileBuilder} encodes those as the FIT "invalid" sentinel.
+     */
+    private void addLatLngStreams(Map<String, List<? extends Number>> result, List<?> pairs) {
+        List<Double> lat = new ArrayList<>(pairs.size());
+        List<Double> lng = new ArrayList<>(pairs.size());
+        for (Object pair : pairs) {
+            if (pair instanceof List<?> p && p.size() == 2
+                    && p.get(0) instanceof Number latVal && p.get(1) instanceof Number lngVal) {
+                lat.add(latVal.doubleValue());
+                lng.add(lngVal.doubleValue());
+            } else {
+                lat.add(null);
+                lng.add(null);
+            }
+        }
+        result.put("lat", lat);
+        result.put("lng", lng);
     }
 }

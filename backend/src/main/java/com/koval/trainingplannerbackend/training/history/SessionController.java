@@ -180,6 +180,14 @@ public class SessionController {
 
     public record ClassifyRaceRequest(String raceId, RaceRole role) {}
 
+    /** Remove a session's race classification (raceId + role), reverting it to the unclassified state. */
+    @PostMapping("/{sessionId}/unclassify-race")
+    public ResponseEntity<CompletedSession> unclassifyRace(@PathVariable String sessionId) {
+        String userId = SecurityUtils.getCurrentUserId();
+        CompletedSession result = sessionService.unclassifyRace(sessionId, userId);
+        return ResponseEntity.of(Optional.ofNullable(result));
+    }
+
     /** Links a completed session to a club training session. */
     @PostMapping("/{sessionId}/link-club-session/{clubSessionId}")
     public ResponseEntity<CompletedSession> linkToClubSession(

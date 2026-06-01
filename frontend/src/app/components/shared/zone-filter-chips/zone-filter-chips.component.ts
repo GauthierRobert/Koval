@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 export interface ZoneChip {
   label: string;
@@ -11,7 +10,7 @@ export interface ZoneChip {
 @Component({
   selector: 'app-zone-filter-chips',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule],
   template: `
     @if (chips.length > 1) {
       <div class="zone-filter-chips" [class.dense]="dense">
@@ -23,13 +22,7 @@ export interface ZoneChip {
             [style.--chip-color]="chip.color"
             (click)="toggled.emit(chip.label)"
           >
-            <span class="zone-dot" [style.background]="chip.color"></span>
             {{ chip.label }}
-          </button>
-        }
-        @if (active.size > 0) {
-          <button type="button" class="zone-chip zone-chip--clear" (click)="cleared.emit()">
-            {{ 'SESSION_ANALYSIS.ZONE_FILTER_CLEAR' | translate }}
           </button>
         }
       </div>
@@ -46,11 +39,13 @@ export interface ZoneChip {
       .zone-chip {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        height: 32px;
+        box-sizing: border-box;
         background: var(--overlay-5);
         border: none;
-        color: var(--text-muted);
-        padding: 8px 12px;
+        /* Zone color persists; opacity signals on/off so color isn't the only cue. */
+        color: var(--chip-color, var(--text-muted));
+        padding: 0 10px;
         border-radius: 6px;
         font-size: 11px;
         font-weight: 600;
@@ -61,20 +56,11 @@ export interface ZoneChip {
       }
       .zone-chip--active {
         background: var(--overlay-10, rgba(0, 0, 0, 0.1));
-        color: var(--text-color);
         opacity: 1;
       }
-      .zone-chip--clear {
-        opacity: 0.85;
-        font-style: italic;
-      }
-      .zone-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-      }
       .dense .zone-chip {
-        padding: 6px 10px;
+        height: 28px;
+        padding: 0 10px;
         font-size: 10px;
       }
     `,

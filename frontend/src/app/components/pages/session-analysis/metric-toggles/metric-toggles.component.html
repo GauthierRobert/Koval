@@ -1,0 +1,170 @@
+<div class="metric-toggles">
+  @if (!isCycling || hasPower) {
+    <button
+      class="toggle-btn icon-only"
+      [class.active]="showPrimary"
+      (click)="metricToggled.emit('showPrimary')"
+      [attr.aria-pressed]="showPrimary"
+      [attr.aria-label]="primaryLabel"
+      [attr.title]="primaryLabel"
+    >
+      @if (isCycling) {
+        <svg class="t-ic power" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M13 2 4.5 13.2c-.4.5 0 1.3.6 1.3H10l-1.2 7.1c-.1.7.8 1.1 1.2.5L20 10.8c.4-.5 0-1.3-.6-1.3H14l1.2-7c.1-.7-.8-1.1-1.2-.5z"
+          />
+        </svg>
+      } @else {
+        <svg
+          class="t-ic power"
+          viewBox="0 0 24 24"
+          width="15"
+          height="15"
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 19a9 9 0 1 1 14 0" />
+          <path d="M12 14l4-4" />
+        </svg>
+      }
+    </button>
+  }
+  @if (isCycling && hasSpeed) {
+    <button
+      class="toggle-btn icon-only"
+      [class.active]="showSpeed"
+      (click)="metricToggled.emit('showSpeed')"
+      [attr.aria-pressed]="showSpeed"
+      aria-label="Speed"
+      title="Speed"
+    >
+      <svg
+        class="t-ic speed"
+        viewBox="0 0 24 24"
+        width="15"
+        height="15"
+        aria-hidden="true"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M5 19a9 9 0 1 1 14 0" />
+        <path d="M12 14l4-4" />
+      </svg>
+    </button>
+  }
+  <button
+    class="toggle-btn icon-only"
+    [class.active]="showHR"
+    (click)="metricToggled.emit('showHR')"
+    [attr.aria-pressed]="showHR"
+    aria-label="Heart Rate"
+    title="Heart Rate"
+  >
+    <svg class="t-ic hr" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M12 21s-6.7-4.3-9.3-8.4C1 9.8 2.4 6 6 6c2 0 3.2 1.1 4 2.4C10.8 7.1 12 6 14 6c3.6 0 5 3.8 3.3 6.6C18.7 16.7 12 21 12 21z"
+      />
+    </svg>
+  </button>
+  @if (hasCadence) {
+    <button
+      class="toggle-btn icon-only"
+      [class.active]="showCadence"
+      (click)="metricToggled.emit('showCadence')"
+      [attr.aria-pressed]="showCadence"
+      aria-label="Cadence"
+      title="Cadence"
+    >
+      <svg
+        class="t-ic cad"
+        viewBox="0 0 24 24"
+        width="15"
+        height="15"
+        aria-hidden="true"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M9.5 4 14.5 4 18 20 6 20Z" />
+        <path d="M6 20 18 20" />
+        <path d="M12 18 15 6" />
+      </svg>
+    </button>
+  }
+  @if (hasDrift) {
+    <span class="drift-toggle-group">
+      <button
+        class="toggle-btn icon-only"
+        [class.active]="showDrift"
+        (click)="metricToggled.emit('showDrift')"
+        [attr.aria-pressed]="showDrift"
+        aria-label="Cardiac drift"
+        title="Cardiac drift"
+      >
+        <svg
+          class="t-ic drift"
+          viewBox="0 0 24 24"
+          width="15"
+          height="15"
+          aria-hidden="true"
+          fill="none"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 8c3.5 0 5-3 9-3s4.5 3 9 3" stroke="#e74c3c" />
+          <path d="M3 16c3.5 0 5 3 9 3s4.5-5 9-5" stroke="var(--accent-color, #ff9d00)" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="info-pill"
+        aria-label="How to read the cardiac drift chart"
+        aria-describedby="drift-help"
+      >
+        ?
+        <span id="drift-help" class="info-pop" role="tooltip">
+          <strong>How to read it</strong>
+          <p>
+            Both lines are normalized to a stable baseline (100%) taken after a brief warmup —
+            roughly minutes 3 to 8 on a 30-min session, scaling up to ~15 min on long rides.
+          </p>
+          <ul>
+            <li>
+              <span class="info-key info-key-hr"></span>
+              <span><strong>HR%</strong> — heart rate vs baseline</span>
+            </li>
+            <li>
+              <span class="info-key info-key-out"></span>
+              <span><strong>Pwr% / Spd%</strong> — output vs baseline</span>
+            </li>
+          </ul>
+          <p class="info-rule">
+            <span class="info-swatch info-swatch-bad"></span>
+            When HR sits above output, the gap fills red — <em>cardiac drift</em> (fatigue, heat,
+            dehydration).
+          </p>
+          <p class="info-rule">
+            <span class="info-swatch info-swatch-good"></span>
+            When output sits above HR, the gap fills green — efficiency rising (warmup, recovery).
+          </p>
+          <p class="info-rule-of-thumb">
+            Rule of thumb: drift &lt;&nbsp;5% = strong aerobic durability, 5–10% = moderate,
+            &gt;&nbsp;10% = significant fade.
+          </p>
+        </span>
+      </button>
+    </span>
+  }
+</div>

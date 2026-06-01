@@ -50,6 +50,10 @@ export interface FitRecord {
   speed: number;
   distance: number;
   elevation?: number;
+  /** GPS latitude in decimal degrees, when the FIT carries a position track. */
+  lat?: number;
+  /** GPS longitude in decimal degrees, when the FIT carries a position track. */
+  lng?: number;
 }
 
 export interface FitTimerEvent {
@@ -178,6 +182,8 @@ export class MetricsService {
           speed: r.speed || 0,
           distance: r.distance || 0,
           elevation: r.enhanced_altitude ?? r.altitude ?? undefined,
+          lat: r.position_lat ?? undefined,
+          lng: r.position_long ?? undefined,
         }));
 
         const rawEvents: RawFitEvent[] = (data.events || []) as RawFitEvent[];

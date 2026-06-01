@@ -61,9 +61,19 @@ public class FitFileBuilder {
 
     private static final int ENUM    = 0x00;  // 1-byte enumeration
     private static final int UINT8   = 0x02;  // 1-byte unsigned integer
+    private static final int SINT32  = 0x85;  // 4-byte signed integer (little-endian)
     private static final int UINT16  = 0x84;  // 2-byte unsigned integer (little-endian)
     private static final int UINT32  = 0x86;  // 4-byte unsigned integer (little-endian)
     private static final int UINT32Z = 0x8c;  // 4-byte unsigned integer, 0 = invalid
+
+    /** FIT "invalid" sentinel for a sint32 field — written when a GPS sample is missing. */
+    private static final int SINT32_INVALID = 0x7fffffff;
+
+    /**
+     * Semicircle conversion factor. FIT stores latitude/longitude as 32-bit semicircles:
+     * {@code semicircles = degrees * (2^31 / 180)}. The full int32 range maps to ±180°.
+     */
+    private static final double SEMICIRCLES_PER_DEGREE = 2147483648.0 / 180.0;
 
     /** Nibble-based CRC-16 lookup table for FIT file integrity checks. */
     private static final int[] CRC_TABLE = {
@@ -193,47 +203,51 @@ public class FitFileBuilder {
         List<? extends Number> timeStream = streams.get("time");
         if (timeStream == null || timeStream.isEmpty()) return;
 
-        defineRecordMsg(cycling);
-
         List<? extends Number> powerStream    = streams.get("watts");
         List<? extends Number> hrStream       = streams.get("heartrate");
         List<? extends Number> cadenceStream  = streams.get("cadence");
         List<? extends Number> velocityStream = streams.get("velocity_smooth");
         List<? extends Number> distanceStream = streams.get("distance");
         List<? extends Number> altitudeStream = streams.get("altitude");
+        List<? extends Number> latStream      = streams.get("lat");
+        List<? extends Number> lngStream      = streams.get("lng");
+
+        boolean hasGps = latStream != null && !latStream.isEmpty()
+                && lngStream != null && !lngStream.isEmpty();
+
+        defineRecordMsg(cycling, hasGps);
 
         for (int i = 0; i < timeStream.size(); i++) {
             int ts = startTs + timeStream.get(i).intValue();
             emitPauseEventsIfGap(timeStream, i, startTs);
-            writeOneRecord(cycling, ts, i, powerStream, hrStream, cadenceStream, velocityStream, distanceStream, altitudeStream);
+            writeOneRecord(cycling, hasGps, ts, i, powerStream, hrStream, cadenceStream,
+                    velocityStream, distanceStream, altitudeStream, latStream, lngStream);
         }
     }
 
     /**
      * Define the record message layout (local type 1, global msg 20).
      * Cycling records carry power; running/swimming carry cumulative distance instead.
-     * Both include enhanced_altitude (field 78, scale=5, offset=500).
+     * Both include enhanced_altitude (field 78, scale=5, offset=500) and, when GPS data is
+     * available, position_lat (field 0) and position_long (field 1) as sint32 semicircles.
      */
-    private void defineRecordMsg(boolean cycling) {
+    private void defineRecordMsg(boolean cycling, boolean hasGps) {
+        List<int[]> fields = new ArrayList<>();
+        fields.add(new int[]{253, 4, UINT32});         // timestamp
         if (cycling) {
-            defineMsg(1, 20, new int[][]{
-                    {253, 4, UINT32},  // timestamp
-                    {7, 2, UINT16},    // power (W)
-                    {3, 1, UINT8},     // heart_rate (bpm)
-                    {4, 1, UINT8},     // cadence (rpm)
-                    {6, 2, UINT16},    // speed (mm/s)
-                    {78, 4, UINT32}    // enhanced_altitude ((m + 500) * 5)
-            });
+            fields.add(new int[]{7, 2, UINT16});       // power (W)
         } else {
-            defineMsg(1, 20, new int[][]{
-                    {253, 4, UINT32},  // timestamp
-                    {0, 4, UINT32},    // distance (cm cumulative)
-                    {3, 1, UINT8},     // heart_rate (bpm)
-                    {4, 1, UINT8},     // cadence (rpm/spm)
-                    {6, 2, UINT16},    // speed (mm/s)
-                    {78, 4, UINT32}    // enhanced_altitude ((m + 500) * 5)
-            });
+            fields.add(new int[]{5, 4, UINT32});       // distance (cm cumulative)
         }
+        fields.add(new int[]{3, 1, UINT8});            // heart_rate (bpm)
+        fields.add(new int[]{4, 1, UINT8});            // cadence (rpm/spm)
+        fields.add(new int[]{6, 2, UINT16});           // speed (mm/s)
+        fields.add(new int[]{78, 4, UINT32});          // enhanced_altitude ((m + 500) * 5)
+        if (hasGps) {
+            fields.add(new int[]{0, 4, SINT32});       // position_lat (semicircles)
+            fields.add(new int[]{1, 4, SINT32});       // position_long (semicircles)
+        }
+        defineMsg(1, 20, fields.toArray(new int[0][]));
     }
 
     /**
@@ -250,21 +264,40 @@ public class FitFileBuilder {
     }
 
     /** Write a single per-second record data message. */
-    private void writeOneRecord(boolean cycling, int ts, int i,
+    private void writeOneRecord(boolean cycling, boolean hasGps, int ts, int i,
                                 List<? extends Number> powerStream, List<? extends Number> hrStream,
                                 List<? extends Number> cadenceStream, List<? extends Number> velocityStream,
-                                List<? extends Number> distanceStream, List<? extends Number> altitudeStream) {
+                                List<? extends Number> distanceStream, List<? extends Number> altitudeStream,
+                                List<? extends Number> latStream, List<? extends Number> lngStream) {
         int hr       = intAt(hrStream, i);
         int cad      = intAt(cadenceStream, i);
         int speedRaw = (int) Math.round(doubleAt(velocityStream, i) * 1000);
         int altRaw   = (int) Math.round((doubleAt(altitudeStream, i) + 500) * 5);
+        int first    = cycling ? intAt(powerStream, i) : (int) Math.round(doubleAt(distanceStream, i) * 100);
 
-        if (cycling) {
-            writeMsg(1, new int[]{ts, intAt(powerStream, i), hr, cad, speedRaw, altRaw});
+        if (hasGps) {
+            writeMsg(1, new int[]{ts, first, hr, cad, speedRaw, altRaw,
+                    semicircleAt(latStream, i), semicircleAt(lngStream, i)});
         } else {
-            int distCm = (int) Math.round(doubleAt(distanceStream, i) * 100);
-            writeMsg(1, new int[]{ts, distCm, hr, cad, speedRaw, altRaw});
+            writeMsg(1, new int[]{ts, first, hr, cad, speedRaw, altRaw});
         }
+    }
+
+    /**
+     * Encode a latitude/longitude sample (degrees) as FIT semicircles, returning the FIT
+     * "invalid" sentinel when the sample is absent or out of the valid ±180° range so the
+     * parser skips it rather than placing the point at (0, 0).
+     */
+    private static int semicircleAt(List<? extends Number> list, int index) {
+        if (list == null || index >= list.size()) return SINT32_INVALID;
+        Number val = list.get(index);
+        if (val == null) return SINT32_INVALID;
+        double deg = val.doubleValue();
+        if (deg < -180.0 || deg > 180.0) return SINT32_INVALID;
+        long semicircles = Math.round(deg * SEMICIRCLES_PER_DEGREE);
+        if (semicircles >= Integer.MAX_VALUE) return Integer.MAX_VALUE - 1; // avoid sentinel collision
+        if (semicircles < Integer.MIN_VALUE) return Integer.MIN_VALUE;
+        return (int) semicircles;
     }
 
     /**

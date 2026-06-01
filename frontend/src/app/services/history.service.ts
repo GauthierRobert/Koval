@@ -464,6 +464,14 @@ export class HistoryService {
       );
   }
 
+  /** Remove a race classification entirely (clears raceId + raceRole), reverting to unclassified. */
+  unclassifyRace(sessionId: string): Observable<SavedSession> {
+    return this.http.post<RawSavedSession>(`${this.apiUrl}/${sessionId}/unclassify-race`, {}).pipe(
+      map((raw) => this.parseSession(raw)),
+      tap((session) => this.replaceLocally(session)),
+    );
+  }
+
   /** Undo a session→scheduled-workout link. */
   unlinkFromSchedule(sessionId: string): Observable<SavedSession> {
     return this.http.post<RawSavedSession>(`${this.apiUrl}/${sessionId}/unlink-schedule`, {}).pipe(

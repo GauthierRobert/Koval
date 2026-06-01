@@ -8,8 +8,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { BehaviorSubject, of } from 'rxjs';
-import { catchError, finalize, tap } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, of } from 'rxjs';
+import { catchError, finalize, map, tap } from 'rxjs/operators';
 import { SportIconComponent } from '../../../shared/sport-icon/sport-icon.component';
 import {
   HistoryService,
@@ -40,6 +40,8 @@ export type SessionActionKind = 'race' | 'link';
 export class SessionActionPanelComponent implements OnChanges {
   @Input() session: SavedSession | null = null;
   @Input() kind: SessionActionKind | null = null;
+  /** False when a coach is viewing — the linked race is shown read-only (only the owner can re-link/unlink). */
+  @Input() canEdit = true;
 
   private readonly historyService = inject(HistoryService);
 
@@ -49,11 +51,24 @@ export class SessionActionPanelComponent implements OnChanges {
   private raceCandidatesSubject = new BehaviorSubject<RaceCandidate[]>([]);
   raceCandidates$ = this.raceCandidatesSubject.asObservable();
 
+  private sessionSubject = new BehaviorSubject<SavedSession | null>(null);
+
   private loadingSubject = new BehaviorSubject<boolean>(false);
   loading$ = this.loadingSubject.asObservable();
 
   private submittingSubject = new BehaviorSubject<boolean>(false);
   submitting$ = this.submittingSubject.asObservable();
+
+  /** When true the panel shows the classify picker instead of the linked summary (the "Change" flow). */
+  private editingSubject = new BehaviorSubject<boolean>(false);
+  editing$ = this.editingSubject.asObservable();
+
+  /** The race the session is currently linked to, enriched from the candidate list when available. */
+  linkedRace$ = combineLatest([this.sessionSubject, this.raceCandidatesSubject]).pipe(
+    map(([session, candidates]) =>
+      session?.raceId ? (candidates.find((c) => c.id === session.raceId) ?? null) : null,
+    ),
+  );
 
   selectedLinkId: string | null = null;
   selectedRaceId: string | null = null;
@@ -61,6 +76,8 @@ export class SessionActionPanelComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (!changes['session'] && !changes['kind']) return;
     const session = this.session;
+    this.sessionSubject.next(session);
+    this.editingSubject.next(false);
     if (!session || !this.kind) {
       this.linkCandidatesSubject.next([]);
       this.raceCandidatesSubject.next([]);
@@ -71,6 +88,38 @@ export class SessionActionPanelComponent implements OnChanges {
     } else {
       this.loadRaceCandidates(session);
     }
+  }
+
+  /** True once the session carries a committed race classification (RACE or WARMUP). */
+  isLinkedRace(session: SavedSession | null): boolean {
+    return !!session?.raceId && (session.raceRole === 'RACE' || session.raceRole === 'WARMUP');
+  }
+
+  /** i18n key for the linked-state role badge. */
+  roleLabelKey(role: RaceRole | undefined): string {
+    return role === 'WARMUP'
+      ? 'WORKOUT_HISTORY.RACE_LINKED_ROLE_WARMUP'
+      : 'WORKOUT_HISTORY.RACE_LINKED_ROLE_RACE';
+  }
+
+  /** Switch from the linked summary to the classify picker so the user can pick a different race/role. */
+  startEditing(): void {
+    this.editingSubject.next(true);
+  }
+
+  /** Abandon the "Change" flow and return to the linked summary. */
+  cancelEditing(): void {
+    this.editingSubject.next(false);
+  }
+
+  /** Remove the race classification entirely; the panel reverts to the unclassified prompt. */
+  unlink(): void {
+    if (!this.session) return;
+    this.submittingSubject.next(true);
+    this.historyService
+      .unclassifyRace(this.session.id)
+      .pipe(finalize(() => this.submittingSubject.next(false)))
+      .subscribe(() => this.editingSubject.next(false));
   }
 
   private loadLinkCandidates(session: SavedSession): void {
@@ -153,7 +202,7 @@ export class SessionActionPanelComponent implements OnChanges {
     this.historyService
       .classifyRace(this.session.id, raceId, role)
       .pipe(finalize(() => this.submittingSubject.next(false)))
-      .subscribe();
+      .subscribe(() => this.editingSubject.next(false));
   }
 
   formatDate(iso: string): string {

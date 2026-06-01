@@ -58,7 +58,7 @@ export class SessionAnalysisPage {
   }
 
   async toggleBlockView(view: 'planned' | 'interpolated') {
-    const label = view === 'planned' ? 'Planned' : 'Interpolated';
+    const label = view === 'planned' ? 'Laps' : 'Interpolated';
     await this.page
       .locator('[data-testid="block-view-toggle"]')
       .filter({ hasText: new RegExp(label, 'i') })

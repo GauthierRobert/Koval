@@ -1,0 +1,205 @@
+.metric-toggles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  box-sizing: border-box;
+  background: var(--overlay-5);
+  border: none;
+  color: var(--text-muted);
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.toggle-btn.active {
+  background: var(--overlay-10, rgba(0, 0, 0, 0.1));
+  color: var(--text-color);
+}
+
+/* ── Icon-only metric toggles ─────────────────────────────────────────── */
+.toggle-btn.icon-only {
+  gap: 0;
+  padding: 0 9px;
+}
+.t-ic {
+  display: block;
+  /* Metric color persists; opacity signals on/off so color isn't the only cue. */
+  opacity: 0.4;
+  transition: opacity 0.15s;
+}
+.toggle-btn.active .t-ic,
+.toggle-btn:hover .t-ic {
+  opacity: 1;
+}
+.t-ic.power {
+  color: var(--accent-color, #ff9d00);
+}
+.t-ic.hr {
+  color: #e74c3c;
+}
+.t-ic.cad {
+  color: #3b82f6;
+}
+.t-ic.speed {
+  color: #22d3ee;
+}
+.t-ic.drift {
+  color: var(--accent-color, #ff9d00);
+}
+
+/* ── Cardiac-drift interpretation popover ─────────────────────────────── */
+.drift-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+.info-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--overlay-5);
+  border: 1px solid var(--overlay-10, rgba(255, 255, 255, 0.1));
+  color: var(--text-muted);
+  font: bold 10px/1 monospace;
+  cursor: help;
+  padding: 0;
+  position: relative;
+  transition: all 0.15s;
+}
+.info-pill:hover,
+.info-pill:focus-visible {
+  color: var(--text-color);
+  background: var(--overlay-10, rgba(255, 255, 255, 0.1));
+  outline: none;
+}
+.info-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  background: var(--surface-card, rgba(32, 34, 52, 0.97));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.22));
+  border-radius: 10px;
+  padding: 12px 14px;
+  font:
+    11px/1.45 system-ui,
+    sans-serif;
+  color: var(--text-color);
+  /* Reset inherited label styling from the header so the popover reads as body text. */
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
+  z-index: 30;
+}
+.info-pill:hover .info-pop,
+.info-pill:focus-visible .info-pop,
+.info-pop:hover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.info-pop::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: var(--surface-card, rgba(32, 34, 52, 0.97));
+  border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.22));
+  border-left: 1px solid var(--glass-border, rgba(255, 255, 255, 0.22));
+}
+.info-pop strong {
+  color: var(--text-color);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+.info-pop p {
+  margin: 6px 0;
+  color: var(--text-80, rgba(255, 255, 255, 0.8));
+}
+.info-pop ul {
+  list-style: none;
+  margin: 6px 0;
+  padding: 0;
+}
+.info-pop ul li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  color: var(--text-80, rgba(255, 255, 255, 0.8));
+}
+.info-key {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+.info-key-hr {
+  background: #e74c3c;
+}
+.info-key-out {
+  background: var(--accent-color, #ff9d00);
+}
+.info-rule {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.info-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.info-swatch-bad {
+  background: rgba(231, 76, 60, 0.35);
+  border: 1px solid rgba(231, 76, 60, 0.6);
+}
+.info-swatch-good {
+  background: rgba(76, 175, 80, 0.35);
+  border: 1px solid rgba(76, 175, 80, 0.6);
+}
+.info-rule-of-thumb {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--overlay-10, rgba(255, 255, 255, 0.1));
+  color: var(--text-muted);
+  font-size: 10px;
+}
+@media (max-width: 768px) {
+  .info-pop {
+    width: 280px;
+  }
+}

@@ -18,7 +18,6 @@ import { ComparisonBlockAlignmentComponent } from './comparison-block-alignment/
 import {
   ColumnMetrics,
   ComparisonColumnComponent,
-  ComparisonViewMode,
 } from './comparison-column/comparison-column.component';
 import {
   ZoneChip,
@@ -68,8 +67,6 @@ export class SessionComparisonPageComponent {
 
   /** Shared zone-filter state across all columns. */
   zoneFilters$ = new BehaviorSubject<Set<string>>(new Set());
-  /** Block-by-block or whole-session aggregate. Default "block". */
-  viewMode$ = new BehaviorSubject<ComparisonViewMode>('block');
 
   /** Shared chart-display controls across all columns. */
   showPrimary$ = new BehaviorSubject<boolean>(true);
@@ -175,10 +172,6 @@ export class SessionComparisonPageComponent {
 
   clearZones(): void {
     this.zoneFilters$.next(new Set());
-  }
-
-  setViewMode(mode: ComparisonViewMode): void {
-    this.viewMode$.next(mode);
   }
 
   openPicker(report: ComparisonReport): void {

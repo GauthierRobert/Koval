@@ -19,25 +19,144 @@
       (alignmentChanged)="onAlignmentChanged(session, $event)"
     />
 
-    <!-- Pending action: confirm a plan link or classify a race day -->
-    @if (pendingAction) {
-      <app-session-action-panel [session]="session" [kind]="pendingAction" />
+    <!-- Pending action: confirm a plan link or classify a race day. Also stays visible once the
+         session is linked to a race so the link is shown in the details and can be changed/unlinked. -->
+    @let linkedToRace =
+      !!session.raceId && (session.raceRole === 'RACE' || session.raceRole === 'WARMUP');
+    @if (pendingAction || linkedToRace) {
+      <app-session-action-panel
+        [session]="session"
+        [kind]="pendingAction ?? 'race'"
+        [canEdit]="!coachAthleteId"
+      />
     }
 
-    <!-- FIT timeseries chart -->
+    <!-- FIT timeseries chart + GPS route map (when present) -->
     @if (fitState$ | async; as fit) {
-      <div class="chart-section glass">
-        <div class="chart-header-row">
-          <div class="section-label">
-            {{ 'SESSION_ANALYSIS.CHART_FIT_TIME_SERIES' | translate }}
-          </div>
-          <div class="chart-controls">
-            @if (blockView === 'interpolated' || !displayBlocks.length) {
+      <div class="chart-map-row">
+        <div class="chart-section glass">
+          <div class="chart-header-row">
+            <div class="chart-header-top">
+              <div class="section-title-group">
+                <div class="section-label">
+                  {{ 'SESSION_ANALYSIS.CHART_FIT_TIME_SERIES' | translate }}
+                </div>
+                <button
+                  type="button"
+                  class="chart-info-pill"
+                  [attr.aria-label]="'SESSION_ANALYSIS.CHART_HINTS_TITLE' | translate"
+                  aria-describedby="chart-controls-help"
+                >
+                  i
+                  <span id="chart-controls-help" class="chart-info-pop" role="tooltip">
+                    <strong>{{ 'SESSION_ANALYSIS.CHART_HINTS_TITLE' | translate }}</strong>
+                    <ul>
+                      <li>
+                        <kbd>Ctrl</kbd> + {{ 'SESSION_ANALYSIS.CHART_HINT_WHEEL' | translate }} —
+                        {{ 'SESSION_ANALYSIS.CHART_HINT_ZOOM' | translate }}
+                      </li>
+                      <li>
+                        <kbd>Ctrl</kbd> + {{ 'SESSION_ANALYSIS.CHART_HINT_DRAG' | translate }} —
+                        {{ 'SESSION_ANALYSIS.CHART_HINT_PAN' | translate }}
+                      </li>
+                      <li>
+                        <kbd>{{ 'SESSION_ANALYSIS.CHART_HINT_DRAG' | translate }}</kbd> —
+                        {{ 'SESSION_ANALYSIS.CHART_HINT_SELECT' | translate }}
+                      </li>
+                    </ul>
+                  </span>
+                </button>
+              </div>
+              @if (!fit.loading && !fit.error && fit.records.length > 0) {
+                @let headerZoneChips = (availableZoneChips$ | async) ?? [];
+                @if (headerZoneChips.length > 1) {
+                  <app-zone-filter-chips
+                    class="header-inline-filter"
+                    [chips]="headerZoneChips"
+                    [active]="zoneFilters$.value"
+                    (toggled)="toggleZoneFilter($event)"
+                    (cleared)="clearZoneFilters()"
+                  />
+                }
+                <!-- Mobile: zone + graph filters collapse into this dropdown (hidden on desktop). -->
+                <div class="filters-dropdown">
+                  <button
+                    type="button"
+                    class="filters-trigger"
+                    [class.active]="filtersMenuOpen"
+                    [attr.aria-expanded]="filtersMenuOpen"
+                    aria-haspopup="true"
+                    (click)="filtersMenuOpen = !filtersMenuOpen"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="14"
+                      height="14"
+                      aria-hidden="true"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M3 5h18l-7 8v6l-4 2v-8z" />
+                    </svg>
+                    {{ 'SESSION_ANALYSIS.FILTERS' | translate }}
+                  </button>
+                  @if (filtersMenuOpen) {
+                    <div class="filters-backdrop" (click)="filtersMenuOpen = false"></div>
+                    <div class="filters-menu" role="menu">
+                      @if (headerZoneChips.length > 1) {
+                        <div class="filters-menu-section">
+                          <span class="filters-menu-label">
+                            {{ 'SESSION_ANALYSIS.FILTER_ZONES' | translate }}
+                          </span>
+                          <app-zone-filter-chips
+                            [chips]="headerZoneChips"
+                            [active]="zoneFilters$.value"
+                            (toggled)="toggleZoneFilter($event)"
+                            (cleared)="clearZoneFilters()"
+                          />
+                        </div>
+                      }
+                      @if (metricFlags$ | async; as mf) {
+                        <div class="filters-menu-section">
+                          <span class="filters-menu-label">
+                            {{ 'SESSION_ANALYSIS.FILTER_GRAPHS' | translate }}
+                          </span>
+                          <app-metric-toggles
+                            [sportType]="mf.sportType"
+                            [hasPower]="mf.hasPower"
+                            [hasSpeed]="mf.hasSpeed"
+                            [hasCadence]="mf.hasCadence"
+                            [hasDrift]="mf.hasDrift"
+                            [showPrimary]="showPrimary"
+                            [showHR]="showHR"
+                            [showCadence]="showCadence"
+                            [showSpeed]="showSpeed"
+                            [showDrift]="showDrift"
+                            (metricToggled)="toggleMetric($event)"
+                          />
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+            <div class="chart-controls">
+              @let zb = (zoneBlocks$ | async) ?? [];
+              @let lapsAvail = displayBlocks.length > 0;
+              @let interpAvail = zb.length > 0;
+              <!-- One control for the block overlay: Raw (off) · Laps · Interpolated. -->
+              @let blockMode =
+                !showBlocks
+                  ? 'raw'
+                  : blockView === 'interpolated' && interpAvail
+                    ? 'interpolated'
+                    : 'laps';
               @if (
-                !fit.loading &&
-                !fit.error &&
-                fit.records.length > 0 &&
-                (zoneBlocks$ | async)?.length
+                !fit.loading && !fit.error && fit.records.length > 0 && blockMode === 'interpolated'
               ) {
                 <div class="smooth-control">
                   <span class="smooth-label">{{
@@ -55,102 +174,152 @@
                   <span class="smooth-value">{{ smoothFactor$.value }}</span>
                 </div>
               }
-            }
-            @if (displayBlocks.length && (zoneBlocks$ | async)?.length) {
-              <div class="view-toggle">
-                <button
-                  data-testid="block-view-toggle"
-                  class="toggle-pill"
-                  [class.active]="blockView === 'planned'"
-                  (click)="blockView = 'planned'"
-                >
-                  {{ 'SESSION_ANALYSIS.TOGGLE_PLANNED' | translate }}
-                </button>
-                <button
-                  data-testid="block-view-toggle"
-                  class="toggle-pill"
-                  [class.active]="blockView === 'interpolated'"
-                  (click)="blockView = 'interpolated'"
-                >
-                  {{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}
-                </button>
-              </div>
-            }
-          </div>
-        </div>
-        @if (!fit.loading && !fit.error && fit.records.length > 0) {
-          @let zoneChips = (availableZoneChips$ | async) ?? [];
-          @if (zoneChips.length > 1) {
-            <div class="chart-zone-filter">
-              <app-zone-filter-chips
-                [chips]="zoneChips"
-                [active]="zoneFilters$.value"
-                [dense]="true"
-                (toggled)="toggleZoneFilter($event)"
-                (cleared)="clearZoneFilters()"
-              />
-            </div>
-          }
-          <app-fit-timeseries-chart
-            [records]="fit.records"
-            [ftp]="ftp"
-            [sportType]="session.sportType"
-            [blockSummaries]="displayBlocks"
-            [blockColors]="(blockColors$ | async) ?? []"
-            [zoneBlocks]="(blockView === 'interpolated' ? (zoneBlocks$ | async) : null) ?? []"
-            [zoneFilters]="zoneFilters$ | async"
-            [enableBrush]="true"
-          />
-          @if (zoneAverages$ | async; as averages) {
-            <app-zone-averages-panel [averages]="averages" [sportType]="session.sportType" />
-          }
-        }
-        @if (!fit.loading && !fit.error && fit.records.length === 0) {
-          @if (displayBlocks.length > 0) {
-            @let sTotal = syntheticTotalDuration(displayBlocks);
-            @let sMax = syntheticMaxPower(displayBlocks, ftp);
-            <div class="synthetic-chart" data-testid="synthetic-block-chart">
-              @for (block of displayBlocks; track $index) {
-                <div
-                  class="synthetic-bar"
-                  [style.width.%]="syntheticBarWidthPct(block, sTotal)"
-                  [style.height.%]="syntheticBarHeightPct(block, sMax)"
-                  [style.background]="syntheticBarColor(block, ftp)"
-                  [attr.title]="
-                    block.label + ' · ' + (block.actualPower || block.targetPower) + 'W'
-                  "
-                ></div>
+              @if (lapsAvail || interpAvail) {
+                <div class="view-toggle" role="group" aria-label="Block overlay mode">
+                  <button
+                    class="toggle-pill"
+                    [class.active]="blockMode === 'raw'"
+                    (click)="setBlockMode('raw')"
+                  >
+                    {{ 'SESSION_ANALYSIS.TOGGLE_RAW' | translate }}
+                  </button>
+                  @if (lapsAvail) {
+                    <button
+                      data-testid="block-view-toggle"
+                      class="toggle-pill"
+                      [class.active]="blockMode === 'laps'"
+                      (click)="setBlockMode('laps')"
+                    >
+                      {{ 'SESSION_ANALYSIS.TOGGLE_LAPS' | translate }}
+                    </button>
+                  }
+                  @if (interpAvail) {
+                    <button
+                      data-testid="block-view-toggle"
+                      class="toggle-pill"
+                      [class.active]="blockMode === 'interpolated'"
+                      (click)="setBlockMode('interpolated')"
+                    >
+                      <span class="pill-text-full">
+                        {{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED' | translate }}
+                      </span>
+                      <span class="pill-text-short">
+                        {{ 'SESSION_ANALYSIS.TOGGLE_INTERPOLATED_SHORT' | translate }}
+                      </span>
+                    </button>
+                  }
+                </div>
+              }
+              @if (!fit.loading && !fit.error && fit.records.length > 0) {
+                @if (metricFlags$ | async; as mf) {
+                  <app-metric-toggles
+                    [sportType]="mf.sportType"
+                    [hasPower]="mf.hasPower"
+                    [hasSpeed]="mf.hasSpeed"
+                    [hasCadence]="mf.hasCadence"
+                    [hasDrift]="mf.hasDrift"
+                    [showPrimary]="showPrimary"
+                    [showHR]="showHR"
+                    [showCadence]="showCadence"
+                    [showSpeed]="showSpeed"
+                    [showDrift]="showDrift"
+                    (metricToggled)="toggleMetric($event)"
+                  />
+                }
               }
             </div>
-            <p class="synthetic-hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
-          } @else {
-            <div class="no-fit-msg">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                opacity="0.4"
-              >
-                <path d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323" />
-                <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5" />
-              </svg>
-              <p>{{ 'SESSION_ANALYSIS.NO_FIT_DATA' | translate }}</p>
-              <p class="hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
+          </div>
+          @if (!fit.loading && !fit.error && fit.records.length > 0) {
+            <app-fit-timeseries-chart
+              [records]="fit.records"
+              [ftp]="ftp"
+              [sportType]="session.sportType"
+              [blockSummaries]="displayBlocks"
+              [blockColors]="(blockColors$ | async) ?? []"
+              [zoneBlocks]="(blockView === 'interpolated' ? (zoneBlocks$ | async) : null) ?? []"
+              [zoneFilters]="zoneFilters$ | async"
+              [enableBrush]="true"
+              [showBlocks]="showBlocks"
+              [showPrimary]="showPrimary"
+              [showHR]="showHR"
+              [showCadence]="showCadence"
+              [showSpeed]="showSpeed"
+              [showDrift]="showDrift"
+              [externalHoverIdx]="syncHoverIdx"
+              (hoverIndexChange)="syncHoverIdx = $event"
+              (selectionStatsChange)="selectionStats = $event"
+            />
+          }
+          @if (!fit.loading && !fit.error && fit.records.length === 0) {
+            @if (displayBlocks.length > 0) {
+              @let sTotal = syntheticTotalDuration(displayBlocks);
+              @let sMax = syntheticMaxPower(displayBlocks, ftp);
+              <div class="synthetic-chart" data-testid="synthetic-block-chart">
+                @for (block of displayBlocks; track $index) {
+                  <div
+                    class="synthetic-bar"
+                    [style.width.%]="syntheticBarWidthPct(block, sTotal)"
+                    [style.height.%]="syntheticBarHeightPct(block, sMax)"
+                    [style.background]="syntheticBarColor(block, ftp)"
+                    [attr.title]="
+                      block.label + ' · ' + (block.actualPower || block.targetPower) + 'W'
+                    "
+                  ></div>
+                }
+              </div>
+              <p class="synthetic-hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
+            } @else {
+              <div class="no-fit-msg">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  opacity="0.4"
+                >
+                  <path
+                    d="M3 3l18 18M10.5 10.677A2 2 0 0 0 10 12a2 2 0 0 0 4 0 2 2 0 0 0-.5-1.323"
+                  />
+                  <path d="M3 10l3 2 2-4 2 7 2-5 2 2h5" />
+                </svg>
+                <p>{{ 'SESSION_ANALYSIS.NO_FIT_DATA' | translate }}</p>
+                <p class="hint">{{ 'SESSION_ANALYSIS.NO_FIT_HINT' | translate }}</p>
+              </div>
+            }
+          }
+          @if (fit.loading) {
+            <app-chart-panel-skeleton height="380px" [showHeader]="false" />
+          }
+          @if (fit.error) {
+            <div class="no-fit-msg error">
+              {{ 'SESSION_ANALYSIS.FIT_LOAD_ERROR' | translate }}
             </div>
           }
-        }
-        @if (fit.loading) {
-          <app-chart-panel-skeleton height="380px" [showHeader]="false" />
-        }
-        @if (fit.error) {
-          <div class="no-fit-msg error">
-            {{ 'SESSION_ANALYSIS.FIT_LOAD_ERROR' | translate }}
-          </div>
+        </div>
+        @if (fit.hasGps) {
+          <app-session-route-map
+            class="route-map-col"
+            [records]="fit.records"
+            [recordColors]="(recordColors$ | async) ?? []"
+            [hoverIdx]="syncHoverIdx"
+            (hoverIndexChange)="syncHoverIdx = $event"
+          />
         }
       </div>
+
+      <!-- Drag-to-select range stats — its own panel, mirrors the zone-averages panel -->
+      @if (!fit.loading && !fit.error && fit.records.length > 0 && selectionStats) {
+        <app-selection-stats-panel [stats]="selectionStats" [sportType]="session.sportType" />
+      }
+
+      <!-- Averages over the active zone filter — its own panel below the chart/map row -->
+      @if (!fit.loading && !fit.error && fit.records.length > 0) {
+        @if (zoneAverages$ | async; as averages) {
+          <app-zone-averages-panel [averages]="averages" [sportType]="session.sportType" />
+        }
+      }
 
       <!-- Zone Distribution -->
       @if (!fit.loading && !fit.error && fit.records.length > 0) {
@@ -215,8 +384,8 @@
       }
     }
 
-    <!-- Block breakdown -->
-    @if (displayBlocks.length || (zoneBlocks$ | async)?.length) {
+    <!-- Block breakdown (hidden in Raw mode — nothing to break down) -->
+    @if (showBlocks && (displayBlocks.length || (zoneBlocks$ | async)?.length)) {
       <app-block-breakdown-table
         [blockView]="blockView"
         [plannedBlocks]="(filteredPlannedBlocks$ | async) ?? []"
