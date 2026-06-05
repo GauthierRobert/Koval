@@ -590,31 +590,88 @@ export class FitTimeseriesChartComponent
   private isTouchHover = false;
   private gesture = new TouchScrubGesture();
   private readonly touchMoveListener = (e: TouchEvent) => this.handleTouchMove(e);
+  /** Long-press (1s hold) arms the tooltip on touch; a plain horizontal drag pans when zoomed. */
+  private static readonly LONG_PRESS_MS = 1000;
+  private longPressTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastTouchX = 0;
+  private lastTouchY = 0;
+  // Touch pan anchors (same shape as the desktop Ctrl-drag pan).
+  private touchPan: { startClientX: number; startViewStart: number; startViewEnd: number } | null =
+    null;
 
   onTouchStart(event: TouchEvent): void {
     if (event.touches.length >= 2) {
+      this.cancelLongPress();
       this.beginPinch(event);
       return;
     }
-    if (!this.showTooltip) return;
     const touch = event.touches[0];
     if (!touch) return;
     const canvas = event.currentTarget as HTMLCanvasElement;
     this.gesture.begin(canvas, touch.clientX, touch.clientY);
-    this.isTouchHover = true;
-    this.computeHoverAt(canvas, touch.clientX, touch.clientY);
+    this.lastTouchX = touch.clientX;
+    this.lastTouchY = touch.clientY;
+    // Tooltip only appears after a 1s hold; until then a horizontal drag pans (when zoomed).
+    if (this.showTooltip) this.scheduleLongPress(canvas);
   }
 
   onTouchEnd(event?: TouchEvent): void {
     // End the pinch once fewer than two fingers remain on the surface.
     if (!event || event.touches.length < 2) this.pinch = null;
+    this.cancelLongPress();
+    this.touchPan = null;
     this.gesture.end();
     this.isTouchHover = false;
     this.onMouseLeave();
   }
 
+  private scheduleLongPress(canvas: HTMLCanvasElement): void {
+    this.cancelLongPress();
+    this.longPressTimer = setTimeout(() => {
+      this.longPressTimer = null;
+      // Only arm the tooltip if the finger hasn't committed to a pan/scroll.
+      if (!this.gesture.forceScrub()) return;
+      navigator.vibrate?.(15);
+      this.zone.run(() => {
+        this.isTouchHover = true;
+        this.computeHoverAt(canvas, this.lastTouchX, this.lastTouchY);
+        this.cdr.detectChanges();
+      });
+    }, FitTimeseriesChartComponent.LONG_PRESS_MS);
+  }
+
+  private cancelLongPress(): void {
+    if (this.longPressTimer !== null) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+    }
+  }
+
+  private applyTouchPan(clientX: number): void {
+    if (!this.touchPan) {
+      const full = this.fullDurationSec();
+      if (full <= 0) return;
+      this.touchPan = {
+        startClientX: clientX,
+        startViewStart: this.viewStartSec ?? 0,
+        startViewEnd: this.viewEndSec ?? full,
+      };
+      return;
+    }
+    const geom = this.plotGeometry();
+    if (!geom || geom.cW <= 0) return;
+    const span = this.touchPan.startViewEnd - this.touchPan.startViewStart;
+    if (span <= 0) return;
+    const shift = -((clientX - this.touchPan.startClientX) / geom.cW) * span;
+    this.zone.run(() => {
+      this.applyView(this.touchPan!.startViewStart + shift, this.touchPan!.startViewEnd + shift);
+      this.cdr.detectChanges();
+    });
+  }
+
   private handleTouchMove(event: TouchEvent): void {
     if (event.touches.length >= 2) {
+      this.cancelLongPress();
       this.handlePinchMove(event);
       return;
     }
@@ -622,21 +679,29 @@ export class FitTimeseriesChartComponent
     const touch = event.touches[0];
     const canvas = this.gesture.activeCanvas;
     if (!touch || !canvas) return;
+    this.lastTouchX = touch.clientX;
+    this.lastTouchY = touch.clientY;
 
-    const resolved = this.gesture.classify(touch.clientX, touch.clientY);
+    const resolved = this.gesture.classify(touch.clientX, touch.clientY, this.isZoomed);
+    if (resolved === 'undecided') return; // jitter — keep waiting for the long-press
+    if (resolved !== 'scrub') this.cancelLongPress();
+
+    if (resolved === 'pan') {
+      if (event.cancelable) event.preventDefault();
+      this.applyTouchPan(touch.clientX);
+      return;
+    }
     if (resolved === 'scroll') {
       this.onMouseLeave();
       this.cdr.detectChanges();
       return;
     }
 
+    // Scrub (long-press armed): the finger drives the tooltip crosshair.
     this.isTouchHover = true;
     this.computeHoverAt(canvas, touch.clientX, touch.clientY);
     this.cdr.detectChanges();
-
-    if (resolved === 'scrub' && event.cancelable) {
-      event.preventDefault();
-    }
+    if (event.cancelable) event.preventDefault();
   }
 
   private touchCanvases(): (HTMLCanvasElement | undefined)[] {

@@ -118,6 +118,7 @@ public class NotificationService {
             case "waitingListPromoted" -> prefs.waitingListPromoted();
             case "planActivated" -> prefs.planActivated();
             case "clubAnnouncement" -> prefs.clubAnnouncement();
+            case "sessionImported" -> prefs.sessionImported();
             default -> true;
         };
     }

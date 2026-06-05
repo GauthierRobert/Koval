@@ -67,7 +67,7 @@ public class ZwiftActivitySyncService {
 
             try {
                 CompletedSession session = mapper.map(activity);
-                CompletedSession saved = sessionService.saveSession(session, userId);
+                CompletedSession saved = sessionService.saveSession(session, userId, false);
                 importedSessions.add(saved);
             } catch (RuntimeException e) {
                 log.warn("Failed to import Zwift activity {}: {}", zwiftId, e.getMessage());

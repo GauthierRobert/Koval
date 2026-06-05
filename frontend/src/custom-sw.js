@@ -34,3 +34,28 @@ messaging.onBackgroundMessage((payload) => {
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const data = event.notification.data || {};
+  let url = '/';
+  if (data.type === 'SESSION_IMPORTED' && data.sessionId) {
+    url = '/history/' + data.sessionId;
+  } else if (data.type === 'TRAINING_ASSIGNED') {
+    url = '/calendar';
+  } else if (data.clubId) {
+    url = '/clubs/' + data.clubId;
+  }
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      const client = windowClients.find((c) => 'focus' in c);
+      if (client) {
+        client.focus();
+        if ('navigate' in client) return client.navigate(url);
+        return undefined;
+      }
+      return clients.openWindow(url);
+    }),
+  );
+});

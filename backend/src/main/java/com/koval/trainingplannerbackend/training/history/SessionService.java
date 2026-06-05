@@ -78,13 +78,21 @@ public class SessionService {
      * Save a completed session: compute metrics, auto-associate, link to schedule, update user load.
      */
     public CompletedSession saveSession(CompletedSession session, String userId) {
+        return saveSession(session, userId, true);
+    }
+
+    /**
+     * Save a completed session. Pass {@code notifyUser = false} from bulk history imports
+     * so the athlete is not pushed one notification per imported activity.
+     */
+    public CompletedSession saveSession(CompletedSession session, String userId, boolean notifyUser) {
         prepareSession(session, userId);
         deleteSyntheticIfLinked(session);
 
         CompletedSession saved = repository.save(session);
 
         postSaveSideEffects(saved, userId);
-        eventPublisher.publishEvent(new SessionCompletedEvent(saved));
+        eventPublisher.publishEvent(new SessionCompletedEvent(saved, notifyUser));
         return saved;
     }
 
@@ -244,7 +252,8 @@ public class SessionService {
 
         session.setClubSessionId(clubSessionId);
         CompletedSession saved = repository.save(session);
-        eventPublisher.publishEvent(new SessionCompletedEvent(saved));
+        // Re-publish for the club feed only — the session itself is not new.
+        eventPublisher.publishEvent(new SessionCompletedEvent(saved, false));
         return saved;
     }
 

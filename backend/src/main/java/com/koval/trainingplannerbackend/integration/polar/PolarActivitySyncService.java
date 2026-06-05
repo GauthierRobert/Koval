@@ -93,7 +93,7 @@ public class PolarActivitySyncService {
             }
             try {
                 CompletedSession mapped = mapper.map(exercise);
-                imported.add(sessionService.saveSession(mapped, userId));
+                imported.add(sessionService.saveSession(mapped, userId, false));
             } catch (RuntimeException e) {
                 log.warn("Failed to import Polar exercise {}: {}", polarId, e.getMessage());
                 skippedErrors++;

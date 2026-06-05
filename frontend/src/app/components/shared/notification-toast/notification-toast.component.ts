@@ -147,7 +147,9 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
   onToastClick(): void {
     this.visible$.next(false);
     const type = this.data['type'];
-    if (type === 'TRAINING_ASSIGNED') {
+    if (type === 'SESSION_IMPORTED' && this.data['sessionId']) {
+      this.router.navigate(['/history', this.data['sessionId']]);
+    } else if (type === 'TRAINING_ASSIGNED') {
       this.router.navigate(['/calendar']);
     } else if (
       type === 'SESSION_CREATED' ||

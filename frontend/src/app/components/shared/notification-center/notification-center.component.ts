@@ -247,7 +247,9 @@ export class NotificationCenterComponent implements OnInit {
   private navigateForNotification(n: PersistedNotification): void {
     const data = n.data ?? {};
     const type = n.type ?? data['type'];
-    if ((type === 'workoutAssigned' || type === 'TRAINING_ASSIGNED') && data['trainingId']) {
+    if ((type === 'sessionImported' || type === 'SESSION_IMPORTED') && data['sessionId']) {
+      this.router.navigate(['/history', data['sessionId']]);
+    } else if ((type === 'workoutAssigned' || type === 'TRAINING_ASSIGNED') && data['trainingId']) {
       this.router.navigate(['/dashboard']);
     } else if ((type === 'clubSessionCreated' || type === 'SESSION_CREATED') && data['clubId']) {
       this.router.navigate(['/clubs', data['clubId']]);

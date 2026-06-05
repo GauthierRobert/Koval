@@ -12,7 +12,8 @@ public record NotificationPreferences(
         Boolean waitingListPromoted,
         Boolean planActivated,
         Boolean clubAnnouncement,
-        Boolean openSessionCreated
+        Boolean openSessionCreated,
+        Boolean sessionImported
 ) {
     public NotificationPreferences {
         workoutAssigned = workoutAssigned != null ? workoutAssigned : true;
@@ -24,9 +25,10 @@ public record NotificationPreferences(
         planActivated = planActivated != null ? planActivated : true;
         clubAnnouncement = clubAnnouncement != null ? clubAnnouncement : true;
         openSessionCreated = openSessionCreated != null ? openSessionCreated : true;
+        sessionImported = sessionImported != null ? sessionImported : true;
     }
 
     public NotificationPreferences() {
-        this(true, true, false, true, true, true, true, true, true);
+        this(true, true, false, true, true, true, true, true, true, true);
     }
 }

@@ -198,6 +198,8 @@
     "ZWIFT_AUTO_SYNC_WORKOUTS": "Envoyer automatiquement les nouveaux entraînements vélo vers Zwift",
     "POLAR_IMPORT_HISTORY": "IMPORTER",
     "POLAR_IMPORTING": "IMPORTATION...",
+    "SUUNTO_IMPORT_HISTORY": "IMPORTER",
+    "SUUNTO_IMPORTING": "IMPORTATION...",
     "NOLIO_AUTO_SYNC_WORKOUTS": "Envoyer automatiquement les nouveaux entraînements vers Nolio",
     "BTN_UNLINK": "DISSOCIER",
     "BTN_CONNECT": "CONNECTER",
@@ -2219,7 +2221,8 @@
     "CLUB_SESSION_CREATED": "Nouvelle session de club créée",
     "CLUB_SESSION_CANCELLED": "Session de club annulée",
     "WAITING_LIST_PROMOTED": "Promotion de la liste d'attente",
-    "PLAN_ACTIVATED": "Plan d'entraînement activé"
+    "PLAN_ACTIVATED": "Plan d'entraînement activé",
+    "SESSION_IMPORTED": "Nouvelle séance importée"
   },
   "NOTIFICATION_CENTER": {
     "TITLE": "Notifications",

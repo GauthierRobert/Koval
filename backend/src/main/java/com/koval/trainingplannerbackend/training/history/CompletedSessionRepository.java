@@ -27,6 +27,9 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
     @Query(value = "{ 'userId': ?0, 'polarActivityId': { $ne: null } }", fields = "{ 'polarActivityId': 1 }")
     List<CompletedSession> findPolarActivityIdsByUserId(String userId);
 
+    @Query(value = "{ 'userId': ?0, 'suuntoActivityId': { $ne: null } }", fields = "{ 'suuntoActivityId': 1 }")
+    List<CompletedSession> findSuuntoActivityIdsByUserId(String userId);
+
     Optional<CompletedSession> findByUserIdAndNolioActivityId(String userId, String nolioActivityId);
 
     /** Sessions the athlete classified as the race effort itself, projected to the fields needed to map a race goal to its session. */
@@ -47,6 +50,13 @@ public interface CompletedSessionRepository extends MongoRepository<CompletedSes
             List<String> userIds, LocalDateTime from, LocalDateTime to);
 
     List<CompletedSession> findByUserIdAndGroupId(String userId, String groupId);
+
+    /**
+     * Sessions whose TSS is missing or only RPE-estimated — i.e. candidates for a metrics
+     * recompute once the user's threshold references (FTP/FTPace/CSS) become available.
+     */
+    @Query("{ 'userId': ?0, $or: [ { 'tss': null }, { 'tssFromRpe': true } ] }")
+    List<CompletedSession> findMetricsBackfillCandidatesByUserId(String userId);
 
     /**
      * Sessions with a GridFS FIT pointer but no GCS object yet — i.e. waiting to

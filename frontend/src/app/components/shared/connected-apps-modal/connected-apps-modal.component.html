@@ -220,9 +220,22 @@
             </div>
           </div>
           @if (user.linkedAccounts?.suunto) {
-            <button class="unlink-btn" [disabled]="unlinking" (click)="unlinkApp('suunto')">
-              {{ 'SETTINGS.BTN_UNLINK' | translate }}
-            </button>
+            <div class="app-actions">
+              <button
+                class="connect-btn"
+                [disabled]="(suuntoImporting$ | async) ?? false"
+                (click)="importSuuntoHistory()"
+              >
+                {{
+                  (suuntoImporting$ | async)
+                    ? ('SETTINGS.SUUNTO_IMPORTING' | translate)
+                    : ('SETTINGS.SUUNTO_IMPORT_HISTORY' | translate)
+                }}
+              </button>
+              <button class="unlink-btn" [disabled]="unlinking" (click)="unlinkApp('suunto')">
+                {{ 'SETTINGS.BTN_UNLINK' | translate }}
+              </button>
+            </div>
           } @else {
             <button class="connect-btn" (click)="connectSuunto()">
               {{ 'SETTINGS.BTN_CONNECT' | translate }}

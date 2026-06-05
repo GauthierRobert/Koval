@@ -23,6 +23,7 @@ export interface NotificationPreferences {
   clubSessionCancelled: boolean;
   waitingListPromoted: boolean;
   planActivated: boolean;
+  sessionImported: boolean;
 }
 
 @Component({
@@ -107,6 +108,15 @@ export interface NotificationPreferences {
               <input
                 type="checkbox"
                 [(ngModel)]="prefs.planActivated"
+                (ngModelChange)="save(prefs)"
+              />
+              <span class="toggle-track"></span>
+            </label>
+            <label class="notif-toggle">
+              <span class="notif-label">{{ 'NOTIFICATIONS.SESSION_IMPORTED' | translate }}</span>
+              <input
+                type="checkbox"
+                [(ngModel)]="prefs.sessionImported"
                 (ngModelChange)="save(prefs)"
               />
               <span class="toggle-track"></span>
@@ -281,6 +291,7 @@ export class NotificationPreferencesComponent implements OnInit {
             clubSessionCancelled: true,
             waitingListPromoted: true,
             planActivated: true,
+            sessionImported: true,
           }),
         ),
     });

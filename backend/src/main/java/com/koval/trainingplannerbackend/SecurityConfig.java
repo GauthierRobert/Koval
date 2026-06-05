@@ -69,6 +69,7 @@ public class SecurityConfig {
                             .requestMatchers("/api/webhooks/terra").permitAll()
                             .requestMatchers("/api/integration/nolio/callback").permitAll()
                             .requestMatchers("/api/integration/polar/webhook").permitAll()
+                            .requestMatchers("/api/integration/suunto/webhook").permitAll()
                             .requestMatchers("/.well-known/oauth-authorization-server",
                                     "/.well-known/oauth-protected-resource",
                                     "/.well-known/oauth-protected-resource/**",

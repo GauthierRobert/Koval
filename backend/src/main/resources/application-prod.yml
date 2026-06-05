@@ -39,6 +39,8 @@ suunto:
   client-id: ${SUUNTO_CLIENT_ID:}
   client-secret: ${SUUNTO_CLIENT_SECRET:}
   redirect-uri: ${SUUNTO_REDIRECT_URI:}
+  subscription-key: ${SUUNTO_SUBSCRIPTION_KEY:}
+  guides-owner: ${SUUNTO_GUIDES_OWNER:Koval}
 
 club-feed:
   broker:

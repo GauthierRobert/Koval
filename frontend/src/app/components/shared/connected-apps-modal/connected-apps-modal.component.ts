@@ -43,6 +43,7 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
 
   user$ = this.authService.user$;
   polarImporting$ = this.polarSync.importing$;
+  suuntoImporting$ = this.suuntoSync.importing$;
   unlinking = false;
   readonly isProd = environment.production;
 
@@ -208,6 +209,19 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
           this.toast.show(msg, 'success');
         },
         error: (err) => this.reportConnectError(err, 'Polar import'),
+      });
+  }
+
+  importSuuntoHistory(): void {
+    this.suuntoSync
+      .importHistory()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          const msg = `Suunto: ${result.newlyImported} new, ${result.skippedDuplicates} duplicate, ${result.skippedErrors} error${result.skippedErrors === 1 ? '' : 's'}`;
+          this.toast.show(msg, 'success');
+        },
+        error: (err) => this.reportConnectError(err, 'Suunto import'),
       });
   }
 

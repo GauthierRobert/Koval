@@ -1,0 +1,144 @@
+openapi: 3.1.0
+info:
+  title: Training Planner - Suunto Integration API
+  version: 1.0.0
+  description: Suunto OAuth linking, activity sync (FIT import), and SuuntoPlus guide auto-push.
+
+servers:
+  - url: http://localhost:8080
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/integration/suunto/auth:
+    get:
+      operationId: getSuuntoAuthUrl
+      summary: Get the Suunto OAuth authorization URL for account linking
+      responses:
+        "200":
+          description: Authorization URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authUrl:
+                    type: string
+        "400":
+          description: Suunto integration is not configured
+
+  /api/integration/suunto/callback:
+    post:
+      operationId: completeSuuntoOAuth
+      summary: Complete the OAuth flow and link Suunto to the authenticated account
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: Suunto did not return a user id
+
+  /api/integration/suunto/import-history:
+    post:
+      operationId: importSuuntoHistory
+      summary: Backfill recently synced Suunto workouts as completed sessions
+      description: >
+        Imports workouts synced to Suunto in the last 30 days. Idempotent — already-imported
+        workouts (deduped on the Suunto workout key) are skipped, so re-clicking only imports
+        what's new. The full FIT file is stored per workout and drives power/NP/normalized-speed
+        metrics. New workouts otherwise arrive via the webhook.
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncResult"
+
+  /api/integration/suunto/auto-push:
+    put:
+      operationId: setSuuntoAutoPush
+      summary: Toggle auto-push of scheduled workouts to the watch as SuuntoPlus guides
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: Suunto is not connected for this user
+
+  /api/integration/suunto/webhook:
+    post:
+      operationId: receiveSuuntoWebhook
+      summary: Receive a Suunto workout notification (unauthenticated, called by Suunto)
+      description: >
+        The callback URL is configured statically in the Suunto API zone app profile. Suunto
+        POSTs `username` and `workoutid` for each newly synced workout; the import runs
+        asynchronously and the endpoint always acks 200.
+      security: []
+      parameters:
+        - name: username
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: workoutid
+          in: query
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                workoutid:
+                  type: string
+      responses:
+        "200":
+          description: Acknowledged
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SyncResult:
+      type: object
+      properties:
+        totalFetched:
+          type: integer
+        newlyImported:
+          type: integer
+        skippedDuplicates:
+          type: integer
+        skippedErrors:
+          type: integer

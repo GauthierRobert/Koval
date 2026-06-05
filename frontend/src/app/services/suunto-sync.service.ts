@@ -1,12 +1,19 @@
 import { inject, Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService, User } from './auth.service';
 
 export interface SuuntoAuthUrlResponse {
   authUrl: string;
+}
+
+export interface SuuntoSyncResult {
+  totalFetched: number;
+  newlyImported: number;
+  skippedDuplicates: number;
+  skippedErrors: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -17,6 +24,9 @@ export class SuuntoSyncService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private ngZone = inject(NgZone);
+
+  private importingSubject = new BehaviorSubject<boolean>(false);
+  importing$ = this.importingSubject.asObservable();
 
   getAuthUrl(): Observable<SuuntoAuthUrlResponse> {
     return this.http.get<SuuntoAuthUrlResponse>(`${this.suuntoUrl}/auth`);
@@ -39,5 +49,15 @@ export class SuuntoSyncService {
     return this.http
       .put<User>(`${this.suuntoUrl}/auto-push`, { enabled })
       .pipe(tap((user) => this.ngZone.run(() => this.authService.updateUser(user))));
+  }
+
+  importHistory(): Observable<SuuntoSyncResult> {
+    this.importingSubject.next(true);
+    return this.http.post<SuuntoSyncResult>(`${this.suuntoUrl}/import-history`, {}).pipe(
+      tap({
+        next: () => this.ngZone.run(() => this.importingSubject.next(false)),
+        error: () => this.ngZone.run(() => this.importingSubject.next(false)),
+      }),
+    );
   }
 }

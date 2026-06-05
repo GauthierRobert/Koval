@@ -120,7 +120,7 @@ public class StravaActivitySyncService {
                     log.warn("Failed to fetch laps for Strava activity {}: {}", stravaId, lapEx.getMessage());
                 }
 
-                CompletedSession saved = sessionService.saveSession(session, userId);
+                CompletedSession saved = sessionService.saveSession(session, userId, false);
 
                 // Fetch streams and build FIT file (non-fatal if it fails)
                 try {

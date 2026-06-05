@@ -1,11 +1,13 @@
 package com.koval.trainingplannerbackend.auth;
 
 import com.koval.trainingplannerbackend.config.exceptions.ResourceNotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -13,10 +15,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final AliasGenerator aliasGenerator;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public UserService(UserRepository userRepository, AliasGenerator aliasGenerator) {
+    public UserService(UserRepository userRepository, AliasGenerator aliasGenerator,
+                       ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.aliasGenerator = aliasGenerator;
+        this.eventPublisher = eventPublisher;
     }
 
     public User getUserById(String userId) {
@@ -59,8 +64,11 @@ public class UserService {
 
     public User updateFtp(String userId, Integer ftp) {
         User user = getUserById(userId);
+        Integer previousFtp = user.getFtp();
         user.setFtp(ftp);
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        publishIfThresholdChanged(userId, previousFtp, ftp);
+        return saved;
     }
 
     public User updateProfile(String userId, String displayName, String email) {
@@ -142,6 +150,11 @@ public class UserService {
             }
         }
         userRepository.save(user);
+        switch (target) {
+            case FTP, FUNCTIONAL_THRESHOLD_PACE, CRITICAL_SWIM_SPEED ->
+                    publishIfThresholdChanged(userId, previous, newValue);
+            default -> { }
+        }
         return previous;
     }
 
@@ -153,6 +166,9 @@ public class UserService {
             Map<String, Integer> customZoneReferenceValues,
             String aiPrePrompt, Boolean aiPrePromptEnabled) {
         User user = getUserById(userId);
+        boolean thresholdChanged = !Objects.equals(user.getFtp(), ftp)
+                || !Objects.equals(user.getFunctionalThresholdPace(), functionalThresholdPace)
+                || !Objects.equals(user.getCriticalSwimSpeed(), criticalSwimSpeed);
         // Always set all fields — null means "clear this value"
         user.setFtp(ftp);
         user.setWeightKg(weightKg);
@@ -174,12 +190,20 @@ public class UserService {
         if (aiPrePromptEnabled != null) {
             user.setAiPrePromptEnabled(aiPrePromptEnabled);
         }
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        if (thresholdChanged) {
+            eventPublisher.publishEvent(new ThresholdReferenceChangedEvent(userId));
+        }
+        return saved;
     }
 
     public User completeOnboarding(String userId, UserRole role, Integer ftp, Integer weightKg,
             Integer criticalSwimSpeed, Integer functionalThresholdPace, Boolean cguAccepted) {
         User user = getUserById(userId);
+        boolean thresholdChanged = (ftp != null && !Objects.equals(user.getFtp(), ftp))
+                || (criticalSwimSpeed != null && !Objects.equals(user.getCriticalSwimSpeed(), criticalSwimSpeed))
+                || (functionalThresholdPace != null
+                        && !Objects.equals(user.getFunctionalThresholdPace(), functionalThresholdPace));
         if (role != null) user.setRole(role);
         if (ftp != null) user.setFtp(ftp);
         if (weightKg != null) user.setWeightKg(weightKg);
@@ -190,7 +214,11 @@ public class UserService {
             user.setCguVersion(CguConstants.CURRENT_VERSION);
         }
         user.setNeedsOnboarding(false);
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        if (thresholdChanged) {
+            eventPublisher.publishEvent(new ThresholdReferenceChangedEvent(userId));
+        }
+        return saved;
     }
 
     public User acceptCgu(String userId) {
@@ -198,6 +226,16 @@ public class UserService {
         user.setCguAcceptedAt(LocalDateTime.now());
         user.setCguVersion(CguConstants.CURRENT_VERSION);
         return userRepository.save(user);
+    }
+
+    /**
+     * Notifies listeners (e.g. session TSS backfill) that a threshold reference value
+     * (FTP, functional threshold pace, critical swim speed) actually changed.
+     */
+    private void publishIfThresholdChanged(String userId, Integer previous, Integer updated) {
+        if (!Objects.equals(previous, updated)) {
+            eventPublisher.publishEvent(new ThresholdReferenceChangedEvent(userId));
+        }
     }
 
     /**

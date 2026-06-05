@@ -133,6 +133,10 @@ suunto:
   client-id: ${SUUNTO_CLIENT_ID:}
   client-secret: ${SUUNTO_CLIENT_SECRET:}
   redirect-uri: ${SUUNTO_REDIRECT_URI:http://localhost:4200/auth/suunto/callback}
+  # APIM subscription key (Ocp-Apim-Subscription-Key header) — separate credential from the OAuth client id.
+  subscription-key: ${SUUNTO_SUBSCRIPTION_KEY:}
+  # Owner name shown on SuuntoPlus guides pushed to the watch.
+  guides-owner: ${SUUNTO_GUIDES_OWNER:Koval}
 
 zwift:
   enabled: ${ZWIFT_ENABLED:false}
