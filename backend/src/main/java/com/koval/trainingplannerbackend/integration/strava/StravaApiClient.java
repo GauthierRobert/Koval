@@ -63,14 +63,18 @@ public class StravaApiClient {
         return response.accessToken();
     }
 
+    /**
+     * Fetch all activities whose start date is within {@code (afterEpoch, beforeEpoch)}.
+     */
     @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> fetchActivitiesAfter(User user, long afterEpoch) {
+    public List<Map<String, Object>> fetchActivitiesBetween(User user, long afterEpoch, long beforeEpoch) {
         String token = ensureValidToken(user);
         List<Map<String, Object>> allActivities = new ArrayList<>();
         int page = 1;
 
         while (true) {
-            String url = ACTIVITIES_URL + "?after=" + afterEpoch + "&per_page=" + PAGE_SIZE + "&page=" + page;
+            String url = ACTIVITIES_URL + "?after=" + afterEpoch + "&before=" + beforeEpoch
+                    + "&per_page=" + PAGE_SIZE + "&page=" + page;
 
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(token);

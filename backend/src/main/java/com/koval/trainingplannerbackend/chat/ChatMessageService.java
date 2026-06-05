@@ -31,6 +31,7 @@ public class ChatMessageService {
     private final ChatAuthorizationService authorizationService;
     private final ChatRoomService chatRoomService;
     private final ChatSseBroadcaster broadcaster;
+    private final ChatNotificationService chatNotificationService;
     private final UserService userService;
 
     public ChatMessageService(ChatMessageRepository messageRepository,
@@ -38,12 +39,14 @@ public class ChatMessageService {
                               ChatAuthorizationService authorizationService,
                               ChatRoomService chatRoomService,
                               ChatSseBroadcaster broadcaster,
+                              ChatNotificationService chatNotificationService,
                               UserService userService) {
         this.messageRepository = messageRepository;
         this.membershipRepository = membershipRepository;
         this.authorizationService = authorizationService;
         this.chatRoomService = chatRoomService;
         this.broadcaster = broadcaster;
+        this.chatNotificationService = chatNotificationService;
         this.userService = userService;
     }
 
@@ -86,6 +89,9 @@ public class ChatMessageService {
         for (ChatRoomMembership m : members) {
             broadcaster.broadcast(m.getUserId(), "chat_message", response);
         }
+
+        // Push notification for members who aren't connected via SSE (async dispatch).
+        chatNotificationService.notifyNewMessage(response, members);
 
         return response;
     }

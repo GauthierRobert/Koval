@@ -50,8 +50,12 @@ public class StravaActivitySyncService {
     private static final int MAX_LOOKBACK_DAYS = 90;
 
     /**
-     * Manual history import: imports activities from the last {@code days} days
-     * (clamped to [1, 90]). Deduplicates against existing sessions.
+     * Manual history import: backfills activities from the last {@code days} days
+     * (clamped to [1, 90]) that predate the Strava link — activities since the link
+     * arrive via webhook. Ranges already covered by a previous import are skipped:
+     * the window is {@code [now - days, min(stravaOldestImportedAt, stravaLinkedAt)]},
+     * and {@code stravaOldestImportedAt} moves back to the window start afterwards.
+     * Deduplicates against existing sessions.
      */
     public SyncResult importHistory(String userId, int days) {
         User user = userRepository.findById(userId)
@@ -63,12 +67,24 @@ public class StravaActivitySyncService {
 
         int lookback = Math.min(Math.max(days, 1), MAX_LOOKBACK_DAYS);
         LocalDateTime windowStart = LocalDateTime.now().minusDays(lookback);
-        LocalDateTime earliest = user.getCreatedAt().minusDays(7);
-        LocalDateTime after = windowStart.isAfter(earliest) ? windowStart : earliest;
-        long afterEpoch = after.toEpochSecond(ZoneOffset.UTC);
+
+        // Legacy accounts predate stravaLinkedAt — fall back to account creation.
+        LocalDateTime linkedAt = user.getStravaLinkedAt() != null ? user.getStravaLinkedAt() : user.getCreatedAt();
+        LocalDateTime oldestImported = user.getStravaOldestImportedAt();
+        LocalDateTime windowEnd = oldestImported != null && oldestImported.isBefore(linkedAt)
+                ? oldestImported
+                : linkedAt;
+
+        if (!windowStart.isBefore(windowEnd)) {
+            // Requested range is already covered by previous imports — nothing to fetch.
+            return new SyncResult(0, 0, 0, 0, List.of());
+        }
+
+        long afterEpoch = windowStart.toEpochSecond(ZoneOffset.UTC);
+        long beforeEpoch = windowEnd.toEpochSecond(ZoneOffset.UTC);
 
         // Fetch activities from Strava
-        List<Map<String, Object>> activities = stravaApiClient.fetchActivitiesAfter(user, afterEpoch);
+        List<Map<String, Object>> activities = stravaApiClient.fetchActivitiesBetween(user, afterEpoch, beforeEpoch);
 
         // Load existing Strava activity IDs for deduplication
         Set<String> existingIds = sessionRepository.findStravaActivityIdsByUserId(userId)
@@ -120,7 +136,9 @@ public class StravaActivitySyncService {
             }
         }
 
-        // Update last sync timestamp
+        // Remember how far back we've imported so a re-click never re-scans this range,
+        // and update the last sync timestamp.
+        user.setStravaOldestImportedAt(windowStart);
         user.setStravaLastSyncAt(LocalDateTime.now());
         userRepository.save(user);
 

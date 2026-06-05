@@ -53,6 +53,7 @@ public class AccountLinkingService {
                 user.setStravaAccessToken(accessToken);
                 user.setStravaRefreshToken(refreshToken);
                 user.setStravaTokenExpiresAt(expiresAt);
+                user.setStravaLinkedAt(LocalDateTime.now());
                 user.setLastLogin(LocalDateTime.now());
                 assignAliasIfMissing(user);
                 return userRepository.save(user);
@@ -68,6 +69,7 @@ public class AccountLinkingService {
         newUser.setStravaAccessToken(accessToken);
         newUser.setStravaRefreshToken(refreshToken);
         newUser.setStravaTokenExpiresAt(expiresAt);
+        newUser.setStravaLinkedAt(LocalDateTime.now());
         newUser.setRole(UserRole.ATHLETE);
         newUser.setLastLogin(LocalDateTime.now());
         newUser.setNeedsOnboarding(true);
@@ -161,6 +163,7 @@ public class AccountLinkingService {
         user.setStravaAccessToken(accessToken);
         user.setStravaRefreshToken(refreshToken);
         user.setStravaTokenExpiresAt(expiresAt);
+        user.setStravaLinkedAt(LocalDateTime.now());
         return userRepository.save(user);
     }
 
@@ -312,6 +315,8 @@ public class AccountLinkingService {
         user.setStravaRefreshToken(null);
         user.setStravaTokenExpiresAt(null);
         user.setStravaLastSyncAt(null);
+        user.setStravaLinkedAt(null);
+        user.setStravaOldestImportedAt(null);
         if (user.getAuthProvider() == AuthProvider.STRAVA) {
             user.setAuthProvider(AuthProvider.GOOGLE);
         }

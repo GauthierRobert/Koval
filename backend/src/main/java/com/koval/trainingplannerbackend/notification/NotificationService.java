@@ -180,13 +180,19 @@ public class NotificationService {
     }
 
     private Map<String, Object> buildMessage(String token, String title, String body, Map<String, String> data) {
-        Map<String, Object> notification = Map.of("title", title, "body", body);
+        // Data-only message: the service worker's onBackgroundMessage is the single display
+        // path. A "notification" key would additionally be auto-displayed by both the FCM SDK
+        // and the Angular service worker, showing the same notification up to three times.
+        Map<String, String> payload = new HashMap<>();
+        if (data != null) {
+            payload.putAll(data);
+        }
+        payload.put("title", title);
+        payload.put("body", body);
+
         Map<String, Object> message = new HashMap<>();
         message.put("token", token);
-        message.put("notification", notification);
-        if (data != null && !data.isEmpty()) {
-            message.put("data", data);
-        }
+        message.put("data", payload);
         return message;
     }
 

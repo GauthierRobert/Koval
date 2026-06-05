@@ -63,6 +63,13 @@ public class User {
     private String stravaRefreshToken;
     private Long stravaTokenExpiresAt;
     private LocalDateTime stravaLastSyncAt;
+    // When Strava was connected. Activities after this arrive via webhook; the manual
+    // history import only backfills activities older than this. Null for legacy users
+    // (falls back to createdAt).
+    private LocalDateTime stravaLinkedAt;
+    // Oldest boundary already covered by a manual history import — re-imports only
+    // fetch activities older than this, so re-clicking a range never re-scans it.
+    private LocalDateTime stravaOldestImportedAt;
 
     // Garmin tokens (OAuth 1.0a)
     @Indexed(unique = true, sparse = true)

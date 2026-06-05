@@ -131,9 +131,11 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((payload) => {
-        this.title = payload.notification?.title || 'Notification';
-        this.body = payload.notification?.body || '';
-        this.data = (payload.data as Record<string, string>) || {};
+        // Backend sends data-only FCM messages — title/body live in payload.data.
+        const data = (payload.data as Record<string, string>) || {};
+        this.title = data['title'] || payload.notification?.title || 'Notification';
+        this.body = data['body'] || payload.notification?.body || '';
+        this.data = data;
         this.ngZone.run(() => this.visible$.next(true));
 
         if (this.dismissTimer) clearTimeout(this.dismissTimer);
@@ -147,7 +149,12 @@ export class NotificationToastComponent implements OnInit, OnDestroy {
     const type = this.data['type'];
     if (type === 'TRAINING_ASSIGNED') {
       this.router.navigate(['/calendar']);
-    } else if (type === 'SESSION_CREATED' || type === 'WAITING_LIST_PROMOTED' || type === 'SESSION_CANCELLED') {
+    } else if (
+      type === 'SESSION_CREATED' ||
+      type === 'WAITING_LIST_PROMOTED' ||
+      type === 'SESSION_CANCELLED' ||
+      type === 'CHAT_MESSAGE'
+    ) {
       const clubId = this.data['clubId'];
       if (clubId) {
         this.router.navigate(['/clubs', clubId]);

@@ -1,0 +1,65 @@
+﻿
+> training-planner-frontend@0.0.0 prebuild
+> node scripts/set-env.js
+
+Environment files generated from .env
+
+> training-planner-frontend@0.0.0 build
+> ng build
+
+[33m>[39m Building...
+[32m√[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m                     [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-YDEQDSO6.js[39m  [2m | [22m[2m-[22m                         [2m | [22m[36m199.30 kB[39m[2m | [22m               [36m57.55 kB[39m
+[32mchunk-OTWJZNNO.js[39m  [2m | [22m[2m-[22m                         [2m | [22m[36m167.37 kB[39m[2m | [22m               [36m35.72 kB[39m
+[32mmain-HIQP3HJT.js[39m   [2m | [22m[2mmain[22m                      [2m | [22m[36m139.24 kB[39m[2m | [22m               [36m25.89 kB[39m
+[32mchunk-UCHQDFIW.js[39m  [2m | [22m[2m-[22m                         [2m | [22m [36m92.77 kB[39m[2m | [22m               [36m23.34 kB[39m
+[32mstyles-ASCQ5JMX.css[39m[2m | [22m[2mstyles[22m                    [2m | [22m [36m53.99 kB[39m[2m | [22m               [36m10.09 kB[39m
+[32mchunk-SBGBC3F7.js[39m  [2m | [22m[2m-[22m                         [2m | [22m [36m49.58 kB[39m[2m | [22m               [36m13.68 kB[39m
+[32mchunk-4J5JYLBN.js[39m  [2m | [22m[2m-[22m                         [2m | [22m [36m39.64 kB[39m[2m | [22m                [36m9.62 kB[39m
+[32mchunk-L6TQEX3P.js[39m  [2m | [22m[2m-[22m                         [2m | [22m [36m37.98 kB[39m[2m | [22m                [36m7.76 kB[39m
+[32mchunk-5DEYSUQR.js[39m  [2m | [22m[2m-[22m                         [2m | [22m [36m18.48 kB[39m[2m | [22m                [36m5.30 kB[39m
+[32mchunk-EQBYG266.js[39m  [2m | [22m[2m-[22m                         [2m | [22m [36m12.80 kB[39m[2m | [22m                [36m3.45 kB[39m
+[32mchunk-47JEG2EL.js[39m  [2m | [22m[2m-[22m                         [2m | [22m [36m12.74 kB[39m[2m | [22m                [36m3.36 kB[39m
+[32mchunk-5P2EO6PU.js[39m  [2m | [22m[2m-[22m                         [2m | [22m [36m11.49 kB[39m[2m | [22m                [36m2.40 kB[39m
+[32mchunk-5JL6NLWB.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m9.82 kB[39m[2m | [22m                [36m2.72 kB[39m
+[32mchunk-WNBPFHPG.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m7.86 kB[39m[2m | [22m                [36m1.50 kB[39m
+[32mchunk-BB3DJGG5.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m4.97 kB[39m[2m | [22m                [36m1.60 kB[39m
+[32mchunk-EIEQT3SY.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m4.87 kB[39m[2m | [22m                [36m1.80 kB[39m
+[32mchunk-5IWRNWYM.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m4.11 kB[39m[2m | [22m              [36m977 bytes[39m
+[32mchunk-BHAVHYZY.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m3.48 kB[39m[2m | [22m                [36m1.22 kB[39m
+[32mchunk-2ZYDCLGD.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m2.21 kB[39m[2m | [22m              [36m676 bytes[39m
+[32mchunk-OG4GT434.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m1.56 kB[39m[2m | [22m              [36m585 bytes[39m
+[32mchunk-QLEHJN3N.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m1.15 kB[39m[2m | [22m              [36m485 bytes[39m
+[32mchunk-DCQ364NW.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m1.11 kB[39m[2m | [22m              [36m352 bytes[39m
+[32mchunk-BYOXVTDY.js[39m  [2m | [22m[2m-[22m                         [2m | [22m  [36m1.10 kB[39m[2m | [22m              [36m546 bytes[39m
+[32mchunk-OD3S4MF7.js[39m  [2m | [22m[2m-[22m                         [2m | [22m[36m978 bytes[39m[2m | [22m              [36m978 bytes[39m
+[32mchunk-UJ4FPRFM.js[39m  [2m | [22m[2m-[22m                         [2m | [22m[36m784 bytes[39m[2m | [22m              [36m784 bytes[39m
+[32mchunk-AMI2KC26.js[39m  [2m | [22m[2m-[22m                         [2m | [22m[36m674 bytes[39m[2m | [22m              [36m674 bytes[39m
+[32mchunk-ZAJWLIV3.js[39m  [2m | [22m[2m-[22m                         [2m | [22m[36m466 bytes[39m[2m | [22m              [36m466 bytes[39m
+[32mchunk-Z5K3KK27.js[39m  [2m | [22m[2m-[22m                         [2m | [22m[36m361 bytes[39m[2m | [22m              [36m361 bytes[39m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m             [2m | [22m[1m[93m880.90 kB[39m[22m[2m | [22m              [1m213.89 kB[22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m                     [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-BJZHR74S.js[39m  [2m | [22m[2mclub-detail-page-component[22m[2m | [22m[36m561.70 kB[39m[2m | [22m               [36m88.49 kB[39m
+[32mchunk-LDT3WJUZ.js[39m  [2m | [22m[2m-[22m                         [2m | [22m[36m155.04 kB[39m[2m | [22m               [36m29.45 kB[39m
+[32mchunk-BT6YMQTT.js[39m  [2m | [22m[2mworkout-builder-component[22m [2m | [22m[36m153.11 kB[39m[2m | [22m               [36m28.67 kB[39m
+[32mchunk-W7LDGYBG.js[39m  [2m | [22m[2m-[22m                         [2m | [22m[36m149.94 kB[39m[2m | [22m               [36m37.75 kB[39m
+[32mchunk-FYON4SLD.js[39m  [2m | [22m[2mcoach-dashboard-component[22m [2m | [22m[36m121.49 kB[39m[2m | [22m               [36m23.48 kB[39m
+[32mchunk-2O5FSN3P.js[39m  [2m | [22m[2mpacing-page-component[22m     [2m | [22m[36m107.53 kB[39m[2m | [22m               [36m19.81 kB[39m
+[32mchunk-QXMBA3NG.js[39m  [2m | [22m[2mcalendar-component[22m        [2m | [22m [36m95.66 kB[39m[2m | [22m               [36m17.50 kB[39m
+[32mchunk-AEGTORCN.js[39m  [2m | [22m[2mworkout-history-component[22m [2m | [22m [36m90.09 kB[39m[2m | [22m               [36m18.94 kB[39m
+[32mchunk-LRZFIZ5S.js[39m  [2m | [22m[2m-[22m                         [2m | [22m [36m63.42 kB[39m[2m | [22m               [36m13.45 kB[39m
+[32mchunk-L5PRV3YV.js[39m  [2m | [22m[2mraces-page-component[22m      [2m | [22m [36m61.25 kB[39m[2m | [22m               [36m13.24 kB[39m
+[32mchunk-NTU5KM7T.js[39m  [2m | [22m[2mplan-detail-page-component[22m[2m | [22m [36m56.73 kB[39m[2m | [22m               [36m10.71 kB[39m
+[32mchunk-L3L4V2QB.js[39m  [2m | [22m[2mdashboard-component[22m       [2m | [22m [36m55.97 kB[39m[2m | [22m               [36m13.07 kB[39m
+[32mchunk-7IUPF46Q.js[39m  [2m | [22m[2msession-comparison-page[22m   [2m | [22m [36m54.79 kB[39m[2m | [22m               [36m12.93 kB[39m
+[32mchunk-WO4ZFOUI.js[39m  [2m | [22m[2mshowcase-component[22m        [2m | [22m [36m51.85 kB[39m[2m | [22m               [36m10.00 kB[39m
+[32mchunk-YLSCEENO.js[39m  [2m | [22m[2m-[22m                         [2m | [22m [36m50.78 kB[39m[2m | [22m               [36m12.87 kB[39m
+[2m...and 62 more lazy chunks files. Use "--verbose" to show all the files.[22m
+
+Application bundle generation complete. [13.879 seconds] - 2026-06-05T10:31:42.901Z
+
+Output location: C:\Users\gauth\Documents\Dev Projects\training-planner-ai\training-planner-ai\frontend\dist\training-planner-frontend
+
