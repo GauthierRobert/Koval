@@ -4,7 +4,11 @@ import {Router} from '@angular/router';
 import {TranslateModule} from '@ngx-translate/core';
 import {BehaviorSubject, Observable, combineLatest, of} from 'rxjs';
 import {catchError, distinctUntilChanged, map, startWith, switchMap} from 'rxjs/operators';
-import {SavedSession} from '../../../../services/history.service';
+import {
+  SavedSession,
+  sessionDistanceMeters,
+  sessionMovingSeconds,
+} from '../../../../services/history.service';
 import {AuthService} from '../../../../services/auth.service';
 import {FitRecord, MetricsService} from '../../../../services/metrics.service';
 import {ZoneClassificationService} from '../../../../services/zone-classification.service';
@@ -86,9 +90,13 @@ export class LastActivityCardComponent {
     return new Date(date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
   }
 
+  movingSeconds(session: SavedSession): number {
+    return sessionMovingSeconds(session);
+  }
+
   formatFitDistance(session: SavedSession): string {
-    if (!session.avgSpeed || session.avgSpeed <= 0) return '—';
-    const meters = session.avgSpeed * session.totalDuration;
+    const meters = sessionDistanceMeters(session);
+    if (meters <= 0) return '—';
     if (session.sportType === 'SWIMMING') return `${Math.round(meters)}m`;
     return `${(meters / 1000).toFixed(1)} km`;
   }

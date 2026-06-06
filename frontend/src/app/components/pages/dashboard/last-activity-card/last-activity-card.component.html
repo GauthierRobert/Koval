@@ -39,7 +39,7 @@
     <div class="activity-stats mono">
       <div class="stat-cell">
         <span class="stat-label">{{ 'DASHBOARD.STATS_DURATION' | translate }}</span>
-        <span class="stat-value">{{ formatDuration(fit.totalDuration) }}</span>
+        <span class="stat-value">{{ formatDuration(movingSeconds(fit)) }}</span>
       </div>
       <div class="stat-cell">
         <span class="stat-label">{{ 'DASHBOARD.STATS_DISTANCE' | translate }}</span>

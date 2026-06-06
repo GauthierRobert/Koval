@@ -261,17 +261,24 @@ public class PowerCurveService {
         for (CompletedSession s : sessions) {
             double tss = Optional.ofNullable(s.getTss()).orElse(0.0);
             totalTss += tss;
-            totalDuration += s.getTotalDurationSeconds();
+            long duration = sessionDuration(s);
+            totalDuration += duration;
             double dist = sessionDistance(s);
             totalDistance += dist;
             String sport = Optional.ofNullable(s.getSportType()).orElse("CYCLING");
             sportTss.merge(sport, tss, Double::sum);
-            sportDuration.merge(sport, (long) s.getTotalDurationSeconds(), Long::sum);
+            sportDuration.merge(sport, duration, Long::sum);
             sportDistance.merge(sport, dist, Double::sum);
         }
 
         return new VolumeEntry(period, Math.round(totalTss * 10.0) / 10.0,
                 totalDuration, totalDistance, sportTss, sportDuration, sportDistance);
+    }
+
+    /** Moving duration in seconds, falling back to elapsed total when moving time is unknown. */
+    private long sessionDuration(CompletedSession s) {
+        Integer moving = s.getMovingTimeSeconds();
+        return moving != null && moving > 0 ? moving : s.getTotalDurationSeconds();
     }
 
     private double sessionDistance(CompletedSession s) {

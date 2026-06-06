@@ -590,8 +590,8 @@ export class FitTimeseriesChartComponent
   private isTouchHover = false;
   private gesture = new TouchScrubGesture();
   private readonly touchMoveListener = (e: TouchEvent) => this.handleTouchMove(e);
-  /** Long-press (1s hold) arms the tooltip on touch; a plain horizontal drag pans when zoomed. */
-  private static readonly LONG_PRESS_MS = 1000;
+  /** Long-press (400ms hold) arms the tooltip on touch; a plain horizontal drag pans when zoomed. */
+  private static readonly LONG_PRESS_MS = 400;
   private longPressTimer: ReturnType<typeof setTimeout> | null = null;
   private lastTouchX = 0;
   private lastTouchY = 0;
@@ -611,11 +611,14 @@ export class FitTimeseriesChartComponent
     this.gesture.begin(canvas, touch.clientX, touch.clientY);
     this.lastTouchX = touch.clientX;
     this.lastTouchY = touch.clientY;
-    // Tooltip only appears after a 1s hold; until then a horizontal drag pans (when zoomed).
+    // Tooltip only appears after the long-press hold; until then a horizontal drag pans (when zoomed).
     if (this.showTooltip) this.scheduleLongPress(canvas);
   }
 
   onTouchEnd(event?: TouchEvent): void {
+    // Suppress the browser's emulated mouse events (mousemove/click after a tap) so the
+    // tooltip has exactly one entry point on touch: the long-press.
+    if (event?.cancelable) event.preventDefault();
     // End the pinch once fewer than two fingers remain on the surface.
     if (!event || event.touches.length < 2) this.pinch = null;
     this.cancelLongPress();

@@ -44,8 +44,25 @@ export interface SavedSession extends SessionSummary {
   groupId?: string | null;
   manuallyCreated?: boolean;
   totalDistance?: number | null;
+  /** Moving duration in seconds (excludes pauses); undefined when the source didn't report it. */
+  movingTime?: number;
   /** Athlete + coach/AI alignment ratings vs the scheduled workout; null until rated. */
   alignmentScore?: AlignmentScore | null;
+}
+
+/** Moving duration in seconds, falling back to elapsed total when moving time is unknown. */
+export function sessionMovingSeconds(s: SavedSession): number {
+  return s.movingTime && s.movingTime > 0 ? s.movingTime : s.totalDuration;
+}
+
+/**
+ * Session distance in meters. Prefers the recorded total distance — Strava/FIT
+ * report the device's measured value. The avgSpeed fallback multiplies by moving
+ * time, because avgSpeed is moving-time-based; using elapsed total would inflate.
+ */
+export function sessionDistanceMeters(s: SavedSession): number {
+  if (s.totalDistance != null && s.totalDistance > 0) return s.totalDistance;
+  return s.avgSpeed > 0 ? s.avgSpeed * sessionMovingSeconds(s) : 0;
 }
 
 /** Race-on-this-day candidate returned by `GET /api/sessions/{id}/race-candidates`. */
@@ -119,6 +136,7 @@ interface RawSavedSession {
   groupId?: string | null;
   manuallyCreated?: boolean | null;
   totalDistance?: number | null;
+  movingTimeSeconds?: number | null;
   alignmentScore?: AlignmentScore | null;
 }
 
@@ -574,6 +592,7 @@ export class HistoryService {
     groupId: s.groupId ?? undefined,
     manuallyCreated: s.manuallyCreated ?? undefined,
     totalDistance: s.totalDistance ?? undefined,
+    movingTime: s.movingTimeSeconds ?? undefined,
     alignmentScore: s.alignmentScore ?? undefined,
   });
 
