@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.integration.nolio.write;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.auth.UserService;
 import com.koval.trainingplannerbackend.training.TrainingRepository;
@@ -26,15 +27,18 @@ public class NolioPushService {
 
     private final NolioApiClient apiClient;
     private final NolioWorkoutMapper mapper;
+    private final NolioPartnerIdGenerator partnerIdGenerator;
     private final TrainingRepository trainingRepository;
     private final UserService userService;
 
     public NolioPushService(NolioApiClient apiClient,
                             NolioWorkoutMapper mapper,
+                            NolioPartnerIdGenerator partnerIdGenerator,
                             TrainingRepository trainingRepository,
                             UserService userService) {
         this.apiClient = apiClient;
         this.mapper = mapper;
+        this.partnerIdGenerator = partnerIdGenerator;
         this.trainingRepository = trainingRepository;
         this.userService = userService;
     }
@@ -49,6 +53,9 @@ public class NolioPushService {
     /** No-op unless the user has enabled auto-sync and connected Nolio write access. */
     public void autoSyncIfEnabled(String userId, Training training) {
         if (training == null || training.getId() == null) return;
+        // Trainings imported FROM Nolio webhooks must never be pushed back — that
+        // would duplicate the Nolio-native object (we can't address it by id_partner).
+        if (training.getNolioRemoteId() != null && training.getNolioWorkoutId() == null) return;
         User user = userService.findById(userId).orElse(null);
         if (user == null) return;
         if (!Boolean.TRUE.equals(user.getNolioAutoSyncWorkouts())) return;
@@ -72,9 +79,11 @@ public class NolioPushService {
 
     /** Delete the remote workout, if one exists. Called when a Training is deleted locally. */
     public void deleteRemote(User user, String nolioWorkoutId) {
-        if (user == null || nolioWorkoutId == null || user.getNolioAccessToken() == null) return;
+        if (user == null || user.getNolioAccessToken() == null) return;
+        Long idPartner = parsePartnerId(nolioWorkoutId);
+        if (idPartner == null) return;
         try {
-            apiClient.deleteWorkout(user, nolioWorkoutId);
+            apiClient.deletePlannedTraining(user, idPartner);
         } catch (RuntimeException e) {
             log.warn("Nolio delete failed for workout {}: {}", nolioWorkoutId, e.getMessage());
         }
@@ -90,15 +99,19 @@ public class NolioPushService {
         trainingRepository.save(training);
 
         try {
-            Map<String, Object> payload = mapper.toPayload(training);
-            String workoutId;
-            if (training.getNolioWorkoutId() != null) {
-                apiClient.updateWorkout(user, training.getNolioWorkoutId(), payload);
-                workoutId = training.getNolioWorkoutId();
-            } else {
-                workoutId = apiClient.createWorkout(user, payload);
+            Long idPartner = parsePartnerId(training.getNolioWorkoutId());
+            boolean isFirstPush = idPartner == null;
+            if (isFirstPush) {
+                idPartner = partnerIdGenerator.next();
             }
-            training.setNolioWorkoutId(workoutId);
+            Map<String, Object> payload = mapper.toPayload(training, idPartner, user.getFtp());
+            if (isFirstPush) {
+                JsonNode created = apiClient.createPlannedTraining(user, payload);
+                captureRemoteId(training, created);
+            } else {
+                apiClient.updatePlannedTraining(user, payload);
+            }
+            training.setNolioWorkoutId(String.valueOf(idPartner));
             training.setNolioSyncStatus(NolioSyncStatus.SYNCED);
             training.setNolioLastSyncedAt(LocalDateTime.now());
             training.setNolioSyncError(null);
@@ -110,6 +123,32 @@ public class NolioPushService {
         }
 
         return trainingRepository.save(training);
+    }
+
+    /**
+     * Remembers Nolio's own id for the object we just created, so planned-event
+     * webhooks echoing our push can be recognised and skipped.
+     */
+    private static void captureRemoteId(Training training, JsonNode created) {
+        if (created == null) return;
+        JsonNode node = created.isArray() && !created.isEmpty() ? created.get(0) : created;
+        for (String field : new String[]{"nolio_id", "id", "pk"}) {
+            if (node.hasNonNull(field)) {
+                training.setNolioRemoteId(node.get(field).asText());
+                return;
+            }
+        }
+        log.info("Nolio create response carried no recognizable id — echo suppression will rely on id_partner only");
+    }
+
+    /** The stored id is our numeric id_partner; anything non-numeric means "never pushed". */
+    private static Long parsePartnerId(String nolioWorkoutId) {
+        if (nolioWorkoutId == null) return null;
+        try {
+            return Long.parseLong(nolioWorkoutId);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private Training loadOwned(String userId, String trainingId) {

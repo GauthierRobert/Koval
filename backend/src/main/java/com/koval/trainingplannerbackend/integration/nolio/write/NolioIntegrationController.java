@@ -26,17 +26,23 @@ import java.util.Map;
 @RequestMapping("/api/integration/nolio")
 public class NolioIntegrationController {
 
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(NolioIntegrationController.class);
+
     private final NolioOAuthService oauthService;
     private final NolioPushService pushService;
+    private final NolioApiClient apiClient;
     private final UserService userService;
     private final UserRepository userRepository;
 
     public NolioIntegrationController(NolioOAuthService oauthService,
                                       NolioPushService pushService,
+                                      NolioApiClient apiClient,
                                       UserService userService,
                                       UserRepository userRepository) {
         this.oauthService = oauthService;
         this.pushService = pushService;
+        this.apiClient = apiClient;
         this.userService = userService;
         this.userRepository = userRepository;
     }
@@ -57,11 +63,27 @@ public class NolioIntegrationController {
         User user = userService.getUserById(state);
         NolioOAuthService.NolioTokenResponse tokens = oauthService.exchangeCodeForToken(code);
         oauthService.applyTokens(user, tokens);
+        resolveNolioUserId(user, tokens.accessToken());
         userRepository.save(user);
         return ResponseEntity.ok(Map.of(
                 "connected", true,
                 "nolioUserId", user.getNolioUserId() == null ? "" : user.getNolioUserId()
         ));
+    }
+
+    /**
+     * Nolio's token response carries no user identity, but inbound webhooks key on
+     * the Nolio user id — resolve it via /get/user/ while we hold a fresh token.
+     * Best-effort: a failure must not break the OAuth connect itself.
+     */
+    private void resolveNolioUserId(User user, String accessToken) {
+        if (user.getNolioUserId() != null || accessToken == null) return;
+        try {
+            user.setNolioUserId(apiClient.fetchNolioUserId(accessToken));
+        } catch (RuntimeException e) {
+            log.warn("Could not resolve Nolio user id for user {} — inbound webhooks won't match until reconnect: {}",
+                    user.getId(), e.getMessage());
+        }
     }
 
     @DeleteMapping

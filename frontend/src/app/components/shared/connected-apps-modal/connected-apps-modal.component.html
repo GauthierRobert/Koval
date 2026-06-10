@@ -304,44 +304,6 @@
           </div>
         }
 
-        <!-- Nolio activities (read via Terra) -->
-        <div class="linked-app-row">
-          <div class="app-info">
-            <img
-              class="app-icon nolio"
-              src="assets/nolio-logo.svg"
-              width="20"
-              height="20"
-              alt="Nolio"
-            />
-            <div class="app-details">
-              <span class="app-name">Nolio activities</span>
-              <span class="app-status" [class.connected]="user.linkedAccounts?.nolioRead">
-                {{
-                  (user.linkedAccounts?.nolioRead
-                    ? 'SETTINGS.APP_CONNECTED'
-                    : 'SETTINGS.APP_NOT_CONNECTED'
-                  ) | translate
-                }}
-              </span>
-            </div>
-          </div>
-          @if (user.linkedAccounts?.nolioRead) {
-            <button class="unlink-btn" [disabled]="unlinking" (click)="unlinkApp('nolioRead')">
-              {{ 'SETTINGS.BTN_UNLINK' | translate }}
-            </button>
-          } @else {
-            <button
-              class="connect-btn"
-              [disabled]="isProd"
-              [title]="isProd ? 'Coming soon' : ''"
-              (click)="connectNolioRead()"
-            >
-              {{ 'SETTINGS.BTN_CONNECT' | translate }}
-            </button>
-          }
-        </div>
-
         <!-- Nolio workout push (direct OAuth) -->
         <div class="linked-app-row">
           <div class="app-info">
@@ -369,12 +331,7 @@
               {{ 'SETTINGS.BTN_UNLINK' | translate }}
             </button>
           } @else {
-            <button
-              class="connect-btn"
-              [disabled]="isProd"
-              [title]="isProd ? 'Coming soon' : ''"
-              (click)="connectNolioWrite()"
-            >
+            <button class="connect-btn" (click)="connectNolioWrite()">
               {{ 'SETTINGS.BTN_CONNECT' | translate }}
             </button>
           }

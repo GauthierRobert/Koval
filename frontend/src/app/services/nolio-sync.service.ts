@@ -6,10 +6,6 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import { Training } from '../models/training.model';
 
-export interface TerraWidgetResponse {
-    widgetUrl: string;
-}
-
 export interface NolioAuthUrlResponse {
     authUrl: string;
 }
@@ -20,7 +16,6 @@ function isAbsoluteUrl(value: string | null | undefined): value is string {
 
 @Injectable({ providedIn: 'root' })
 export class NolioSyncService {
-    private readonly terraUrl = `${environment.apiUrl}/api/integration/terra`;
     private readonly nolioUrl = `${environment.apiUrl}/api/integration/nolio`;
     private readonly authLinkUrl = `${environment.apiUrl}/api/auth/link`;
 
@@ -30,22 +25,6 @@ export class NolioSyncService {
 
     private pushingSubject = new BehaviorSubject<string | null>(null);
     pushing$ = this.pushingSubject.asObservable();
-
-    connectRead(): Observable<TerraWidgetResponse> {
-        return this.http.post<TerraWidgetResponse>(`${this.terraUrl}/nolio/connect`, {}).pipe(
-            tap(({ widgetUrl }) => {
-                if (isAbsoluteUrl(widgetUrl)) {
-                    window.open(widgetUrl, '_blank', 'width=600,height=700');
-                }
-            }),
-        );
-    }
-
-    disconnectRead(): Observable<void> {
-        return this.http.delete<void>(`${this.authLinkUrl}/nolio-read`).pipe(
-            tap(() => this.ngZone.run(() => this.authService.refreshUser())),
-        );
-    }
 
     connectWrite(): Observable<NolioAuthUrlResponse> {
         return this.http.get<NolioAuthUrlResponse>(`${this.nolioUrl}/authorize`).pipe(

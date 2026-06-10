@@ -51,7 +51,6 @@ export interface User {
     polar: boolean;
     suunto: boolean;
     zwift: boolean;
-    nolioRead: boolean;
     nolioWrite: boolean;
   };
   authProvider?: string;

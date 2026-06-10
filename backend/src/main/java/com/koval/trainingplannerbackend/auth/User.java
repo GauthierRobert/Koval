@@ -104,12 +104,7 @@ public class User {
     private LocalDateTime zwiftLastSyncAt;
     private Boolean zwiftAutoSyncWorkouts = false;
 
-    // Terra linkage for Nolio activity ingest (read path)
-    @Indexed(unique = true, sparse = true)
-    private String terraUserId;
-    private Boolean terraProviderNolioConnected = false;
-
-    // Nolio direct OAuth tokens (write path - push trainings)
+    // Nolio direct OAuth tokens (workout push + inbound webhook sync)
     @Indexed(unique = true, sparse = true)
     private String nolioUserId;
     private String nolioAccessToken;

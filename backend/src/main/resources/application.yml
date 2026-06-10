@@ -141,17 +141,7 @@ suunto:
 zwift:
   enabled: ${ZWIFT_ENABLED:false}
 
-# Terra Integration (aggregator for Nolio activity ingest)
-# https://docs.tryterra.co
-terra:
-  dev-id: ${TERRA_DEV_ID:}
-  api-key: ${TERRA_API_KEY:}
-  signing-secret: ${TERRA_SIGNING_SECRET:}
-  api-base-url: ${TERRA_API_BASE_URL:https://api.tryterra.co/v2}
-  widget-success-redirect-url: ${TERRA_WIDGET_SUCCESS_URL:http://localhost:4200/settings/integrations?terra=success}
-  widget-failure-redirect-url: ${TERRA_WIDGET_FAILURE_URL:http://localhost:4200/settings/integrations?terra=failure}
-
-# Nolio direct OAuth (write path - push trainings to Nolio account)
+# Nolio direct OAuth (push trainings + inbound webhook sync)
 nolio:
   client-id: ${NOLIO_CLIENT_ID:}
   client-secret: ${NOLIO_CLIENT_SECRET:}
@@ -160,6 +150,8 @@ nolio:
   api-base-url: ${NOLIO_API_BASE_URL:}
   redirect-uri: ${NOLIO_REDIRECT_URI:http://localhost:4200/auth/nolio/callback}
   scope: ${NOLIO_SCOPE:workouts:write}
+  # Static shared secret Nolio sends in the X-Nolio-Key header of webhook calls.
+  webhook-key: ${NOLIO_WEBHOOK_KEY:}
 
 # Google OAuth2 Configuration
 # Create your app at: https://console.cloud.google.com/apis/credentials

@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /** Spring Data repository for {@link Training} documents in the {@code trainings} collection. */
 @Repository
@@ -25,6 +26,8 @@ public interface TrainingRepository extends MongoRepository<Training, String> {
     List<Training> findByGroupIdsIn(List<String> groupIds);
 
     List<Training> findByClubIdsIn(List<String> clubIds);
+
+    Optional<Training> findFirstByCreatedByAndNolioRemoteId(String userId, String nolioRemoteId);
 
     /**
      * Same filter as {@link #findByCreatedBy(String)} but excludes the heavy

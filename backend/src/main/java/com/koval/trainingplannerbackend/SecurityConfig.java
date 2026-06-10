@@ -66,8 +66,8 @@ public class SecurityConfig {
                         auth.requestMatchers("/api/auth/dev/login").permitAll();
                     }
                     auth.requestMatchers("/api/integration/strava/webhook", "/api/integration/strava/webhook/**").permitAll()
-                            .requestMatchers("/api/webhooks/terra").permitAll()
                             .requestMatchers("/api/integration/nolio/callback").permitAll()
+                            .requestMatchers("/api/integration/nolio/webhook/**").permitAll()
                             .requestMatchers("/api/integration/polar/webhook").permitAll()
                             .requestMatchers("/api/integration/suunto/webhook").permitAll()
                             .requestMatchers("/.well-known/oauth-authorization-server",

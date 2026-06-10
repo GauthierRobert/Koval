@@ -68,7 +68,6 @@ public class UserResponseMapper {
         linkedAccounts.put("polar", user.getPolarUserId() != null);
         linkedAccounts.put("suunto", user.getSuuntoUserId() != null);
         linkedAccounts.put("zwift", user.getZwiftUserId() != null);
-        linkedAccounts.put("nolioRead", Boolean.TRUE.equals(user.getTerraProviderNolioConnected()));
         linkedAccounts.put("nolioWrite", user.getNolioAccessToken() != null);
         map.put("linkedAccounts", linkedAccounts);
         map.put("authProvider", Optional.ofNullable(user.getAuthProvider()).map(Enum::name).orElse(null));

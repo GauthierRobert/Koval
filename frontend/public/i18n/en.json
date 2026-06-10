@@ -2140,6 +2140,7 @@
     "BTN_EXPORT": "EXPORT",
     "EXPORT_ZWIFT": "Zwift (.zwo)",
     "SEND_TO_ZWIFT": "Send to Zwift",
+    "PUSH_TO_NOLIO": "Push to Nolio",
     "EXPORT_JSON": "JSON",
     "BTN_EDIT_BLOCKS": "EDIT BLOCKS",
     "BTN_EDIT_BLOCKS_SHORT": "EDIT",

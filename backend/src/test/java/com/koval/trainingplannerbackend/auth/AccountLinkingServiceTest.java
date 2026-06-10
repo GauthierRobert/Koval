@@ -1,6 +1,5 @@
 package com.koval.trainingplannerbackend.auth;
 
-import com.koval.trainingplannerbackend.integration.terra.TerraApiClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,15 +22,13 @@ class AccountLinkingServiceTest {
     @Mock
     private UserService userService;
     @Mock
-    private TerraApiClient terraApiClient;
-    @Mock
     private AliasGenerator aliasGenerator;
 
     private AccountLinkingService service;
 
     @BeforeEach
     void setUp() {
-        service = new AccountLinkingService(userRepository, userService, terraApiClient, aliasGenerator);
+        service = new AccountLinkingService(userRepository, userService, aliasGenerator);
         lenient().when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
@@ -277,30 +274,6 @@ class AccountLinkingServiceTest {
 
             assertNull(result.getGoogleId());
             assertEquals(AuthProvider.STRAVA, result.getAuthProvider());
-        }
-
-        @Test
-        void unlinkNolioRead_callsTerraDeauthAndClearsState() {
-            User me = existing("me");
-            me.setTerraUserId("terra-1");
-            me.setTerraProviderNolioConnected(true);
-            when(userService.getUserById("me")).thenReturn(me);
-
-            User result = service.unlinkNolioRead("me");
-
-            verify(terraApiClient).deauthenticateUser("terra-1");
-            assertNull(result.getTerraUserId());
-            assertFalse(result.getTerraProviderNolioConnected());
-        }
-
-        @Test
-        void unlinkNolioRead_skipsTerraCallWhenNoTerraId() {
-            User me = existing("me");
-            when(userService.getUserById("me")).thenReturn(me);
-
-            service.unlinkNolioRead("me");
-
-            verify(terraApiClient, never()).deauthenticateUser(any());
         }
 
         @Test

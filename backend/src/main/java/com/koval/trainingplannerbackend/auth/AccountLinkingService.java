@@ -1,6 +1,5 @@
 package com.koval.trainingplannerbackend.auth;
 
-import com.koval.trainingplannerbackend.integration.terra.TerraApiClient;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -11,16 +10,13 @@ public class AccountLinkingService {
 
     private final UserRepository userRepository;
     private final UserService userService;
-    private final TerraApiClient terraApiClient;
     private final AliasGenerator aliasGenerator;
 
     public AccountLinkingService(UserRepository userRepository,
                                  UserService userService,
-                                 TerraApiClient terraApiClient,
                                  AliasGenerator aliasGenerator) {
         this.userRepository = userRepository;
         this.userService = userService;
-        this.terraApiClient = terraApiClient;
         this.aliasGenerator = aliasGenerator;
     }
 
@@ -324,22 +320,7 @@ public class AccountLinkingService {
     }
 
     /**
-     * Disconnects the Nolio activity feed (Terra read side).
-     * Also attempts Terra-side deauth; local state is cleared regardless.
-     */
-    public User unlinkNolioRead(String userId) {
-        User user = userService.getUserById(userId);
-        if (user.getTerraUserId() != null) {
-            terraApiClient.deauthenticateUser(user.getTerraUserId());
-        }
-        user.setTerraUserId(null);
-        user.setTerraProviderNolioConnected(false);
-        return userRepository.save(user);
-    }
-
-    /**
-     * Disconnects the direct Nolio write access and clears the auto-sync flag.
-     * Leaves the Terra read side untouched — the two connections are independent.
+     * Disconnects the Nolio account (OAuth tokens, webhook identity, auto-sync flag).
      */
     public User unlinkNolioWrite(String userId) {
         User user = userService.getUserById(userId);

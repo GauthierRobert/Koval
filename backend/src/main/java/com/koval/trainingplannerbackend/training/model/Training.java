@@ -67,6 +67,15 @@ public abstract sealed class Training
     private LocalDateTime nolioLastSyncedAt;
     private String nolioSyncError;
 
+    /**
+     * Nolio's own id (`nolio_id`) for the planned training this Training mirrors.
+     * Set on pushed trainings (captured from the create response) and on trainings
+     * imported from Nolio webhooks. With {@link #nolioWorkoutId} it distinguishes
+     * the direction: workoutId set = pushed by us; workoutId null = imported.
+     */
+    @Indexed
+    private String nolioRemoteId;
+
     /** Adds the given club ID to this training's club list (idempotent, null-safe). */
     public void addClubId(String clubId) {
         if (clubId != null && !this.clubIds.contains(clubId)) {

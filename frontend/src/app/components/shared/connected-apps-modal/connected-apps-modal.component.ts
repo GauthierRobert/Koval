@@ -72,7 +72,6 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
       user.linkedAccounts.polar,
       user.linkedAccounts.suunto,
       user.linkedAccounts.zwift,
-      user.linkedAccounts.nolioRead,
       user.linkedAccounts.nolioWrite,
     ].filter(Boolean).length;
   }
@@ -91,7 +90,6 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
       | 'polar'
       | 'suunto'
       | 'zwift'
-      | 'nolioRead'
       | 'nolioWrite',
   ) {
     this.unlinking = true;
@@ -114,9 +112,6 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
         break;
       case 'zwift':
         obs = this.authService.unlinkZwift();
-        break;
-      case 'nolioRead':
-        obs = this.nolioSync.disconnectRead();
         break;
       case 'nolioWrite':
         obs = this.nolioSync.disconnectWrite();
@@ -231,15 +226,6 @@ export class ConnectedAppsModalComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.authService.refreshUser(),
-      });
-  }
-
-  connectNolioRead(): void {
-    this.nolioSync
-      .connectRead()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        error: (err) => this.reportConnectError(err, 'Nolio activities'),
       });
   }
 

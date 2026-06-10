@@ -19,8 +19,7 @@ import java.time.Instant;
 import java.util.Map;
 
 /**
- * OAuth2 client for the direct Nolio API (write path - push planned workouts).
- * This is independent of Terra: Terra handles read, this handles write.
+ * OAuth2 client for the direct Nolio API (workout push + inbound webhook sync).
  *
  * Note: Exact authorize/token URLs are supplied via config since Nolio's
  * developer portal credentials are per-tenant.

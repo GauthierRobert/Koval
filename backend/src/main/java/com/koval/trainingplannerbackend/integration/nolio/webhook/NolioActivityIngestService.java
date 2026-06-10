@@ -1,6 +1,5 @@
-package com.koval.trainingplannerbackend.integration.nolio.read;
+package com.koval.trainingplannerbackend.integration.nolio.webhook;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.koval.trainingplannerbackend.auth.User;
 import com.koval.trainingplannerbackend.training.history.CompletedSession;
 import com.koval.trainingplannerbackend.training.history.CompletedSessionRepository;
@@ -13,8 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Persists a Nolio activity (delivered by Terra) into our history,
- * folding it onto an existing Strava session when the two overlap.
+ * Persists a Nolio activity into our history, folding it onto an existing
+ * Strava session when the two overlap.
  *
  * Policy (agreed with user):
  *   - If an existing session for the same user has a non-null stravaActivityId
@@ -31,18 +30,15 @@ public class NolioActivityIngestService {
     private static final Logger log = LoggerFactory.getLogger(NolioActivityIngestService.class);
     private static final long DEDUP_WINDOW_MINUTES = 2;
 
-    private final NolioActivityMapper mapper;
     private final CompletedSessionRepository sessionRepository;
 
-    public NolioActivityIngestService(NolioActivityMapper mapper, CompletedSessionRepository sessionRepository) {
-        this.mapper = mapper;
+    public NolioActivityIngestService(CompletedSessionRepository sessionRepository) {
         this.sessionRepository = sessionRepository;
     }
 
-    public void ingest(User user, JsonNode activity) {
-        CompletedSession candidate = mapper.map(activity);
+    public void ingest(User user, CompletedSession candidate) {
         if (candidate.getNolioActivityId() == null) {
-            log.warn("Nolio activity payload missing metadata.summary_id - skipping");
+            log.warn("Nolio activity payload missing its id - skipping");
             return;
         }
 

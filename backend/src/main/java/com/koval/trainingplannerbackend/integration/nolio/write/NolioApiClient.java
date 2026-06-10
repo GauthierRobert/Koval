@@ -1,5 +1,6 @@
 package com.koval.trainingplannerbackend.integration.nolio.write;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.koval.trainingplannerbackend.auth.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,15 +20,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Thin HTTP client for the Nolio workouts API.
- * Endpoint paths are relative to {@code nolio.api-base-url} and match the shape
- * expected by {@link NolioWorkoutMapper}. Exact request/response bodies may need
- * adjustment once Nolio's developer portal is available.
+ * Thin HTTP client for the Nolio API (https://github.com/NolioApp/NolioAPI-Documentation/wiki).
+ * Writes are POSTs keyed by the partner-chosen {@code id_partner} carried in the
+ * JSON body; reads are GETs with query params. Business 4xx errors come back as
+ * plain text (not JSON) — error snippets are surfaced as-is.
  */
 @Component
 public class NolioApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(NolioApiClient.class);
+    private static final int ERROR_BODY_SNIPPET_LENGTH = 300;
 
     private final NolioOAuthService oauthService;
     private final RestTemplate restTemplate;
@@ -44,44 +46,82 @@ public class NolioApiClient {
         this.restTemplate = new RestTemplate(factory);
     }
 
-    @SuppressWarnings("unchecked")
-    public String createWorkout(User user, Map<String, Object> payload) {
-        ResponseEntity<Map> response = send(user, HttpMethod.POST, "/workouts", payload);
-        Map<String, Object> body = response.getBody();
-        if (body == null) {
-            throw new NolioApiException("Empty response from Nolio workout create");
+    /**
+     * Creates a planned training. The payload must already carry {@code id_partner}.
+     * Returns Nolio's echo of the created object (used to capture {@code nolio_id}).
+     */
+    public JsonNode createPlannedTraining(User user, Map<String, Object> payload) {
+        return exchange(tokenFor(user), HttpMethod.POST, "/create/planned/training/", payload);
+    }
+
+    /** Updates the planned training identified by the payload's {@code id_partner}. */
+    public void updatePlannedTraining(User user, Map<String, Object> payload) {
+        exchange(tokenFor(user), HttpMethod.POST, "/update/planned/training/", payload);
+    }
+
+    /** Deletes the planned training identified by {@code idPartner}. */
+    public void deletePlannedTraining(User user, long idPartner) {
+        exchange(tokenFor(user), HttpMethod.POST, "/delete/planned/training/", Map.of("id_partner", idPartner));
+    }
+
+    /** Fetches one achieved workout by Nolio id. Returns the array element, or null when absent. */
+    public JsonNode getTraining(User user, long nolioId) {
+        return firstElement(exchange(tokenFor(user), HttpMethod.GET, "/get/training/?id=" + nolioId, null));
+    }
+
+    /** Fetches one planned workout by Nolio id. Returns the array element, or null when absent. */
+    public JsonNode getPlannedTraining(User user, long nolioId) {
+        return firstElement(exchange(tokenFor(user), HttpMethod.GET, "/get/planned/training/?id=" + nolioId, null));
+    }
+
+    /**
+     * Resolves the Nolio user id of the token's owner via {@code /get/user/}.
+     * Takes a raw access token because it is called during the OAuth callback,
+     * before the tokens are persisted on the {@link User}.
+     */
+    public String fetchNolioUserId(String accessToken) {
+        JsonNode profile = exchange(accessToken, HttpMethod.GET, "/get/user/", null);
+        if (profile == null || !profile.hasNonNull("id")) {
+            throw new NolioApiException("Nolio /get/user/ response missing id: " + profile);
         }
-        Object id = body.getOrDefault("id", body.get("workoutId"));
-        if (id == null) {
-            throw new NolioApiException("Nolio create response missing workout id: " + body);
-        }
-        return String.valueOf(id);
+        return profile.get("id").asText();
     }
 
-    public void updateWorkout(User user, String workoutId, Map<String, Object> payload) {
-        send(user, HttpMethod.PUT, "/workouts/" + workoutId, payload);
+    private String tokenFor(User user) {
+        return oauthService.ensureValidToken(user);
     }
 
-    public void deleteWorkout(User user, String workoutId) {
-        send(user, HttpMethod.DELETE, "/workouts/" + workoutId, null);
+    private static JsonNode firstElement(JsonNode body) {
+        if (body == null || !body.isArray() || body.isEmpty()) return null;
+        return body.get(0);
     }
 
-    @SuppressWarnings("rawtypes")
-    private ResponseEntity<Map> send(User user, HttpMethod method, String path, Object body) {
-        String token = oauthService.ensureValidToken(user);
-
+    private JsonNode exchange(String token, HttpMethod method, String path, Object body) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         headers.setBearerAuth(token);
+        if (body != null) {
+            headers.setContentType(MediaType.APPLICATION_JSON);
+        }
 
         try {
-            return restTemplate.exchange(
-                    apiBaseUrl + path, method, new HttpEntity<>(body, headers), Map.class);
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    apiBaseUrl + path, method, new HttpEntity<>(body, headers), JsonNode.class);
+            return response.getBody();
         } catch (HttpClientErrorException e) {
-            log.warn("Nolio API {} {} failed: {} {}", method, path, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new NolioApiException("Nolio API " + method + " " + path + " failed: " + e.getStatusCode());
+            String detail = snippet(e.getResponseBodyAsString());
+            log.warn("Nolio API {} {} failed: {} {}", method, path, e.getStatusCode(), detail);
+            throw new NolioApiException(
+                    "Nolio API " + method + " " + path + " failed: " + e.getStatusCode()
+                            + (detail.isBlank() ? "" : " — " + detail));
         }
+    }
+
+    private static String snippet(String body) {
+        if (body == null) return "";
+        return body.length() > ERROR_BODY_SNIPPET_LENGTH
+                ? body.substring(0, ERROR_BODY_SNIPPET_LENGTH)
+                : body;
     }
 
     public static class NolioApiException extends RuntimeException {
