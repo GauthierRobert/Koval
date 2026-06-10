@@ -522,23 +522,23 @@
               }
             }
           }
-        </div>
 
-        @if (state.hasMore) {
-          <button
-            type="button"
-            class="load-more-btn"
-            data-testid="load-more-btn"
-            (click)="loadOlder()"
-            [disabled]="state.loading"
-          >
-            @if (state.loading) {
-              {{ 'WORKOUT_HISTORY.LOADING_OLDER' | translate }}
-            } @else {
-              {{ 'WORKOUT_HISTORY.LOAD_OLDER' | translate }}
-            }
-          </button>
-        }
+          @if (state.hasMore) {
+            <button
+              type="button"
+              class="load-more-btn"
+              data-testid="load-more-btn"
+              (click)="loadOlder()"
+              [disabled]="state.loading"
+            >
+              @if (state.loading) {
+                {{ 'WORKOUT_HISTORY.LOADING_OLDER' | translate }}
+              } @else {
+                {{ 'WORKOUT_HISTORY.LOAD_OLDER' | translate }}
+              }
+            </button>
+          }
+        </div>
       }
     }
   </aside>

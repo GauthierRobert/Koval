@@ -363,15 +363,21 @@
   flex-shrink: 0;
 }
 
+/* Secondary button, flows in the list right after the last loaded week.
+ * Visible surface + border so it reads as tappable, but stays neutral
+ * (no accent fill) — loading older weeks is not the primary action. */
 .load-more-btn {
-  margin: var(--space-sm) var(--space-xs) var(--space-md);
-  padding: var(--space-xs) var(--space-md);
-  background: transparent;
-  border: 1px solid var(--border-subtle);
+  margin: var(--space-sm) 0 var(--space-xs);
+  padding: 10px var(--space-md);
+  min-height: var(--touch-target-min, 32px);
+  background: var(--overlay-5);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   color: var(--text-muted);
   font-size: var(--text-xs);
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: center;
   cursor: pointer;
   transition:
     background 0.12s,
@@ -1085,6 +1091,17 @@
     border-bottom: none;
   }
 
+  /* Taller rows on touch: week headers ~40% higher and session cards
+     ~15% higher than desktop so they are easier to scan and tap. */
+  .week-header {
+    padding: 10px 8px;
+    font-size: 11px;
+  }
+
+  .session-item {
+    padding: 14px 12px 14px 14px;
+  }
+
   /* Touch has no hover: surface the row actions permanently so they stay
      reachable on mobile. Larger tap targets too. */
   .item-actions {
@@ -1113,7 +1130,7 @@
   }
 
   .session-item {
-    padding: 8px 8px 8px 12px;
+    padding: 12px 8px 12px 12px;
     gap: 8px;
   }
 
